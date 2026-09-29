@@ -24,7 +24,7 @@ def _job(source, title, company, url, location="", description="", salary=0, ema
     }
 
 
-def remotive(query: str) -> list[dict]:
+def remotive(query: str, p: Profile | None = None) -> list[dict]:
     r = requests.get("https://remotive.com/api/remote-jobs", params={"search": query},
                      headers=UA, timeout=30)
     r.raise_for_status()
@@ -35,7 +35,7 @@ def remotive(query: str) -> list[dict]:
     ]
 
 
-def remoteok(query: str) -> list[dict]:
+def remoteok(query: str, p: Profile | None = None) -> list[dict]:
     r = requests.get("https://remoteok.com/api", headers=UA, timeout=30)
     r.raise_for_status()
     q = query.lower()
@@ -64,11 +64,40 @@ def from_file(path: str) -> list[dict]:
     ]
 
 
-SOURCES = {"remotive": remotive, "remoteok": remoteok}
+def adzuna(query: str, p: Profile) -> list[dict]:
+    """Adzuna job search API (free key: developer.adzuna.com). Env: ADZUNA_APP_ID, ADZUNA_APP_KEY."""
+    import os
+    app_id, app_key = os.environ.get("ADZUNA_APP_ID"), os.environ.get("ADZUNA_APP_KEY")
+    if not (app_id and app_key):
+        raise RuntimeError("set ADZUNA_APP_ID and ADZUNA_APP_KEY (free at developer.adzuna.com)")
+    out = []
+    for where in p.search_locations:
+        r = requests.get("https://api.adzuna.com/v1/api/jobs/us/search/1", headers=UA, timeout=30,
+                         params={"app_id": app_id, "app_key": app_key, "what": query, "where": where,
+                                 "distance": 15, "max_days_old": 14, "results_per_page": 50})
+        r.raise_for_status()
+        for j in r.json().get("results", []):
+            out.append(_job("adzuna", j["title"], j.get("company", {}).get("display_name", ""),
+                            j["redirect_url"], j.get("location", {}).get("display_name", ""),
+                            j.get("description", ""), int(j.get("salary_min") or 0)))
+    return out
+
+
+def from_inbox(folder: str) -> list[dict]:
+    import glob
+    out = []
+    for f in sorted(glob.glob(f"{folder}/*.json") + glob.glob(f"{folder}/*.csv")):
+        out += from_file(f)
+    return out
+
+
+SOURCES = {"remotive": remotive, "remoteok": remoteok, "adzuna": adzuna}
 
 
 def score(job: dict, p: Profile) -> int:
     """-1 = rejected by filters, otherwise number of keyword hits."""
+    if p.title_keywords and not any(k.lower() in job["title"].lower() for k in p.title_keywords):
+        return -1
     text = f"{job['title']} {job['description']}".lower()
     text = re.sub(r"<[^>]+>", " ", text)
     if any(x.lower() in text for x in p.exclude):

@@ -33,6 +33,14 @@ class Profile:
         "My resume is attached, and I'd love to talk if there's a fit.\n\n"
         "Thank you,\n{name}\n{phone} | {email}"
     )
+    title_keywords: list[str] = field(default_factory=lambda: ["payroll"])  # title must contain one
+    search_locations: list[str] = field(default_factory=lambda: [
+        "San Francisco, CA", "Oakland, CA", "San Jose, CA", "Fremont, CA", "Walnut Creek, CA",
+        "San Mateo, CA", "Santa Clara, CA", "Hayward, CA"])
+    auto_min_score: int = 1        # run mode approves listings scoring at least this
+    send_hours: list[int] = field(default_factory=lambda: [8, 18])  # only email between these local hours
+    run_every_minutes: int = 60
+    inbox: str = "inbox"           # drop JSON/CSV listing files here; run mode imports them
     sources: list[str] = field(default_factory=lambda: ["remotive", "remoteok"])
     daily_limit: int = 25          # max applications sent per day
     delay_seconds: int = 45        # pause between sends
