@@ -35,6 +35,7 @@ class Spec:
     commission_bps: float = 5.0
     slippage_bps: float = 5.0
     exclude: list[str] = field(default_factory=list)
+    alpha_script: str = ""            # path to an xstrategy file; replaces `factors` when set
 
     @classmethod
     def from_dict(cls, d: dict) -> "Spec":
@@ -47,15 +48,15 @@ class Spec:
         if not uni:
             raise ValueError("universe must be a sector name or a non-empty list of tickers")
         d["universe"] = [str(s).upper() for s in uni]
-        facs = d.get("factors")
+        facs = d.get("factors") or ({} if d.get("alpha_script") else None)
         if isinstance(facs, list):
             facs = {f["name"]: float(f["weight"]) for f in facs}
-        if not facs:
-            raise ValueError("factors must be non-empty")
+        if not facs and not d.get("alpha_script"):
+            raise ValueError("factors must be non-empty (or give an alpha_script)")
         bad = [f for f in facs if f not in F.FACTORS]
         if bad:
             raise ValueError(f"unknown factor(s) {bad}; choose from {list(F.FACTORS)}")
-        if any(w < 0 for w in facs.values()) or sum(facs.values()) <= 0:
+        if facs and (any(w < 0 for w in facs.values()) or sum(facs.values()) <= 0):
             raise ValueError("factor weights must be >= 0 and sum to > 0")
         d["factors"] = facs
         known = {k: v for k, v in d.items() if k in cls.__dataclass_fields__}
@@ -128,10 +129,14 @@ def run(spec: Spec, panel: Panel, start: str | None = None, end: str | None = No
     bench = panel.col(BENCHMARK)
     T, N = px.shape
 
-    total_w = sum(spec.factors.values())
-    score = np.zeros((T, N))
-    for name, w in spec.factors.items():
-        score = score + (w / total_w) * F.cs_rank(F.compute(name, px, bench))
+    if spec.alpha_script:
+        import xstrategy
+        score = xstrategy.scores(spec.alpha_script, px, bench, uni)
+    else:
+        total_w = sum(spec.factors.values())
+        score = np.zeros((T, N))
+        for name, w in spec.factors.items():
+            score = score + (w / total_w) * F.cs_rank(F.compute(name, px, bench))
     vol = -F.low_vol_3m(px, bench)
     regime_ok = np.ones(T, bool)
     if spec.regime_filter == "spy_above_200d":
@@ -249,6 +254,8 @@ def run(spec: Spec, panel: Panel, start: str | None = None, end: str | None = No
         "contribution_pct_by_name": by_name[:10],
         "missing_symbols": missing,
         "equity_hash": digest,
+        "_daily_returns": port_r,
+        "_dates": panel.dates[s0:s1],
     }
 
 

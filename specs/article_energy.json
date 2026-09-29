@@ -1,0 +1,9 @@
+{
+  "name": "article_energy",
+  "hypothesis": "The article's survivor: Energy + power/nuclear names ranked by momentum, low idiosyncratic risk and quality.",
+  "universe": "Energy",
+  "alpha_script": "strategies/article_energy.py",
+  "top_n": 5,
+  "rebalance": "weekly",
+  "band": 2
+}

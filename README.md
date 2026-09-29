@@ -151,6 +151,25 @@ Backtest timing: the signal uses the close on day t, the trade fills at the clos
 
 ### Differences from the article
 - **No Minara.** Minara is a closed desktop app with no public API. This bot uses free Yahoo daily prices and its own backtester, so everything runs locally and you can read all of it.
-- **No fundamentals.** The article's operating-cash-flow factor (`jkp_ocf_at`) needs a fundamentals feed. Here, "quality" is estimated from price behavior (`consistency_12m`, `shallow_drawdown_6m`). The article's recipe rebuilt with these substitutes, on the article's 19 names, **fails** the validator on current data: 3.7% vs SPY 16.7% over the trailing year, with 64% of returns from one stock (DNN). The same factors on the wider 28-name Energy list pass (`specs/energy_momentum_lowvol.json`). That's one hand-picked variant, so treat it as an example of the tooling, not as evidence.
+- **No fundamentals.** The article's operating-cash-flow factor (`jkp_ocf_at`) needs a fundamentals feed. Here it returns a price-based quality proxy (`consistency_12m`) and logs a warning.
+- **The article's code, as written, fails the validator on current data.** `strategies/article_energy.py` is the article's survivor code, unchanged (see "Article strategy code" below). Over the trailing year it returned 16.67% vs SPY 16.72%, with a Sharpe of 0.62 and 44% of returns from one stock (DNN). A variant using the same factors on the full 28-name Energy list passes (`specs/energy_momentum_lowvol.json`), but I picked that variant by hand, so treat it as an example of the tooling, not as evidence.
 - **Survivorship bias.** The universe lists in `quantbot/universe.py` are today's large caps. Backtests over them look better than reality would have.
 - **No live trading.** A pass means "worth a human looking at it, then paper trading it". It is not an order.
+
+### Article strategy code (xstrategy)
+The `xstrategy/` package is a small stand-in for the API used in the article, so code written for it runs here unchanged. Put a `Strategy(XStrategy)` class with an `alpha(d)` method in a file, then point a spec at it with `"alpha_script"`:
+```
+quantbot validate specs/article_energy.json      # runs strategies/article_energy.py
+```
+Available factors: `jkp_ret_6_1`, `jkp_ret_12_1` (momentum), `cz_idio_vol_proxy` (sign-flipped so calmer names score higher), and `jkp_ocf_at` (the price proxy described above). `d.factor(name)` gives any factor from `quantbot/factors.py`, and `d.close` gives today's prices.
+
+### What the backtests show per month
+These are backtest numbers over the last 35 full months, after modeled costs. They are not a forecast.
+
+| | avg month | median | best | worst | months up | 3-year total |
+|---|---|---|---|---|---|---|
+| article_energy | +2.96% | +2.68% | +27.0% | -9.4% | 66% | +154% |
+| energy_momentum_lowvol | +3.26% | +3.33% | +26.2% | -9.7% | 60% | +182% |
+| SPY (buy and hold) | +1.88% | +2.10% | +10.5% | -5.6% | 71% | +88% |
+
+These figures are flattered by survivorship bias and by choosing the strategies after the fact, so expect worse in live trading.

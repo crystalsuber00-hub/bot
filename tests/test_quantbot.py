@@ -144,3 +144,26 @@ def test_agent_loop_gates_tools_and_writes_report(tmp_path):
     req = client.requests[0]
     assert req["model"] == "claude-opus-5-5" and req["fallbacks"] == "default"
     assert "thinking" not in req  # Opus 5.5: thinking is always on; effort is the control
+
+
+def test_xstrategy_script_matches_builtin_factor(tmp_path):
+    script = tmp_path / "s.py"
+    script.write_text(
+        "from xstrategy import *\n"
+        "from xstrategy.factors_library.momentum import jkp_ret_6_1\n"
+        "class Strategy(XStrategy):\n"
+        "    def alpha(self, d):\n"
+        "        return combine(cs_rank(jkp_ret_6_1(d)), weights=[1.0])\n")
+    p = panel()
+    builtin = bt.run(spec(), p, start=str(p.dates[400]))
+    scripted = bt.run(spec(factors=None, alpha_script=str(script)), p, start=str(p.dates[400]))
+    assert scripted["equity_hash"] == builtin["equity_hash"]
+
+
+def test_article_strategy_file_runs():
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    s = spec(universe=["XOM", "CVX", "DNN", "AAA"], alpha_script=str(root / "strategies" / "article_energy.py"))
+    p = Panel(panel().dates, ["SPY", "XOM", "CVX", "DNN", "AAA"], panel().px[:, :5])
+    r = bt.run(s, p, start=str(p.dates[400]))
+    assert "AAA" not in dict(r["contribution_pct_by_name"])  # not in the article's eligible list
