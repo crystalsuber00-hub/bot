@@ -7,3 +7,4 @@ state.json
 history/
 logs/
 crypto_state.json
+crypto_gate_log.json

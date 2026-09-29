@@ -122,3 +122,5 @@ python -m cryptobot paper --strategy breakout --params '{"entry":168,"exit":96}'
 - Test other coins with `--product ETH-USD`. Don't go live unless a strategy is profitable out-of-sample across several coins and periods, and even then past results don't predict future ones.
 
 `python -m cryptobot robust` runs the breakout rule with fixed parameters over four non-overlapping windows for five coins (20 tests, nothing tuned): 10 of 20 were profitable, i.e. a coin flip. It beat buy & hold mainly in the one crashing window, by being in cash. The SOL out-of-sample +17% did not hold up: the same rule lost 3% and 27% in two of SOL's four windows.
+
+`python -m cryptobot gate` is a pre-registered validation gate (rules in `cryptobot/gate.py`, fixed before running): select on the first 75% of data across all five coins, log every rejected trial, and let only one survivor touch the last 25% once. Current result: 0 of 18 trials survived development, so the holdout was never used and there is nothing to deploy. Don't loosen the rules to get a pass; add genuinely new strategy ideas instead.
