@@ -29,15 +29,15 @@ def simulate(closes: list[float], positions: list[int], fee: float = FEE,
     """Target set at bar i's close is held over bar i+1 (no look-ahead)."""
     equity, peak, max_dd = 1.0, 1.0, 0.0
     rets: list[float] = []
-    held, trades, in_mkt = 0, 0, 0
+    held, trades, in_mkt = 0.0, 0, 0.0
     for i in range(len(closes) - 1):
-        target = positions[i]
+        target = positions[i]  # fraction of equity, 0..1
         cost = 0.0
         if target != held:
-            cost = fee + slippage
+            cost = (fee + slippage) * abs(target - held)
             trades += 1
             held = target
-        r = closes[i + 1] / closes[i] - 1 if held else 0.0
+        r = (closes[i + 1] / closes[i] - 1) * held
         in_mkt += held
         net = (1 + r) * (1 - cost) - 1
         equity *= 1 + net

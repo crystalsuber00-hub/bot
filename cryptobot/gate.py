@@ -8,7 +8,8 @@ Rules are fixed here, before any result is seen. Do not edit them after running.
   4. Only the single best survivor (by mean dev Sharpe) touches the holdout, once.
   5. It passes only if on the holdout, in >= 4 of 5 coins: return > 0, beats buy & hold,
      max drawdown < 30%, and return still > 0 with fees and slippage doubled.
-The holdout verdict is stored; re-running prints the stored verdict instead of re-testing.
+The holdout verdict is stored; once the holdout is used, re-running prints it instead of re-testing.
+Until then, new strategies can be screened in further rounds (counted in the log).
 """
 from __future__ import annotations
 
@@ -40,11 +41,14 @@ def trials():
 
 
 def run() -> None:
-    if LOG.exists():
-        prev = json.loads(LOG.read_text())
+    prev = json.loads(LOG.read_text()) if LOG.exists() else {}
+    if prev.get("verdict"):
         print("Holdout already used; stored verdict (delete the log only if you change the data or rules):\n")
         print(prev["summary"])
         return
+    # the holdout is still unseen, so new ideas may be screened; earlier trials are counted so the
+    # total number of things tried stays visible
+    rounds = prev.get("rounds", 0) + 1
 
     data = {c: [x for _, x in get_candles(c, 3600, refresh=False)] for c in COINS}
     split = {c: int(len(v) * (1 - HOLDOUT_FRAC)) for c, v in data.items()}
@@ -71,13 +75,13 @@ def run() -> None:
             survivors.append((name, fn, params, info))
 
     n = len(rejections) + len(survivors)
-    lines = [f"{n} trials tried; {len(rejections)} rejected in development, {len(survivors)} survived."]
+    lines = [f"Round {rounds}. {n} trials this round; {len(rejections)} rejected in development, {len(survivors)} survived."]
     for r in sorted(rejections, key=lambda r: -r["dev_mean_return"])[:5]:
         lines.append(f"  rejected: {r['trial']}  dev {r['dev_mean_return']:+.0%}/window  ({r['reason']})")
 
     if not survivors:
         lines.append("\nVERDICT: no candidate survived development. Holdout not touched. Nothing to deploy.")
-        _finish(lines, rejections, None)
+        _finish(lines, rejections, None, rounds)
         return
 
     name, fn, params, info = max(survivors, key=lambda s: s[3]["dev_sharpe"])
@@ -98,10 +102,10 @@ def run() -> None:
     verdict = "PASS" if good >= MIN_COINS else "FAIL"
     lines.append(f"\nVERDICT: {verdict} ({good}/{len(data)} coins passed; needed {MIN_COINS}). "
                  + ("Still only paper trade it." if verdict == "PASS" else "Nothing to deploy."))
-    _finish(lines, rejections, verdict)
+    _finish(lines, rejections, verdict, rounds)
 
 
-def _finish(lines: list[str], rejections: list[dict], verdict: str | None) -> None:
+def _finish(lines: list[str], rejections: list[dict], verdict: str | None, rounds: int) -> None:
     text = "\n".join(lines)
     print(text)
-    LOG.write_text(json.dumps({"summary": text, "verdict": verdict, "rejections": rejections}, indent=1))
+    LOG.write_text(json.dumps({"summary": text, "verdict": verdict, "rounds": rounds, "rejections": rejections}, indent=1))

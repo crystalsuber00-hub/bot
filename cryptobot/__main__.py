@@ -4,6 +4,7 @@ import json
 from .backtest import run
 from .data import get_candles
 from .paper import loop
+from .strategies import STRATEGIES
 from . import gate, robust
 
 
@@ -18,7 +19,7 @@ def main() -> None:
     sub.add_parser("gate", help="pre-registered validation: dev selection, single holdout test (cached data)")
     t = sub.add_parser("paper", help="run the paper trader")
     t.add_argument("--product", default="BTC-USD")
-    t.add_argument("--strategy", default="sma_cross", choices=["sma_cross", "breakout"])
+    t.add_argument("--strategy", default="sma_cross", choices=list(STRATEGIES))
     t.add_argument("--params", default="{}", help='JSON, e.g. \'{"fast":24,"slow":168}\'')
     t.add_argument("--cash", type=float, default=10000.0)
     t.add_argument("--once", action="store_true")
