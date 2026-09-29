@@ -32,10 +32,15 @@ def cover_letter(job: dict, p: Profile) -> str:
     return r.json()["content"][0]["text"]
 
 
-def send_email(job: dict, p: Profile, letter: str) -> None:
+def intro_letter(job: dict, p: Profile) -> str:
+    return p.intro_email.format(company=job["company"] or "your company", title=job["title"],
+                                summary=p.summary, name=p.name, email=p.email, phone=p.phone)
+
+
+def send_email(job: dict, p: Profile, letter: str, to: str = "", subject: str = "") -> None:
     msg = EmailMessage()
-    msg["From"], msg["To"] = p.email, job["email"]
-    msg["Subject"] = f"Application: {job['title']} - {p.name}"
+    msg["From"], msg["To"] = p.email, to or job["email"]
+    msg["Subject"] = subject or f"Application: {job['title']} - {p.name}"
     msg.set_content(letter)
     if p.resume:
         path = Path(p.resume)

@@ -117,4 +117,6 @@ jobapply apply --dry-run                   # preview every letter
 jobapply apply                             # email where an address exists; otherwise opens the listing + saves the letter in letters/
 jobapply status
 ```
+Listings can carry a `contact` column (recruiter/HR email); after applying, the tool also sends a short introduction email to that address. Sends are capped by `daily_limit` (default 25) with `delay_seconds` between them, to keep your email account from being flagged as spam.
+
 Set `ANTHROPIC_API_KEY` to have Claude tailor each letter; set `SMTP_PASSWORD` (an app password) for email sends. It never submits without your approval, and marks each job applied immediately so nothing is sent twice.

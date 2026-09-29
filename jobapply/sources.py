@@ -16,11 +16,11 @@ def _id(source: str, url: str) -> str:
     return hashlib.sha1(f"{source}|{url}".encode()).hexdigest()[:12]
 
 
-def _job(source, title, company, url, location="", description="", salary=0, email=""):
+def _job(source, title, company, url, location="", description="", salary=0, email="", contact=""):
     return {
         "id": _id(source, url), "source": source, "title": title, "company": company,
         "url": url, "location": location, "description": description,
-        "salary": salary, "email": email, "status": "new", "score": 0,
+        "salary": salary, "email": email, "contact": contact, "status": "new", "score": 0,
     }
 
 
@@ -59,7 +59,7 @@ def from_file(path: str) -> list[dict]:
         rows = list(csv.DictReader(open(path, newline="")))
     return [
         _job("file", r["title"], r.get("company", ""), r["url"], r.get("location", ""),
-             r.get("description", ""), int(r.get("salary") or 0), r.get("email", ""))
+             r.get("description", ""), int(r.get("salary") or 0), r.get("email", ""), r.get("contact", ""))
         for r in rows
     ]
 

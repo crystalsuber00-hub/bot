@@ -31,3 +31,20 @@ def test_cli_flow(tmp_path, monkeypatch, capsys):
     main(["apply", "--dry-run"])
     assert "Python Dev" in capsys.readouterr().out
     assert queue.load()
+
+
+def test_intro_and_cap(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\ndaily_limit=1\ndelay_seconds=0\n')
+    (tmp_path / "l.csv").write_text("title,company,url,email,contact\nPayroll Specialist,Co,http://j/1,jobs@co.com,hr@co.com\n"
+                                    "Payroll Specialist,Co2,http://j/2,jobs@co2.com,hr@co2.com\n")
+    monkeypatch.setattr(sources, "SOURCES", {})
+    main(["search", "-f", "l.csv"])
+    main(["review", "--approve-above", "1"])
+    main(["apply", "--dry-run"])
+    assert "[intro email to hr@co.com]" in capsys.readouterr().out
+    sent = []
+    from jobapply import __main__ as m
+    monkeypatch.setattr(m, "send_email", lambda j, p, l, to="", subject="": sent.append(to or j["email"]))
+    main(["apply"])
+    assert sent == ["jobs@co.com", "hr@co.com"]  # cap of 1 application (+its intro)

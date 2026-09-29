@@ -5,7 +5,10 @@ import sys
 from pathlib import Path
 
 from . import queue, sources
-from .apply import cover_letter, open_manual, send_email
+import time
+from datetime import date
+
+from .apply import cover_letter, intro_letter, open_manual, send_email
 from .profile import load_profile
 
 
@@ -49,20 +52,31 @@ def cmd_review(a, p, jobs):
 
 def cmd_apply(a, p, jobs):
     approved = [j for j in jobs.values() if j["status"] == "approved"]
-    print(f"{len(approved)} approved" + (" (dry run)" if a.dry_run else ""))
-    for j in approved:
+    today = date.today().isoformat()
+    sent_today = sum(j.get("applied_on") == today for j in jobs.values())
+    room = max(p.daily_limit - sent_today, 0)
+    print(f"{len(approved)} approved, {room} sends left today" + (" (dry run)" if a.dry_run else ""))
+    for j in approved[:room] if not a.dry_run else approved:
         letter = cover_letter(j, p)
         if a.dry_run:
             print(f"\n--- {j['title']} @ {j['company']} ---\n{letter}")
+            if j["contact"]:
+                print(f"\n[intro email to {j['contact']}]\n{intro_letter(j, p)}")
             continue
         if j["email"]:
             send_email(j, p, letter)
-            print(f"emailed {j['company']}")
+            print(f"applied by email: {j['company']}")
         else:
             f = open_manual(j, letter, Path("letters"))
             input(f"letter saved to {f}; finish in browser, press Enter when submitted ")
-        j["status"] = "applied"
+        if j["contact"] and not j.get("intro_sent"):
+            send_email(j, p, intro_letter(j, p), to=j["contact"],
+                       subject=f"Introduction: {j['title']} applicant - {p.name}")
+            j["intro_sent"] = True
+            print(f"intro email sent to {j['contact']}")
+        j["status"], j["applied_on"] = "applied", today
         queue.save(jobs)  # persist after each so a crash never re-applies
+        time.sleep(p.delay_seconds)
 
 
 def cmd_status(a, p, jobs):

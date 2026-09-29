@@ -22,6 +22,15 @@ class Profile:
         "My resume is attached. I'd welcome the chance to talk.\n\n"
         "Best,\n{name}\n{email} {phone}"
     )
+    intro_email: str = (
+        "Hi,\n\n"
+        "I just applied for the {title} position at {company} and wanted to introduce myself "
+        "directly. {summary}\n\n"
+        "My resume is attached, and I'd love to talk if there's a fit.\n\n"
+        "Thank you,\n{name}\n{email} {phone}"
+    )
+    daily_limit: int = 25          # max applications sent per day
+    delay_seconds: int = 45        # pause between sends
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""
