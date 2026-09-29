@@ -5,6 +5,7 @@ symbol = "SPX"
 option_root = "SPXW"       # SPXW = daily/PM-settled options (needed for 0DTE)
 dte = 0                    # 0 = same-day expiry
 state_file = "state.json"
+history_dir = "history"   # per-day CSV of the spread mid, used by `spxbot chart`
 poll_seconds = 30
 
 [schedule]

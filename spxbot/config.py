@@ -55,6 +55,7 @@ class Config:
     option_root: str = "SPXW"
     dte: int = 0
     state_file: str = "state.json"
+    history_dir: str = "history"
     poll_seconds: int = 30
     schedule: Schedule = field(default_factory=Schedule)
     strategy: Strategy = field(default_factory=Strategy)

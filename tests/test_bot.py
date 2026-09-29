@@ -118,3 +118,19 @@ def test_ntfy_request(monkeypatch):
     url, kw = calls[0]
     assert url == "https://ntfy.sh/t" and kw["data"] == b"body"
     assert kw["headers"]["Title"] == "ENTRY x" and kw["headers"]["Authorization"] == "Bearer tok"
+
+
+def test_history_logged_and_chart_rendered(tmp_path):
+    from spxbot.chart import make_chart
+    e, f, _ = make(tmp_path, 6120)
+    e.cfg.history_dir = str(tmp_path / "h")
+    e.tick(WED(9, 41))
+    pos = e.state.position_for("2026-09-30")
+    for i, frac in enumerate((0.9, 0.8, 0.7)):
+        f.mark = pos.credit * frac
+        e.tick(WED(10, i))
+    out = make_chart(e.cfg, e.state)
+    assert out.endswith("2026-09-30.html")
+    html = open(out).read()
+    assert "<polyline" in html and "exit target" in html
+    assert len(open(tmp_path / "h" / "2026-09-30.csv").read().splitlines()) == 4

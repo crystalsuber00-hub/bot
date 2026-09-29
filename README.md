@@ -23,6 +23,14 @@ export TRADIER_TOKEN=... NTFY_TOPIC=my-secret-topic TELEGRAM_BOT_TOKEN=... TELEG
 spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 ```
+## Spread chart
+While a trade is open, each poll logs the spread's mid price to `history/YYYY-MM-DD.csv`. Draw it (option candles are gappy; this uses bid/ask mid so it's smooth):
+```
+spxbot -c config.toml --chart              # latest day
+spxbot -c config.toml --chart 2026-09-30   # specific day -> history/2026-09-30.html
+```
+Open the HTML in a browser: blue line = cost to buy back the spread, grey dashes = entry credit, green dashes = exit target.
+
 Tests: `pip install -e '.[dev]' && pytest`
 
 ## Assumptions to check

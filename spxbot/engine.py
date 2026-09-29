@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import csv
 import logging
 import time
+from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -95,6 +97,7 @@ class Engine:
         if not s or not l:
             return
         debit = round(s.mid - l.mid, 2)
+        self._log_history(pos, now, s.mid, l.mid, debit)
         reason = check_exit(pos, debit, self.cfg.strategy, now.strftime("%H:%M"))
         if not reason:
             return
@@ -109,6 +112,21 @@ class Engine:
             f"{reason}\nBuy back at {debit:.2f} (credit {pos.credit:.2f}) | P&L ${pos.pnl(debit):+,.0f}",
             {"event": "exit", **pos.to_dict()},
         )
+
+    def _log_history(self, pos: Position, now: datetime, short_mid: float, long_mid: float, debit: float) -> None:
+        """Append one row per poll so the spread can be charted smoothly."""
+        try:
+            spx = self.client.get_quote(self.cfg.symbol).last
+            path = Path(self.cfg.history_dir) / f"{pos.date}.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            new = not path.exists()
+            with path.open("a", newline="") as f:
+                w = csv.writer(f)
+                if new:
+                    w.writerow(["time", "spx", "short_mid", "long_mid", "spread_mid"])
+                w.writerow([now.strftime("%H:%M:%S"), spx, round(short_mid, 2), round(long_mid, 2), debit])
+        except Exception:
+            log.exception("history logging failed")
 
     def run_forever(self) -> None:
         log.info("spxbot running in %s mode", self.cfg.mode)
