@@ -17,7 +17,7 @@ def run_check(cfg, client, notifier, now: datetime | None = None) -> bool:
     if side is None:
         print(f"[--] no trade direction right now: {why}")
     else:
-        print(f"[ok] move {move:+.2f}% since {cfg.strategy.reference} -> would sell a {side.replace('_', ' ')}")
+        print(f"[ok] move {move:+.2f}% since {cfg.strategy.reference} -> would sell a {side.replace('_', ' ')} spread")
         exp = (now.date() + timedelta(days=cfg.dte)).isoformat()
         chain = client.get_chain(cfg.symbol, exp, cfg.option_root, "put" if side == "put_credit" else "call")
         if not chain:
