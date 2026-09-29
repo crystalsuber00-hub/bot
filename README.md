@@ -136,3 +136,17 @@ Options are **Black-Scholes estimates** using the VIX as implied vol with a crud
 Result (2026-09 run, 403 trades):
 - Buying volatility (straddles, strangles) lost money in every development window and wiped out the test account. Buyers pay the VIX, and the VIX usually overstates how much SPY actually moves.
 - Selling it (iron condor, short straddle) won in development, as that same gap predicts. The iron condor was selected and **failed the holdout**: profitable with prices at the VIX, but flat (-0.1% a trade) and a 47% drawdown when implied vol is set 15% below the VIX, which is closer to real at-the-money pricing. Its edge sits inside the model's uncertainty, and every loss is a full -100% of the capital at risk.
+
+## spyopts.bot: paper iron condors on Alpaca
+
+Trades the backtested iron condor on an Alpaca **paper** account (the trading URL is hard-coded to paper): ~30-day SPY expiry, short strikes 3% out of the money, long wings 6% out, sized so max loss is 10% of account equity, entered 10:00-15:30 ET at the mid (re-quoted 0.05 lower every 10 minutes, 4 tries a day). It closes from 14:00 ET on the trading day before expiry, because SPY options settle into shares; the backtest held to expiry, so that's one untested difference. It compares its state with Alpaca's positions every run and halts on any mismatch (`--clear-halt` after you fix it). Unit-tested against a fake Alpaca only.
+
+```
+export ALPACA_KEY_ID=... ALPACA_SECRET_KEY=...   # paper keys
+python -m spyopts.bot --check     # keys, options level, sample quotes; no orders
+python -m spyopts.bot             # one run; --loop to keep running
+python -m spyopts.bot --status    # position and closed trades
+```
+To run it without your computer, `.github/workflows/spy-bot.yml` runs it every 15 minutes on weekdays via GitHub Actions and commits `spy_bot_state.json` back. Add the keys as repository secrets; it only runs from the default branch.
+
+The free `indicative` quote feed is delayed and modified, so paper fills are rough; set `ALPACA_FEED=opra` if you subscribe to real-time options data. With the tested structure one condor risks roughly $1,700-2,000 at current SPY prices, so the 10% rule needs about $20,000 of equity; below that the bot sends a "NO TRADE" alert and does nothing.
