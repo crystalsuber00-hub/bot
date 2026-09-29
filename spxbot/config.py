@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,7 +27,20 @@ class Strategy:
     quantity: int = 1
     profit_target: float = 0.50
     stop_loss_multiple: float = 0
-    force_close_time: str = ""
+    force_close_time: str = "15:45"   # flatten before the close; "" = off
+
+
+@dataclass
+class Execution:
+    nudge_seconds: int = 30          # wait this long between price adjustments of a working order
+    nudge_step: float = 0.05         # $/share per adjustment
+    max_nudges: int = 3              # entry: gives up conceding after this; exit: then goes to the natural price
+    max_entry_concession: float = 0.15   # never accept less than mid credit minus this
+    fill_grace_seconds: int = 90     # don't flag a missing position right after a fill (broker lag)
+    max_exit_attempts: int = 5       # rejected/cancelled exit orders before freezing for manual action
+    kill_file: str = "KILL"          # create this file to stop entries and flatten everything
+    max_daily_loss: float = 500.0    # $; flatten if today's P&L (at mid) reaches this loss. 0 = off
+    max_total_loss: float = 0.0      # $; halt new entries once cumulative realized loss reaches this. 0 = off
 
 
 @dataclass
@@ -71,6 +85,7 @@ class Config:
     poll_seconds: int = 30
     schedule: Schedule = field(default_factory=Schedule)
     strategy: Strategy = field(default_factory=Strategy)
+    execution: Execution = field(default_factory=Execution)
     tradier: Tradier = field(default_factory=Tradier)
     ibkr: Ibkr = field(default_factory=Ibkr)
     notify: Notify = field(default_factory=Notify)
@@ -87,6 +102,11 @@ class Config:
             raise ValueError("profit_target must be between 0 and 1")
         if s.reference not in ("open", "prev_close"):
             raise ValueError("reference must be 'open' or 'prev_close'")
+        if s.force_close_time and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", s.force_close_time):
+            raise ValueError("force_close_time must be HH:MM or empty")
+        e = self.execution
+        if e.nudge_step <= 0 or e.max_nudges < 0 or e.nudge_seconds < 1 or e.max_daily_loss < 0:
+            raise ValueError("invalid [execution] settings")
         if s.spread_width <= 0 or s.quantity < 1:
             raise ValueError("spread_width and quantity must be positive")
 
@@ -103,7 +123,7 @@ def load_config(path: str | None) -> Config:
     cfg = Config()
     if path:
         data = tomllib.loads(Path(path).read_text())
-        for k in ("schedule", "strategy", "tradier", "ibkr", "notify"):
+        for k in ("schedule", "strategy", "execution", "tradier", "ibkr", "notify"):
             _fill(getattr(cfg, k), data.pop(k, {}))
         _fill(cfg, data)
     env = os.environ.get

@@ -4,7 +4,7 @@ from __future__ import annotations
 import requests
 
 from .config import Tradier
-from .models import OptionQuote, Quote
+from .models import OptionQuote, OrderStatus, Quote
 
 
 class TradierClient:
@@ -21,6 +21,16 @@ class TradierClient:
 
     def _post(self, path: str, data: dict) -> dict:
         r = self.s.post(f"{self.base}{path}", data=data, timeout=15)
+        r.raise_for_status()
+        return r.json()
+
+    def _put(self, path: str, data: dict) -> dict:
+        r = self.s.put(f"{self.base}{path}", data=data, timeout=15)
+        r.raise_for_status()
+        return r.json()
+
+    def _delete(self, path: str) -> dict:
+        r = self.s.delete(f"{self.base}{path}", timeout=15)
         r.raise_for_status()
         return r.json()
 
@@ -83,3 +93,40 @@ class TradierClient:
 
     def close_spread(self, short_sym, long_sym, qty, debit) -> str:
         return self._spread_order(short_sym, long_sym, qty, debit, opening=False)
+
+    # --- order tracking ----------------------------------------------------
+    def order_status(self, order_id: str) -> OrderStatus:
+        try:
+            o = self._get(f"/accounts/{self.cfg.account_id}/orders/{order_id}")["order"]
+        except (requests.HTTPError, KeyError):
+            return OrderStatus("unknown")
+        status = o.get("status", "")
+        filled = int(float(o.get("exec_quantity") or 0))
+        avg = o.get("avg_fill_price")
+        avg = abs(float(avg)) if avg not in (None, "", 0, "0") else None
+        if status == "filled":
+            state = "filled"
+        elif status in ("canceled", "expired"):
+            state = "cancelled"
+        elif status in ("rejected", "error"):
+            state = "rejected"
+        else:  # open, partially_filled, pending, accepted_for_bidding, held, ...
+            state = "working"
+        return OrderStatus(state, filled, avg)
+
+    def cancel_order(self, order_id: str) -> None:
+        self._delete(f"/accounts/{self.cfg.account_id}/orders/{order_id}")
+
+    def replace_order(self, order_id: str, price: float, opening: bool) -> None:
+        self._put(f"/accounts/{self.cfg.account_id}/orders/{order_id}",
+                  {"type": "credit" if opening else "debit", "duration": "day", "price": f"{price:.2f}"})
+
+    def positions(self) -> dict[str, int]:
+        """Net quantity per SPX option symbol (short = negative)."""
+        data = self._get(f"/accounts/{self.cfg.account_id}/positions")
+        out: dict[str, int] = {}
+        block = data.get("positions")
+        for p in self._as_list(block.get("position") if isinstance(block, dict) else None):
+            if p["symbol"].startswith("SPX"):
+                out[p["symbol"]] = out.get(p["symbol"], 0) + int(p["quantity"])
+        return out

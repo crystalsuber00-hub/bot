@@ -177,7 +177,7 @@ def simulate_day(day: dict, mode: str, st: Strategy, p: Params) -> dict | None:
             fees += 2 * p.commission
             break
     pnl = (credit - debit) * 100 - fees
-    return {"date": day["date"], "side": side, "traded": True, "pnl": pnl, "reason": reason.split(" ")[0],
+    return {"date": day["date"], "side": side, "traded": True, "pnl": pnl, "reason": reason,
             "credit": credit, "move_pct": move_pct}
 
 

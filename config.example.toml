@@ -26,7 +26,16 @@ reference = "open"         # measure the move from today's "open" or "prev_close
 quantity = 1
 profit_target = 0.50       # close at 50% of credit captured (use 0.60 for the upper end)
 stop_loss_multiple = 0     # 0 = off. e.g. 2.0 closes if it costs 2x credit to buy back
-force_close_time = ""      # e.g. "15:45" to flatten before the close; "" = off
+force_close_time = "15:45" # flatten before the close so a 0DTE can't ride into settlement; "" = off
+
+[execution]                # only used in mode = "trade"
+nudge_seconds = 30         # reprice a working order this often
+nudge_step = 0.05          # $/share per reprice
+max_nudges = 3
+max_entry_concession = 0.15  # entry never accepts less than (mid credit - this)
+kill_file = "KILL"         # `touch KILL` = stop entries and flatten everything
+max_daily_loss = 500       # $ (all contracts); flatten if today's P&L at mid hits this loss. 0 = off
+max_total_loss = 0         # $ cumulative realized loss that halts new entries. 0 = off
 
 [tradier]
 # token / account_id: prefer env TRADIER_TOKEN and TRADIER_ACCOUNT_ID

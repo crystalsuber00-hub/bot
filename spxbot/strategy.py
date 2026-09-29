@@ -54,13 +54,19 @@ def build_setup(side: str, move_pct: float, chain: list[OptionQuote], cfg: Strat
     return Setup(side, short, long, credit, move_pct), "ok"
 
 
-def check_exit(pos: Position, debit: float, cfg: Strategy, now_hhmm: str) -> Optional[str]:
-    """Return an exit reason, or None to keep holding. `debit` = cost to buy back the spread."""
+@dataclass
+class ExitSignal:
+    kind: str  # profit | stop | time | kill  (anything but "profit" is urgent)
+    text: str
+
+
+def check_exit(pos: Position, debit: float, cfg: Strategy, now_hhmm: str) -> Optional[ExitSignal]:
+    """Return an exit signal, or None to keep holding. `debit` = cost to buy back the spread."""
     captured = (pos.credit - debit) / pos.credit
     if captured >= cfg.profit_target:
-        return f"profit target ({captured:.0%} of credit captured)"
+        return ExitSignal("profit", f"profit target ({captured:.0%} of credit captured)")
     if cfg.stop_loss_multiple and debit >= pos.credit * cfg.stop_loss_multiple:
-        return f"stop loss (debit {debit:.2f} >= {cfg.stop_loss_multiple}x credit)"
+        return ExitSignal("stop", f"stop loss (debit {debit:.2f} >= {cfg.stop_loss_multiple}x credit)")
     if cfg.force_close_time and now_hhmm >= cfg.force_close_time:
-        return f"time exit at {cfg.force_close_time}"
+        return ExitSignal("time", f"time exit at {cfg.force_close_time}")
     return None

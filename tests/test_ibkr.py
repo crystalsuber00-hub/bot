@@ -10,7 +10,7 @@ from spxbot.ibkr import IBKRClient, make_key, parse_key, tick_round
 
 class FakeIB:
     def __init__(self):
-        self.orders, self.cancelled, self.n = [], [], 1000
+        self.orders, self.cancelled, self.n, self._trades = [], [], 1000, []
 
     def isConnected(self): return True
     def sleep(self, s): pass
@@ -30,7 +30,20 @@ class FakeIB:
     def cancelMktData(self, c): self.cancelled.append(c)
     def placeOrder(self, bag, order):
         self.orders.append((bag, order))
-        return NS(order=NS(orderId=42))
+        order.orderId = getattr(order, "orderId", 0) or 42
+        t = NS(order=order, contract=bag, orderStatus=NS(status="Submitted", filled=0, avgFillPrice=0.0))
+        if not any(x.order is order for x in self._trades):
+            self._trades.append(t)
+        return t
+    _trades = None
+    def trades(self): return self._trades
+    def reqAllOpenOrders(self): pass
+    def cancelOrder(self, order): self.cancelled_orders = getattr(self, "cancelled_orders", []) + [order]
+    def positions(self):
+        c = lambda r, k, t="SPXW": NS(secType="OPT", symbol="SPX", tradingClass=t, right=r,
+                                     lastTradeDateOrContractMonth="20260930", strike=k)
+        return [NS(contract=c("P", 6000.0), position=-2), NS(contract=c("P", 5990.0), position=2),
+                NS(contract=NS(secType="STK", symbol="AAPL"), position=100)]
 
 
 def client(readonly=False):
@@ -71,3 +84,23 @@ def test_option_quotes_keep_subscription():
     k = "SPXW|20260930|P|6000"
     got = c.get_option_quotes([k])
     assert got[k].delta is not None and k in c._tickers and not c.ib.cancelled
+
+
+def test_order_status_cancel_replace_and_positions():
+    c = client()
+    oid = c.open_spread("SPXW|20260930|P|6000", "SPXW|20260930|P|5990", 2, 1.40)
+    assert c.order_status(oid).state == "working"
+    c.replace_order(oid, 1.35, opening=True)
+    assert c.ib.orders[-1][1].lmtPrice == -1.35 and len(c.ib.trades()) == 1  # modified in place
+    trade = c.ib.trades()[0]
+    trade.orderStatus.status, trade.orderStatus.filled, trade.orderStatus.avgFillPrice = "Filled", 2, -1.35
+    st = c.order_status(oid)
+    assert (st.state, st.filled_qty, st.avg_price) == ("filled", 2, 1.35)
+    trade.orderStatus.status, trade.orderStatus.filled = "Cancelled", 1
+    assert c.order_status(oid).state == "cancelled" and c.order_status(oid).filled_qty == 1
+    trade.orderStatus.status = "Inactive"
+    assert c.order_status(oid).state == "rejected"
+    assert c.order_status("999").state == "unknown"
+    c.cancel_order(oid)
+    assert c.ib.cancelled_orders
+    assert c.positions() == {"SPXW|20260930|P|6000": -2, "SPXW|20260930|P|5990": 2}

@@ -10,7 +10,7 @@ import math
 import time
 
 from .config import Ibkr
-from .models import OptionQuote, Quote
+from .models import OptionQuote, OrderStatus, Quote
 
 log = logging.getLogger("spxbot")
 
@@ -173,3 +173,56 @@ class IBKRClient:
 
     def close_spread(self, short_sym, long_sym, qty, debit) -> str:
         return self._place(short_sym, long_sym, qty, debit, opening=False)
+
+    # --- order tracking ----------------------------------------------------
+    def _find_trade(self, order_id):
+        for t in self.ib.trades():
+            if str(t.order.orderId) == str(order_id):
+                return t
+        return None
+
+    def order_status(self, order_id: str) -> OrderStatus:
+        self._ensure()
+        t = self._find_trade(order_id)
+        if t is None:  # e.g. after a restart: ask IB for open orders placed by any client
+            self.ib.reqAllOpenOrders()
+            self.ib.sleep(1)
+            t = self._find_trade(order_id)
+        if t is None:
+            return OrderStatus("unknown")
+        os_ = t.orderStatus
+        if os_.status == "Filled":
+            state = "filled"
+        elif os_.status in ("Cancelled", "ApiCancelled"):
+            state = "cancelled"
+        elif os_.status == "Inactive":
+            state = "rejected"
+        else:  # PendingSubmit, PreSubmitted, Submitted, PendingCancel
+            state = "working"
+        avg = abs(float(os_.avgFillPrice)) if os_.avgFillPrice else None  # combo avg price is signed
+        return OrderStatus(state, int(os_.filled or 0), avg)
+
+    def cancel_order(self, order_id: str) -> None:
+        t = self._find_trade(order_id)
+        if t is not None:
+            self.ib.cancelOrder(t.order)
+
+    def replace_order(self, order_id: str, price: float, opening: bool) -> None:
+        t = self._find_trade(order_id)
+        if t is None:
+            raise RuntimeError(f"order {order_id} not found; cannot reprice")
+        t.order.lmtPrice = tick_round(-price if opening else price)
+        self.ib.placeOrder(t.contract, t.order)  # same orderId = modify in place
+
+    def positions(self) -> dict[str, int]:
+        """Net quantity per option key (see make_key); short = negative."""
+        self._ensure()
+        out: dict[str, int] = {}
+        for p in self.ib.positions():
+            c = p.contract
+            if c.secType != "OPT" or c.symbol != self.underlying or not p.position:
+                continue
+            right = "put" if c.right in ("P", "PUT") else "call"
+            key = make_key(c.tradingClass, c.lastTradeDateOrContractMonth, right, c.strike)
+            out[key] = out.get(key, 0) + int(p.position)
+        return out

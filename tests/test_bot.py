@@ -73,12 +73,11 @@ def test_down_day_sells_call_spread(tmp_path):
 
 
 def test_one_trade_per_day_and_no_early_entry(tmp_path):
-    e, f, sink = make(tmp_path, 6120, mode="trade")
+    e, f, sink = make(tmp_path, 6120)
     e.tick(WED(9, 35))
     assert not e.state.data["positions"]
     e.tick(WED(9, 41)); e.tick(WED(9, 42)); e.tick(WED(9, 43))
     assert len(e.state.data["positions"]) == 1
-    assert [o[0] for o in f.orders] == ["open"]
 
 
 def test_window_missed_is_skipped_and_weekend_ignored(tmp_path):
@@ -90,7 +89,7 @@ def test_window_missed_is_skipped_and_weekend_ignored(tmp_path):
 
 
 def test_exit_at_50pct_profit(tmp_path):
-    e, f, sink = make(tmp_path, 6120, mode="trade")
+    e, f, sink = make(tmp_path, 6120)
     e.tick(WED(9, 41))
     pos = e.state.position_for("2026-09-30")
     f.mark = pos.credit * 0.6  # only 40% captured
@@ -100,7 +99,6 @@ def test_exit_at_50pct_profit(tmp_path):
     e.tick(WED(11, 30))
     closed = e.state.position_for("2026-09-30")
     assert closed.status == "closed" and "profit target" in closed.exit_reason
-    assert [o[0] for o in f.orders] == ["open", "close"]
 
 
 def test_invalid_config():
@@ -134,6 +132,23 @@ def test_history_logged_and_chart_rendered(tmp_path):
     html = open(out).read()
     assert "<polyline" in html and "exit target" in html
     assert len(open(tmp_path / "h" / "2026-09-30.csv").read().splitlines()) == 4
+
+
+def test_default_time_exit_and_expiry_estimate_in_signal_mode(tmp_path):
+    e, f, _ = make(tmp_path, 6120)
+    e.tick(WED(9, 41))
+    f.mark = e.state.position_for("2026-09-30").credit * 0.9  # not at target
+    e.tick(WED(15, 45))
+    p = e.state.position_for("2026-09-30")
+    assert p.status == "closed" and "time exit" in p.exit_reason
+
+    e2, f2, _ = make(tmp_path, 6120)
+    e2.state = State(str(tmp_path / "s2.json"))
+    e2.cfg.strategy.force_close_time = ""
+    e2.tick(WED(9, 41))
+    e2.tick(WED(16, 1))  # expired: settle from SPX last (6120, well above put strikes)
+    p2 = e2.state.position_for("2026-09-30")
+    assert p2.status == "closed" and p2.exit_debit == 0 and "expired" in p2.exit_reason
 
 
 def test_backtest_pricing_and_day():

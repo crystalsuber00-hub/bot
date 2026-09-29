@@ -26,6 +26,13 @@ class OptionQuote:
 
 
 @dataclass
+class OrderStatus:
+    state: str  # working | filled | cancelled | rejected | unknown
+    filled_qty: int = 0
+    avg_price: Optional[float] = None  # net per-share price actually achieved (always positive)
+
+
+@dataclass
 class Position:
     id: str
     date: str
@@ -40,16 +47,31 @@ class Position:
     short_delta: float
     spx_at_entry: float
     entry_time: str
-    status: str = "open"  # open | closed
+    status: str = "open"  # pending_entry | open | pending_exit | closed | cancelled
     exit_time: Optional[str] = None
     exit_debit: Optional[float] = None
     exit_reason: Optional[str] = None
     entry_order_id: Optional[str] = None
     exit_order_id: Optional[str] = None
+    # order-tracking bookkeeping
+    est_credit: float = 0.0        # mid credit when the signal fired
+    entry_limit: float = 0.0
+    exit_limit: float = 0.0
+    order_ts: str = ""             # when the working order was placed / last repriced
+    nudges: int = 0
+    cancel_requested: bool = False
+    filled_at: str = ""
+    exit_kind: str = ""            # profit | stop | time | kill
+    exit_attempts: int = 0
 
     def pnl(self, debit: float) -> float:
         """Dollar P&L for the whole position at a given buy-back debit."""
         return (self.credit - debit) * 100 * self.quantity
+
+    def realized(self) -> float:
+        if self.status != "closed" or self.exit_debit is None:
+            return 0.0
+        return self.pnl(self.exit_debit)
 
     def to_dict(self) -> dict:
         return asdict(self)

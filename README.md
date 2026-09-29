@@ -23,6 +23,24 @@ export TRADIER_TOKEN=... NTFY_TOPIC=my-secret-topic TELEGRAM_BOT_TOKEN=... TELEG
 spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 ```
+## Trade mode: order tracking and safety
+A position is only recorded as open when the broker confirms the fill, and P&L uses the actual fill prices.
+
+| Situation | What the bot does |
+|---|---|
+| Entry order unfilled | Drops the limit 0.05 every 30s (up to 3 times, never more than 0.15 below the signal mid or under `min_credit`), then **cancels at the end of the entry window**. No position, no trade that day. |
+| Partial fill at cancel | Keeps the filled quantity as the position. |
+| Profit-target exit unfilled | Starts at the mid, raises 0.05 every 30s up to 3 times, then goes to the natural price (short ask − long bid). |
+| Time / stop / daily-loss / kill exit | Urgent: starts at the natural price and keeps re-quoting. |
+| Exit order rejected or cancelled | Re-sends. After `max_exit_attempts` (5) it **freezes** and alerts you. |
+| Every poll | Compares the state file with the broker's real positions. Position closed elsewhere → marked closed. Any other mismatch → **freeze** (no orders until you fix it and run `spxbot --clear-halt`). Runs at startup too, so a restart mid-trade resumes correctly. |
+| 15:45 ET | Time exit (`force_close_time`). If the bot is still running after 16:00 it estimates settlement from SPX and marks the trade expired; confirm at your broker. |
+| Max daily loss (`max_daily_loss`, default $500) | Flattens if today's P&L, valued at the mid, reaches that loss. Real fills will be worse than the mid, so set it below what you can afford to lose. |
+| Kill switch | `touch KILL` (path in `kill_file`): cancels a pending entry, blocks new ones, flattens open positions. |
+| `max_total_loss` (off by default) | Halts new entries once cumulative realized losses reach the limit. |
+
+Known limits: the checks only run while the bot is running (if the machine or Gateway dies, working orders stay live at the broker); the mid-based daily loss can't protect against gaps; if the broker times out after accepting an order the bot may not know about it (the startup check catches the resulting position, not a still-working order).
+
 ## Interactive Brokers setup
 ```
 pip install -e '.[ibkr]'
@@ -54,5 +72,5 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Defaults are 0DTE SPXW, $10 wide, 1 contract, min credit $0.50 — none of these were in your description, so adjust.
 - No stop loss or time exit by default (you didn't mention one); `stop_loss_multiple` and `force_close_time` are available.
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
-- Orders are day limits at the mid and are not re-priced or fill-tracked; the bot assumes a fill. Verify in sandbox before going live.
+- Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
