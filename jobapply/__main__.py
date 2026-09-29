@@ -66,8 +66,10 @@ def cmd_apply(a, p, jobs):
             if j["contact"]:
                 print(f"\n[intro email to {j['contact']}]\n{intro_letter(j, p)}")
             continue
+        emailed = False
         if j["email"]:
             send_email(j, p, letter)
+            emailed = True
             print(f"applied by email: {j['company']}")
         else:
             f = open_manual(j, letter, Path("letters"))
@@ -76,10 +78,12 @@ def cmd_apply(a, p, jobs):
             send_email(j, p, intro_letter(j, p), to=j["contact"],
                        subject=intro_subject(j, p))
             j["intro_sent"] = True
+            emailed = True
             print(f"intro email sent to {j['contact']}")
         j["status"], j["applied_on"] = "applied", today
         queue.save(jobs)  # persist after each so a crash never re-applies
-        time.sleep(p.delay_seconds)
+        if emailed:  # only pace actual email sends; browser applications are already slow
+            time.sleep(p.delay_seconds)
 
 
 def cmd_preview(a, p, jobs):
