@@ -105,5 +105,85 @@
   "salary": 54000,
   "url": "https://to.indeed.com/aat6j6h9f9mn",
   "description": "payroll coordinator from $26/hr"
+ },
+ {
+  "title": "HR and Payroll Administrator - Automotive Dealership",
+  "company": "MARIN HONDA",
+  "location": "San Rafael, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aa2yh72jjrbl",
+  "description": "payroll administrator $28-30/hr"
+ },
+ {
+  "title": "Office Administrator (HR, Payroll & QuickBooks Online)",
+  "company": "Western Truck Fabrication, Inc.",
+  "location": "Hayward, CA",
+  "salary": 84000,
+  "url": "https://to.indeed.com/aag2wggdfnxz",
+  "description": "payroll office administrator $38-45/hr"
+ },
+ {
+  "title": "HR, Payroll & Accounts Specialist - Skilled Nursing Facility",
+  "company": "Golden Harbor Healthcare",
+  "location": "Hayward, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aahmzprwt6hj",
+  "description": "payroll specialist $35-42/hr"
+ },
+ {
+  "title": "Payroll Analyst II",
+  "company": "Millennium Physician Group",
+  "location": "San Francisco, CA",
+  "salary": 61226,
+  "url": "https://to.indeed.com/aarrj9x67rm6",
+  "description": "payroll analyst $61-92k (a step up in level)"
+ },
+ {
+  "title": "Payroll & Accounts Payable Specialist",
+  "company": "Shorecal Engineering INC",
+  "location": "San Francisco, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aaghmhy67vsq",
+  "description": "payroll specialist $70-90k"
+ },
+ {
+  "title": "Payroll Specialist",
+  "company": "The Salvation Army",
+  "location": "San Francisco, CA",
+  "salary": 57150,
+  "url": "https://to.indeed.com/aajljswn4w2y",
+  "description": "payroll specialist $57-79k"
+ },
+ {
+  "title": "Payroll Assistant (Remote)",
+  "company": "Carter's Corporate Headquarters",
+  "location": "Remote",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aad2dztsvswp",
+  "description": "payroll assistant remote $25-35/hr"
+ },
+ {
+  "title": "Payroll & Billing Specialist (Remote)",
+  "company": "Cross Country",
+  "location": "Remote",
+  "salary": 56000,
+  "url": "https://to.indeed.com/aazryd4zlh4c",
+  "description": "payroll specialist remote $27/hr"
+ },
+ {
+  "title": "Payroll Processor (Remote)",
+  "company": "OneSource Virtual",
+  "location": "Remote",
+  "salary": 0,
+  "url": "https://to.indeed.com/aakmgv8zpr2r",
+  "description": "payroll processor remote"
+ },
+ {
+  "title": "Payroll Administrator (Remote)",
+  "company": "NCR Voyix - Global Headquarters",
+  "location": "Remote",
+  "salary": 48000,
+  "url": "https://to.indeed.com/aaw9cctk9wrq",
+  "description": "payroll administrator remote $23-35/hr"
  }
 ]
