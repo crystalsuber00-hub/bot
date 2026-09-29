@@ -90,6 +90,8 @@ def cmd_apply(a, p, jobs):
             if _send_intro(j, p):
                 queue.save(jobs)
                 time.sleep(p.delay_seconds)
+    approved.sort(key=lambda j: -j["score"])  # best matches first (they get the cover letters)
+    letters_used = sum(j.get("letter_on") == today for j in jobs.values())
     for j in approved[:room] if not a.dry_run else approved:
         letter = cover_letter(j, p)
         if a.dry_run:
@@ -107,8 +109,16 @@ def cmd_apply(a, p, jobs):
             emailed = True
             print(f"applied by email: {j['company']}")
         else:
-            f = open_manual(j, letter, Path("letters"))
-            input(f"letter saved to {f}; finish in browser, press Enter when submitted ")
+            use_letter = letters_used < p.cover_letters_per_day
+            if use_letter:
+                letters_used += 1
+                j["letter_on"] = today
+            else:
+                print(f"  resume only for {j['company']} "
+                      f"({p.cover_letters_per_day} cover letters already used today)")
+            f = open_manual(j, letter, Path("letters"), copy=use_letter)
+            input(f"{'letter saved to ' + str(f) + '; ' if use_letter else ''}"
+                  "finish in browser, press Enter when submitted ")
         j["status"], j["applied_on"] = "applied", today
         queue.save(jobs)  # persist before the intro so a failure never re-applies
         if j["contact"] and not j.get("intro_sent"):

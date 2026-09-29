@@ -16,6 +16,8 @@ class Profile:
     locations: list[str] = field(default_factory=list)  # empty = anywhere
     min_salary: int = 0
     summary: str = ""                                   # 2-3 sentences about you
+    headlines: list[str] = field(default_factory=list)  # rotated per job so emails aren't identical
+    cover_letters_per_day: int = 3  # browser applications that get a cover letter; the rest are resume-only
     headline: str = ""                                  # one-sentence opener; falls back to summary
     highlights: list[str] = field(default_factory=list) # bullet points in the emails
     cover_letter: str = (

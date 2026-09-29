@@ -1,3 +1,4 @@
+from pathlib import Path
 from jobapply import queue, sources
 from jobapply.__main__ import main
 from jobapply.profile import Profile
@@ -119,3 +120,29 @@ def test_rescore_reopens_location_rejects(tmp_path, monkeypatch):
     (tmp_path / "profile.toml").write_text(prof.replace('["Oakland"]', '["Oakland", "Los Gatos"]'))
     main(["review", "--rescore", "--approve-above", "1"])
     assert next(iter(queue.load().values()))["status"] == "approved"
+
+
+def test_headlines_rotate_per_job_but_stay_stable():
+    from jobapply.apply import cover_letter
+    p = Profile(name="A", email="a@x.com", headlines=["H0.", "H1.", "H2."])
+    jobs = [sources._job("t", "Payroll Clerk", "Co", f"http://j/{i}") for i in range(12)]
+    used = {next(h for h in p.headlines if h in cover_letter(j, p)) for j in jobs}
+    assert len(used) > 1                                         # variety across jobs
+    assert all(cover_letter(j, p) == cover_letter(j, p) for j in jobs)  # same job, same text
+
+
+def test_cover_letter_cap_makes_the_rest_resume_only(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text(
+        '[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\nsources=[]\ncover_letters_per_day=2\n')
+    rows = "".join(f"Payroll Clerk,Co{i},http://j/{i}\n" for i in range(4))
+    (tmp_path / "l.csv").write_text("title,company,url\n" + rows)
+    from jobapply import __main__ as m
+    copied = []
+    monkeypatch.setattr(m, "open_manual", lambda j, l, d, copy=True: copied.append(copy) or Path("x"))
+    monkeypatch.setattr("builtins.input", lambda *_: "")
+    main(["search", "-f", "l.csv"])
+    main(["review", "--approve-above", "1"])
+    main(["apply"])
+    assert copied == [True, True, False, False]
+    assert "resume only" in capsys.readouterr().out
