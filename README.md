@@ -122,3 +122,11 @@ jobapply edit                              # open your profile to change headlin
 Listings can carry a `contact` column (recruiter/HR email); after applying, the tool also sends a short introduction email to that address. Sends are capped by `daily_limit` (default 25) with `delay_seconds` between them, to keep your email account from being flagged as spam.
 
 Set `ANTHROPIC_API_KEY` to have Claude tailor each letter; set `SMTP_PASSWORD` (an app password) for email sends. It never submits without your approval, and marks each job applied immediately so nothing is sent twice.
+
+### Watching for new jobs (semi-automatic)
+```
+jobapply watch            # checks every run_every_minutes; alerts you; never approves or sends
+jobapply watch --once     # a single check
+jobapply contacts         # which jobs won't get an intro email (no company contact known)
+```
+`watch` uses your `search_locations`, drops in any JSON/CSV files in `inbox/`, and alerts when new payroll jobs appear (phone push via `NTFY_TOPIC` from the free ntfy app, plus a Mac banner). You then run `jobapply review --approve-above 1` and `jobapply apply`. Add real HR/careers addresses you find to `contacts.csv` (`company,email`) and every job at that company gets the intro email. Optional job source: set `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` (free at developer.adzuna.com) and add `"adzuna"` to `sources` in your profile.

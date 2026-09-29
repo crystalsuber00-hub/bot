@@ -89,3 +89,21 @@ def test_failed_intro_does_not_crash_and_is_retried(tmp_path, monkeypatch, capsy
     monkeypatch.setattr(m, "send_email", lambda j, p, l, to="", subject="": sent.append(to))
     main(["apply"])  # retry
     assert sent == ["hr@co.com"] and next(iter(queue.load().values()))["intro_sent"]
+
+
+def test_contacts_file_fills_intro_and_watch_only_alerts(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\nsources=[]\n')
+    (tmp_path / "contacts.csv").write_text("company,email\nFormco,hr@f.com\n")
+    (tmp_path / "inbox").mkdir()
+    (tmp_path / "inbox" / "l.csv").write_text("title,company,url,email,contact\nPayroll Clerk,Formco,http://j/2,,\n")
+    from jobapply import __main__ as m
+    alerts, sent = [], []
+    monkeypatch.setattr(m, "alert", lambda t, b="": alerts.append(t))
+    monkeypatch.setattr(m, "send_email", lambda *a, **k: sent.append(1))
+    main(["watch", "--once"])
+    job = next(iter(queue.load().values()))
+    assert job["contact"] == "hr@f.com" and job["status"] == "new"   # not approved, not sent
+    assert len(alerts) == 1 and sent == []
+    main(["watch", "--once"])
+    assert len(alerts) == 1                                        # no repeat alert
