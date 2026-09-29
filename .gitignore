@@ -6,3 +6,6 @@ state.json
 .env
 history/
 logs/
+profile.toml
+jobs.json
+letters/

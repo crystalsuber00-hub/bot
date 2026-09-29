@@ -1,0 +1,13 @@
+[profile]
+name = "Your Name"
+email = "you@example.com"
+phone = "555-0100"
+resume = "resume.pdf"
+summary = "I'm a backend engineer with 5 years of Python and cloud experience."
+keywords = ["python", "backend", "remote"]
+exclude = ["senior director", "unpaid", "clearance"]
+locations = ["USA", "Remote"]
+min_salary = 90000
+# Only needed for listings that have an apply-by-email address (password in env SMTP_PASSWORD):
+smtp_host = "smtp.gmail.com"
+smtp_port = 587

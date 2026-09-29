@@ -106,3 +106,15 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
 - Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
+
+## jobapply: semi-automatic job applications
+A separate CLI in this repo. It fetches listings, scores them against your profile, lets you approve in bulk, then sends applications.
+```
+cp profile.example.toml profile.toml       # edit: keywords, exclusions, resume, summary
+jobapply search                            # Remotive + RemoteOK for each keyword (-f jobs.csv to import your own)
+jobapply review --approve-above 2          # bulk-approve, or run without the flag to go one by one
+jobapply apply --dry-run                   # preview every letter
+jobapply apply                             # email where an address exists; otherwise opens the listing + saves the letter in letters/
+jobapply status
+```
+Set `ANTHROPIC_API_KEY` to have Claude tailor each letter; set `SMTP_PASSWORD` (an app password) for email sends. It never submits without your approval, and marks each job applied immediately so nothing is sent twice.
