@@ -24,6 +24,20 @@ spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 spxbot -c config.toml --check  # test connection, data and alerts; places no orders
 ```
+## Auto-start every weekday
+The bot can start itself each weekday morning and stop itself at 16:10 ET (`--until 16:10`); a second copy refuses to start. It sends "started" / "finished for the day" alerts, and an "unreachable" alert if it can't get broker data (e.g. IB Gateway isn't logged in).
+
+1. `cp .env.example .env` and put your `NTFY_TOPIC` (and any tokens) in it.
+2. Install the schedule (default: 09:15 ET, converted to your computer's local time automatically):
+   - **Mac:** `bash scripts/install_mac.sh`
+   - **Linux:** `bash scripts/install_linux.sh`
+   - **Windows (PowerShell, in the bot folder):** `.\scripts\install_windows.ps1`
+   Pass a different Eastern time as an argument, e.g. `bash scripts/install_mac.sh 09:10`. Re-run the installer after US/local daylight-saving changes if your country switches on different dates.
+3. Every morning before that time: **log in to IB Gateway.** That step can't be automated by the bot (Gateway's daily login is a security feature; the community tool IBC can automate it if you want).
+4. The computer has to be on and awake. The Mac script prints the `pmset` command to wake it; the Windows task is set to wake the computer.
+
+Logs are in `logs/`. The Mac and Linux scripts were syntax-checked and the schedule file validated, but not run on real machines; the Windows script has not been run at all. If one misbehaves, run `scripts/run_bot.sh` (or `.ps1`) by hand and paste me the output.
+
 ## Tracking and the 2-week review
 The bot records every decision automatically: `state.json` (each trade, its strikes, credit, exit and P&L, plus every no-trade day with the reason) and `history/*.csv` (spread price every poll). Nothing to switch on. After a couple of weeks:
 ```

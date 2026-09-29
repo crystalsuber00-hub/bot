@@ -434,12 +434,25 @@ class Engine:
         except Exception:
             log.exception("history logging failed")
 
-    def run_forever(self) -> None:
+    def run_forever(self, until: str | None = None) -> None:
+        """Poll until killed, or until `until` (HH:MM in the schedule timezone) so a scheduler can start it daily."""
         log.info("spxbot running in %s mode", self.cfg.mode)
+        self.notify.send(f"spxbot started ({self.cfg.mode} mode, {self.cfg.broker}). "
+                         f"Watching for the {self.cfg.schedule.market_open} open"
+                         + (f"; stops at {until}." if until else "."), {"event": "started"})
+        fails = 0
         while True:
+            if until and self.now().strftime("%H:%M") >= until:
+                self.notify.send("spxbot finished for the day.", {"event": "stopped"})
+                return
             try:
                 self.tick()
-            except Exception:
+                fails = 0
+            except Exception as e:
+                fails += 1
                 log.exception("tick failed")
+                if fails == 3:  # ~90s of failures: tell the user, once per outage
+                    self.notify.send(f"spxbot can't reach the broker/data: {e!r}. "
+                                     "Is IB Gateway running and logged in?", {"event": "unreachable"})
             # IB clients must keep their event loop pumped while idle
             getattr(self.client, "sleep", time.sleep)(self.cfg.poll_seconds)

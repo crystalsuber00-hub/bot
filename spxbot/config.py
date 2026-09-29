@@ -87,6 +87,7 @@ class Config:
     dte: int = 0
     state_file: str = "state.json"
     history_dir: str = "history"
+    lock_port: int = 47201       # localhost port used to stop a second copy of the bot starting
     poll_seconds: int = 30
     schedule: Schedule = field(default_factory=Schedule)
     strategy: Strategy = field(default_factory=Strategy)

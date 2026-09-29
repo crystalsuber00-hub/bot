@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import socket
 
 from .config import load_config
 from .engine import Engine
@@ -10,10 +11,22 @@ from .state import State
 from .tradier import TradierClient
 
 
+def single_instance(port: int):
+    """Hold a localhost port for the life of the process; returns None if another bot already holds it."""
+    sock = socket.socket()
+    try:
+        sock.bind(("127.0.0.1", port))
+    except OSError:
+        return None
+    return sock
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="spxbot")
     ap.add_argument("-c", "--config", help="path to config.toml")
     ap.add_argument("--once", action="store_true", help="run a single tick and exit (for cron)")
+    ap.add_argument("--until", metavar="HH:MM",
+                    help="stop by itself at this time (in schedule.timezone, e.g. 16:10); used by the daily auto-start")
     ap.add_argument("--check", action="store_true",
                     help="test connection, data, strike selection and alerts (places no orders), then exit")
     ap.add_argument("--report", action="store_true",
@@ -55,7 +68,12 @@ def main() -> None:
         raise SystemExit(0 if run_check(cfg, client, Notifier(cfg.notify)) else 1)
 
     engine = Engine(cfg, client, Notifier(cfg.notify), State(cfg.state_file))
-    engine.tick() if args.once else engine.run_forever()
+    if args.once:
+        return engine.tick()
+    lock = single_instance(cfg.lock_port)
+    if lock is None:
+        raise SystemExit("spxbot is already running (lock port in use); not starting a second copy")
+    engine.run_forever(args.until)
 
 
 if __name__ == "__main__":

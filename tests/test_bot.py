@@ -241,3 +241,26 @@ def test_report_summarizes_trades_skips_and_gaps(tmp_path):
     assert "NO decision on 2026-09-24" in r and "1x entry window passed" in r
     assert "too few to judge" in r and "Bot vs backtest model" in r
     assert "2026-09-21" not in build_report(e.cfg, e.state, days=2, today=date(2026, 9, 25))
+
+
+def test_run_forever_stops_at_until_and_alerts_on_outage(tmp_path):
+    e, f, sink = make(tmp_path, 6120)
+    e.cfg.poll_seconds = 0
+    times = iter([WED(9, 20), WED(9, 21), WED(9, 22), WED(9, 23), WED(16, 11)])
+    e.now = lambda: next(times)
+    calls = {"n": 0}
+    def boom(now=None):
+        calls["n"] += 1
+        raise RuntimeError("gateway down")
+    e.tick = boom
+    e.run_forever(until="16:10")
+    msgs = [m[1]["event"] for m in sink.msgs]
+    assert msgs == ["started", "unreachable", "stopped"] and calls["n"] == 4
+
+
+def test_single_instance_lock():
+    from spxbot.__main__ import single_instance
+    a = single_instance(47999)
+    assert a is not None and single_instance(47999) is None
+    a.close()
+    assert single_instance(47999) is not None
