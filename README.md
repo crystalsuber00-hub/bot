@@ -150,3 +150,20 @@ python -m spyopts.bot --status    # position and closed trades
 To run it without your computer, `.github/workflows/spy-bot.yml` runs it every 15 minutes on weekdays via GitHub Actions and commits `spy_bot_state.json` back. Add the keys as repository secrets; it only runs from the default branch.
 
 The free `indicative` quote feed is delayed and modified, so paper fills are rough; set `ALPACA_FEED=opra` if you subscribe to real-time options data. With the tested structure one condor has about $23 between strikes at SPY ~$764 (Sept 2026), so it risks roughly $2,000 after the credit and the 10% rule needs about $20,000+ of equity; below that the bot sends a "NO TRADE" alert and does nothing.
+
+## Real-price check: Cboe strategy indexes (`python -m spyopts.cboe --refresh`)
+
+Cboe publishes benchmark indexes built from **actual SPX option prices**; CNDR is almost exactly the bot's trade (monthly iron condor, short ~20-delta, long ~5-delta wings, rest in 1-month T-bills). Because the index holds T-bills, the options only add the return **over cash**, and the indexes include **no commissions or bid-ask costs**.
+
+Result on the 2026-09 run (monthly, 2007-01 to 2026-09 unless noted):
+
+| | Over T-bills per year | Max drawdown | 12-month periods beating cash |
+|---|---|---|---|
+| CNDR iron condor, 1986 onward | +2.3% | 19% | 64% |
+| CNDR iron condor, since 2007 | +1.0% | 19% | 45% |
+| CNDR iron condor, last 10 years | **-1.5%** | 19% | 32% |
+| CNDR iron condor, last 1 year | +8.1% | 2% | 100% |
+| PUT (cash-secured puts) | +7.3% | 33% | 80% |
+| S&P 500 total return | +11.1% | 51% | 81% |
+
+The iron condor earned about as much as cash over the last 20 years **before** costs, and less than cash over the last 10. Retail bid-ask costs on four legs every month are plausibly larger than that edge. The strong last year is exactly the kind of run that tempts people in before a bad one; it is not evidence of an edge. In this real-price data, holding the S&P 500 beat every option strategy tested.
