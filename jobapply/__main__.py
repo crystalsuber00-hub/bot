@@ -53,12 +53,33 @@ def cmd_review(a, p, jobs):
         j["status"] = {"a": "approved", "s": "skipped"}.get(ans, "new")
 
 
+def _send_intro(j, p) -> bool:
+    """Send the intro email to the company contact; never raise, so one failure can't stop the run."""
+    try:
+        send_email(j, p, intro_letter(j, p), to=j["contact"], subject=intro_subject(j, p))
+    except Exception as e:
+        print(f"  intro email to {j['contact']} FAILED ({e.__class__.__name__}); "
+              "run 'jobapply apply' again later to retry it")
+        return False
+    j["intro_sent"] = True
+    print(f"intro email sent to {j['contact']}")
+    return True
+
+
 def cmd_apply(a, p, jobs):
     approved = [j for j in jobs.values() if j["status"] == "approved"]
+    owed = [j for j in jobs.values()
+            if j["status"] == "applied" and j["contact"] and not j.get("intro_sent")]
     today = date.today().isoformat()
     sent_today = sum(j.get("applied_on") == today for j in jobs.values())
     room = max(p.daily_limit - sent_today, 0)
-    print(f"{len(approved)} approved, {room} sends left today" + (" (dry run)" if a.dry_run else ""))
+    print(f"{len(approved)} approved, {len(owed)} intro emails owed, {room} sends left today"
+          + (" (dry run)" if a.dry_run else ""))
+    if not a.dry_run:
+        for j in owed:  # retry intros that failed on an earlier run
+            if _send_intro(j, p):
+                queue.save(jobs)
+                time.sleep(p.delay_seconds)
     for j in approved[:room] if not a.dry_run else approved:
         letter = cover_letter(j, p)
         if a.dry_run:
@@ -68,20 +89,21 @@ def cmd_apply(a, p, jobs):
             continue
         emailed = False
         if j["email"]:
-            send_email(j, p, letter)
+            try:
+                send_email(j, p, letter)
+            except Exception as e:
+                print(f"FAILED to email {j['company']} ({e.__class__.__name__}: {e}); skipping it")
+                continue
             emailed = True
             print(f"applied by email: {j['company']}")
         else:
             f = open_manual(j, letter, Path("letters"))
             input(f"letter saved to {f}; finish in browser, press Enter when submitted ")
-        if j["contact"] and not j.get("intro_sent"):
-            send_email(j, p, intro_letter(j, p), to=j["contact"],
-                       subject=intro_subject(j, p))
-            j["intro_sent"] = True
-            emailed = True
-            print(f"intro email sent to {j['contact']}")
         j["status"], j["applied_on"] = "applied", today
-        queue.save(jobs)  # persist after each so a crash never re-applies
+        queue.save(jobs)  # persist before the intro so a failure never re-applies
+        if j["contact"] and not j.get("intro_sent"):
+            emailed = _send_intro(j, p) or emailed
+            queue.save(jobs)
         if emailed:  # only pace actual email sends; browser applications are already slow
             time.sleep(p.delay_seconds)
 

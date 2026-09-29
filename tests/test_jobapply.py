@@ -68,3 +68,24 @@ def test_no_highlights_falls_back_to_summary(tmp_path, monkeypatch, capsys):
     (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nsummary="Old summary."\n')
     main(["preview"])
     assert "Old summary." in capsys.readouterr().out
+
+
+def test_failed_intro_does_not_crash_and_is_retried(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\ndelay_seconds=0\n')
+    (tmp_path / "l.csv").write_text("title,company,url,email,contact\nPayroll Specialist,Co,http://j/1,jobs@co.com,hr@co.com\n")
+    monkeypatch.setattr(sources, "SOURCES", {})
+    main(["search", "-f", "l.csv"])
+    main(["review", "--approve-above", "1"])
+    from jobapply import __main__ as m
+    def boom(j, p, l, to="", subject=""):
+        if to:
+            raise RuntimeError("bad password")
+    monkeypatch.setattr(m, "send_email", boom)
+    main(["apply"])  # application ok, intro fails -> must not raise
+    job = next(iter(queue.load().values()))
+    assert job["status"] == "applied" and not job.get("intro_sent")
+    sent = []
+    monkeypatch.setattr(m, "send_email", lambda j, p, l, to="", subject="": sent.append(to))
+    main(["apply"])  # retry
+    assert sent == ["hr@co.com"] and next(iter(queue.load().values()))["intro_sent"]
