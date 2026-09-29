@@ -24,6 +24,18 @@ class Notifier:
                     json={"chat_id": c.telegram_chat_id, "text": text}, timeout=10)
             if c.discord_webhook_url:
                 requests.post(c.discord_webhook_url, json={"content": text}, timeout=10)
+            if c.ntfy_topic:
+                title, _, body = text.partition("\n")
+                event = (payload or {}).get("event")
+                headers = {
+                    "Title": title,
+                    "Tags": {"entry": "chart_with_upwards_trend", "exit": "moneybag", "skip": "zzz"}.get(event, "bell"),
+                    "Priority": "default" if event == "skip" else "high",
+                }
+                if c.ntfy_token:
+                    headers["Authorization"] = f"Bearer {c.ntfy_token}"
+                requests.post(f"{c.ntfy_server.rstrip('/')}/{c.ntfy_topic}",
+                              data=(body or title).encode(), headers=headers, timeout=10)
             if c.webhook_url and payload is not None:
                 requests.post(c.webhook_url, json=payload, timeout=10)
         except requests.RequestException as e:  # never let alerting kill the bot

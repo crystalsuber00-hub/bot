@@ -12,14 +12,14 @@ Signal bot for a contrarian SPX credit-spread routine:
 Data and orders come from [Tradier](https://tradier.com) (SPX quotes + option chain with greeks).
 
 ## Modes
-- `signal` (default): sends entry/exit alerts (console, Telegram, Discord, and/or a JSON webhook for your own service) and paper-tracks the position. No orders.
+- `signal` (default): sends entry/exit alerts (console, ntfy, Telegram, Discord, and/or a JSON webhook for your own service) and paper-tracks the position. No orders.
 - `trade`: also places multileg limit orders at the mid. **Start on the Tradier sandbox** (`sandbox = true`).
 
 ## Run
 ```
 pip install -e .
 cp config.example.toml config.toml
-export TRADIER_TOKEN=... TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=...
+export TRADIER_TOKEN=... NTFY_TOPIC=my-secret-topic TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=...
 spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 ```

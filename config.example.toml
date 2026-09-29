@@ -35,3 +35,6 @@ console = true
 # telegram_bot_token / telegram_chat_id: prefer env TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 # discord_webhook_url: prefer env DISCORD_WEBHOOK_URL
 # webhook_url: generic JSON POST of every signal, for your own signal service
+# ntfy_topic: prefer env NTFY_TOPIC (use a hard-to-guess name; ntfy.sh topics are public)
+# ntfy_server = "https://ntfy.sh"   # or your self-hosted server
+# ntfy_token: env NTFY_TOKEN, only for protected topics

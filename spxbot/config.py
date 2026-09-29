@@ -43,6 +43,9 @@ class Notify:
     telegram_chat_id: str = ""
     discord_webhook_url: str = ""
     webhook_url: str = ""
+    ntfy_topic: str = ""
+    ntfy_server: str = "https://ntfy.sh"
+    ntfy_token: str = ""
 
 
 @dataclass
@@ -95,5 +98,8 @@ def load_config(path: str | None) -> Config:
     n.telegram_chat_id = env("TELEGRAM_CHAT_ID", n.telegram_chat_id)
     n.discord_webhook_url = env("DISCORD_WEBHOOK_URL", n.discord_webhook_url)
     n.webhook_url = env("WEBHOOK_URL", n.webhook_url)
+    n.ntfy_topic = env("NTFY_TOPIC", n.ntfy_topic)
+    n.ntfy_server = env("NTFY_SERVER", n.ntfy_server)
+    n.ntfy_token = env("NTFY_TOKEN", n.ntfy_token)
     cfg.validate()
     return cfg

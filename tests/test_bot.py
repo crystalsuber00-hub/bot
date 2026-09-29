@@ -108,3 +108,13 @@ def test_invalid_config():
     cfg.strategy.profit_target = 1.5
     with pytest.raises(ValueError):
         cfg.validate()
+
+
+def test_ntfy_request(monkeypatch):
+    from spxbot.config import Notify
+    calls = []
+    monkeypatch.setattr("spxbot.notify.requests.post", lambda url, **kw: calls.append((url, kw)))
+    Notifier(Notify(console=False, ntfy_topic="t", ntfy_token="tok")).send("ENTRY x\nbody", {"event": "entry"})
+    url, kw = calls[0]
+    assert url == "https://ntfy.sh/t" and kw["data"] == b"body"
+    assert kw["headers"]["Title"] == "ENTRY x" and kw["headers"]["Authorization"] == "Bearer tok"
