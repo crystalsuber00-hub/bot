@@ -24,6 +24,15 @@ spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 spxbot -c config.toml --check  # test connection, data and alerts; places no orders
 ```
+## Tracking and the 2-week review
+The bot records every decision automatically: `state.json` (each trade, its strikes, credit, exit and P&L, plus every no-trade day with the reason) and `history/*.csv` (spread price every poll). Nothing to switch on. After a couple of weeks:
+```
+python -m spxbot.backtest --refresh      # optional: lets the report compare against the model
+spxbot -c config.toml --report           # everything recorded
+spxbot -c config.toml --report --days 14 # just the last two weeks
+```
+The report shows coverage (weekdays the bot never saw), every trade, win rate, average win/loss, worst day, losing streak, drawdown, and how the bot's results compare with the backtest model on the same days. Back up `state.json` and `history/`; they are your record.
+
 ## Sitting out risky days
 All optional, in `[strategy]`, and they apply in both signal and trade mode. Skipped days send a "NO TRADE today" alert with the reason.
 - `pause_after_losses` / `pause_days` (default 2 / 3): after 2 losing trades in a row, sit out the next 3 trading days (Mon-Fri; market holidays aren't known to the bot). Each further loss triggers another pause.

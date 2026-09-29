@@ -226,3 +226,18 @@ def test_skip_dates_and_volatility_filters(tmp_path):
     gap = Quote(6120, 6100, 6000)  # opened +1.67% above prior close
     assert choose_side(gap, Strategy(max_gap_pct=1.0))[0] is None
     assert choose_side(gap, Strategy())[0] == "put_credit"
+
+
+def test_report_summarizes_trades_skips_and_gaps(tmp_path):
+    from datetime import date
+    from spxbot.report import build_report
+    e, f, _ = make(tmp_path, 6120)
+    assert "No signals recorded" in build_report(e.cfg, e.state, today=date(2026, 9, 30))
+    _closed(e, "2026-09-21", 0.4)                       # win
+    _closed(e, "2026-09-22", 3.0)                       # loss
+    e.state.mark_skipped("2026-09-23", "entry window passed with no trade")
+    r = build_report(e.cfg, e.state, today=date(2026, 9, 25))
+    assert "trades 2" in r and "wins 1 (50%)" in r and "longest losing streak 1" in r
+    assert "NO decision on 2026-09-24" in r and "1x entry window passed" in r
+    assert "too few to judge" in r and "Bot vs backtest model" in r
+    assert "2026-09-21" not in build_report(e.cfg, e.state, days=2, today=date(2026, 9, 25))

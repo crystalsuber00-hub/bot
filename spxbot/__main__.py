@@ -16,6 +16,9 @@ def main() -> None:
     ap.add_argument("--once", action="store_true", help="run a single tick and exit (for cron)")
     ap.add_argument("--check", action="store_true",
                     help="test connection, data, strike selection and alerts (places no orders), then exit")
+    ap.add_argument("--report", action="store_true",
+                    help="summarize recorded signals/trades and compare with the backtest model, then exit")
+    ap.add_argument("--days", type=int, help="with --report: only the last N calendar days")
     ap.add_argument("--clear-halt", action="store_true",
                     help="clear a freeze/halt after you've fixed the position at your broker, then exit")
     ap.add_argument("--chart", nargs="?", const="latest", metavar="DATE",
@@ -24,6 +27,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     cfg = load_config(args.config)
+    if args.report:
+        from .report import build_report
+        print(build_report(cfg, State(cfg.state_file), args.days))
+        return
     if args.clear_halt:
         st = State(cfg.state_file)
         print("was:", st.halt_info())
