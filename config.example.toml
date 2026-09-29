@@ -1,0 +1,37 @@
+# Copy to config.toml and edit. Secrets can also come from env vars (see README).
+
+mode = "signal"            # "signal" = alerts only (paper-tracks the trade); "trade" = also places orders
+symbol = "SPX"
+option_root = "SPXW"       # SPXW = daily/PM-settled options (needed for 0DTE)
+dte = 0                    # 0 = same-day expiry
+state_file = "state.json"
+poll_seconds = 30
+
+[schedule]
+timezone = "America/New_York"
+market_open = "09:30"
+entry_delay_minutes = 10   # first look 10 min after the open ...
+entry_window_minutes = 5   # ... and last look 15 min after the open
+
+[strategy]
+target_delta_min = 0.15    # short strike |delta| range
+target_delta_max = 0.20
+target_delta = 0.175       # preferred point inside the range
+spread_width = 10          # points between short and long strike
+min_credit = 0.50          # skip if credit (per share) is below this
+min_move_pct = 0.0         # ignore days where SPX moved less than this % (0 = always trade)
+reference = "open"         # measure the move from today's "open" or "prev_close"
+quantity = 1
+profit_target = 0.50       # close at 50% of credit captured (use 0.60 for the upper end)
+stop_loss_multiple = 0     # 0 = off. e.g. 2.0 closes if it costs 2x credit to buy back
+force_close_time = ""      # e.g. "15:45" to flatten before the close; "" = off
+
+[tradier]
+# token / account_id: prefer env TRADIER_TOKEN and TRADIER_ACCOUNT_ID
+sandbox = true
+
+[notify]
+console = true
+# telegram_bot_token / telegram_chat_id: prefer env TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+# discord_webhook_url: prefer env DISCORD_WEBHOOK_URL
+# webhook_url: generic JSON POST of every signal, for your own signal service

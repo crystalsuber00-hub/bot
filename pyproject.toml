@@ -1,0 +1,18 @@
+[project]
+name = "spxbot"
+version = "0.1.0"
+description = "Signal-based SPX credit spread bot (contrarian, 15-20 delta, one trade/day)"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+spxbot = "spxbot.__main__:main"
+
+[tool.setuptools]
+packages = ["spxbot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
