@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import mimetypes
 import os
+import shutil
 import smtplib
+import subprocess
 import webbrowser
 from email.message import EmailMessage
 from pathlib import Path
@@ -75,5 +77,9 @@ def open_manual(job: dict, letter: str, out_dir: Path) -> Path:
     out_dir.mkdir(exist_ok=True)
     f = out_dir / f"{job['id']}.txt"
     f.write_text(letter)
+    tool = shutil.which("pbcopy") or shutil.which("xclip")  # letter ready to Cmd+V into the form
+    if tool:
+        subprocess.run([tool], input=letter.encode(), check=False)
+        print("  (letter copied to your clipboard: just paste it)")
     webbrowser.open(job["url"])
     return f
