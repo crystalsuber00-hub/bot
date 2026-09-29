@@ -106,3 +106,17 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
 - Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
+
+---
+
+# cryptobot (paper trading only)
+
+A separate, honest crypto tool. It places **no real orders**; nothing here can spend money.
+
+```
+python -m cryptobot backtest                       # ~2 years of hourly BTC-USD from Coinbase, cached in data/
+python -m cryptobot paper --strategy breakout --params '{"entry":168,"exit":96}'   # loops hourly, state in crypto_state.json
+```
+- Strategies are long/flat (`sma_cross`, `breakout`). Parameters are picked on the first 60% of the data and scored on the unseen last 40%; trust only the OUT-OF-SAMPLE line. Costs are 0.4% fee + 0.05% slippage per side.
+- Result on the 2026-09 run: buy & hold lost 10% out-of-sample; both strategies also lost (-9% and -4%) with much smaller drawdowns. **Neither made money.** That is the point of the tool: it shows this kind of strategy has no demonstrated edge, before you risk anything.
+- Test other coins with `--product ETH-USD`. Don't go live unless a strategy is profitable out-of-sample across several coins and periods, and even then past results don't predict future ones.

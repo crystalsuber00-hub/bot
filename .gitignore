@@ -6,3 +6,4 @@ state.json
 .env
 history/
 logs/
+crypto_state.json
