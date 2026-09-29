@@ -16,18 +16,22 @@ class Profile:
     locations: list[str] = field(default_factory=list)  # empty = anywhere
     min_salary: int = 0
     summary: str = ""                                   # 2-3 sentences about you
+    headline: str = ""                                  # one-sentence opener; falls back to summary
+    highlights: list[str] = field(default_factory=list) # bullet points in the emails
     cover_letter: str = (
         "Hi {company} team,\n\n"
-        "I'm applying for the {title} role. {summary}\n\n"
+        "I'm applying for the {title} role. {headline}\n\n"
+        "{bullets}\n\n"
         "My resume is attached. I'd welcome the chance to talk.\n\n"
-        "Best,\n{name}\n{email} {phone}"
+        "Best,\n{name}\n{phone} | {email}"
     )
     intro_email: str = (
         "Hi,\n\n"
         "I just applied for the {title} position at {company} and wanted to introduce myself "
-        "directly. {summary}\n\n"
+        "directly. {headline}\n\n"
+        "{bullets}\n\n"
         "My resume is attached, and I'd love to talk if there's a fit.\n\n"
-        "Thank you,\n{name}\n{email} {phone}"
+        "Thank you,\n{name}\n{phone} | {email}"
     )
     sources: list[str] = field(default_factory=lambda: ["remotive", "remoteok"])
     daily_limit: int = 25          # max applications sent per day

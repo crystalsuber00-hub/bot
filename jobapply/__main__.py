@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -8,7 +10,8 @@ from . import queue, sources
 import time
 from datetime import date
 
-from .apply import cover_letter, intro_letter, open_manual, send_email
+from .apply import (application_subject, cover_letter, intro_letter, intro_subject,
+                    open_manual, send_email)
 from .profile import load_profile
 
 
@@ -71,12 +74,27 @@ def cmd_apply(a, p, jobs):
             input(f"letter saved to {f}; finish in browser, press Enter when submitted ")
         if j["contact"] and not j.get("intro_sent"):
             send_email(j, p, intro_letter(j, p), to=j["contact"],
-                       subject=f"Introduction: {j['title']} applicant - {p.name}")
+                       subject=intro_subject(j, p))
             j["intro_sent"] = True
             print(f"intro email sent to {j['contact']}")
         j["status"], j["applied_on"] = "applied", today
         queue.save(jobs)  # persist after each so a crash never re-applies
         time.sleep(p.delay_seconds)
+
+
+def cmd_preview(a, p, jobs):
+    job = sources._job("preview", "Payroll Specialist", "Example Company", "https://example.com")
+    print(f"=== APPLICATION EMAIL ===\nSubject: {application_subject(job, p)}\n\n{cover_letter(job, p)}")
+    print(f"\n=== INTRO EMAIL (only sent where a company contact is known) ===\n"
+          f"Subject: {intro_subject(job, p)}\n\n{intro_letter(job, p)}")
+    print("\nChange any of this with:  jobapply edit")
+
+
+def cmd_edit(a, p, jobs):
+    editor = os.environ.get("EDITOR", "nano")
+    print(f"Opening {a.config} in {editor}. Edit headline / highlights / cover_letter / intro_email, "
+          "save, then run: jobapply preview")
+    subprocess.call([editor, a.config])
 
 
 def cmd_status(a, p, jobs):
@@ -99,10 +117,13 @@ def main(argv=None):
     d = sub.add_parser("apply", help="send approved applications")
     d.add_argument("--dry-run", action="store_true")
     sub.add_parser("status")
+    sub.add_parser("preview", help="show the emails exactly as they will be sent")
+    sub.add_parser("edit", help="open your profile to change the email wording")
     a = ap.parse_args(argv)
     p = load_profile(a.config)
     jobs = queue.load()
-    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status}[a.cmd](a, p, jobs)
+    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status,
+     "preview": cmd_preview, "edit": cmd_edit}[a.cmd](a, p, jobs)
     queue.save(jobs)
 
 

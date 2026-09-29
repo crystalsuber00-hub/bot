@@ -48,3 +48,23 @@ def test_intro_and_cap(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(m, "send_email", lambda j, p, l, to="", subject="": sent.append(to or j["email"]))
     main(["apply"])
     assert sent == ["jobs@co.com", "hr@co.com"]  # cap of 1 application (+its intro)
+
+
+def test_preview_uses_headline_and_bullets(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text(
+        '[profile]\nname="A"\nemail="a@x.com"\nphone="1"\nheadline="I am great."\n'
+        'highlights=["Did X","Did Y"]\n')
+    main(["preview"])
+    out = capsys.readouterr().out
+    assert "- Did X\n- Did Y" in out and "I am great." in out
+    assert "Subject: Application: Payroll Specialist - A" in out
+    assert "Subject: Introduction:" in out
+    assert "\n\n\n" not in out
+
+
+def test_no_highlights_falls_back_to_summary(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nsummary="Old summary."\n')
+    main(["preview"])
+    assert "Old summary." in capsys.readouterr().out

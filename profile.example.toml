@@ -3,6 +3,11 @@ name = "Your Name"
 email = "you@example.com"
 phone = "555-0100"
 resume = "resume.pdf"
+headline = "I'm a Bay Area payroll specialist with 5 years of experience, available to start right away."
+highlights = [
+  "Ran full-cycle payroll for 200+ employees in ADP Workforce Now",
+  "California wage and hour compliance, garnishments, W-2/1099 reporting",
+]
 summary = "I'm a payroll specialist experienced with multi-state payroll, tax filings and ADP/Paychex/Workday."
 keywords = ["payroll specialist", "payroll administrator", "payroll analyst"]
 exclude = ["payroll manager", "director", "unpaid"]

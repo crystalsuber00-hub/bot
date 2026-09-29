@@ -12,10 +12,28 @@ import requests
 from .profile import Profile
 
 
+def _fill(template: str, job: dict, p: Profile) -> str:
+    text = template.format(
+        company=job["company"] or "your company", title=job["title"],
+        headline=p.headline or p.summary, summary=p.summary,
+        bullets="\n".join(f"- {h}" for h in p.highlights),
+        name=p.name, email=p.email, phone=p.phone)
+    while "\n\n\n" in text:  # no bullets configured -> avoid a blank gap
+        text = text.replace("\n\n\n", "\n\n")
+    return text
+
+
+def application_subject(job: dict, p: Profile) -> str:
+    return f"Application: {job['title']} - {p.name}"
+
+
+def intro_subject(job: dict, p: Profile) -> str:
+    return f"Introduction: {job['title']} applicant - {p.name}"
+
+
 def cover_letter(job: dict, p: Profile) -> str:
     """Template letter; if ANTHROPIC_API_KEY is set, Claude tailors it to the listing."""
-    base = p.cover_letter.format(company=job["company"] or "hiring", title=job["title"],
-                                 summary=p.summary, name=p.name, email=p.email, phone=p.phone)
+    base = _fill(p.cover_letter, job, p)
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         return base
@@ -33,14 +51,13 @@ def cover_letter(job: dict, p: Profile) -> str:
 
 
 def intro_letter(job: dict, p: Profile) -> str:
-    return p.intro_email.format(company=job["company"] or "your company", title=job["title"],
-                                summary=p.summary, name=p.name, email=p.email, phone=p.phone)
+    return _fill(p.intro_email, job, p)
 
 
 def send_email(job: dict, p: Profile, letter: str, to: str = "", subject: str = "") -> None:
     msg = EmailMessage()
     msg["From"], msg["To"] = p.email, to or job["email"]
-    msg["Subject"] = subject or f"Application: {job['title']} - {p.name}"
+    msg["Subject"] = subject or application_subject(job, p)
     msg.set_content(letter)
     if p.resume:
         path = Path(p.resume)

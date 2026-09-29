@@ -116,6 +116,8 @@ jobapply review --approve-above 2          # bulk-approve, or run without the fl
 jobapply apply --dry-run                   # preview every letter
 jobapply apply                             # email where an address exists; otherwise opens the listing + saves the letter in letters/
 jobapply status
+jobapply preview                           # show the emails exactly as they'll be sent
+jobapply edit                              # open your profile to change headline / highlights / wording
 ```
 Listings can carry a `contact` column (recruiter/HR email); after applying, the tool also sends a short introduction email to that address. Sends are capped by `daily_limit` (default 25) with `delay_seconds` between them, to keep your email account from being flagged as spam.
 
