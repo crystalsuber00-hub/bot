@@ -149,4 +149,4 @@ python -m spyopts.bot --status    # position and closed trades
 ```
 To run it without your computer, `.github/workflows/spy-bot.yml` runs it every 15 minutes on weekdays via GitHub Actions and commits `spy_bot_state.json` back. Add the keys as repository secrets; it only runs from the default branch.
 
-The free `indicative` quote feed is delayed and modified, so paper fills are rough; set `ALPACA_FEED=opra` if you subscribe to real-time options data. With the tested structure one condor risks roughly $1,700-2,000 at current SPY prices, so the 10% rule needs about $20,000 of equity; below that the bot sends a "NO TRADE" alert and does nothing.
+The free `indicative` quote feed is delayed and modified, so paper fills are rough; set `ALPACA_FEED=opra` if you subscribe to real-time options data. With the tested structure one condor has about $23 between strikes at SPY ~$764 (Sept 2026), so it risks roughly $2,000 after the credit and the 10% rule needs about $20,000+ of equity; below that the bot sends a "NO TRADE" alert and does nothing.
