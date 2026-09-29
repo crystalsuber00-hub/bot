@@ -1,8 +1,101 @@
 [
- {"title":"Payroll Specialist","company":"Century Group International Inc","location":"Emeryville, CA","salary":80000,"url":"https://to.indeed.com/aa4dyh4hvk4k","description":"payroll specialist"},
- {"title":"Payroll Clerk","company":"Putnam Toyota- Burlingame","location":"Burlingame, CA","salary":58000,"url":"https://to.indeed.com/aazvrshpggqx","description":"payroll clerk $28-33/hr"},
- {"title":"Payroll/HR Administrator & Accounting Assistant","company":"SteelWave","location":"San Mateo, CA","salary":75000,"url":"https://to.indeed.com/aaqtvk8ldkjb","description":"payroll administrator assistant"},
- {"title":"Payroll Technician II / Personnel Attendance","company":"Piedmont Unified School District","location":"Piedmont, CA","salary":61200,"url":"https://to.indeed.com/aa7stng67jf6","description":"payroll technician"},
- {"title":"Payroll Administrator","company":"Samaritan House","location":"San Mateo, CA","salary":95000,"url":"https://to.indeed.com/aaxz2gzz2gcq","description":"payroll administrator $45.91/hr"},
- {"title":"AP PR Coordinator","company":"Washington Center","location":"San Leandro, CA","salary":64000,"url":"https://to.indeed.com/aamkdn4gvwjv","description":"payroll coordinator accounts payable"}
+ {
+  "title": "Payroll Specialist",
+  "company": "Century Group International Inc",
+  "location": "Emeryville, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aa4dyh4hvk4k",
+  "description": "payroll specialist"
+ },
+ {
+  "title": "Payroll Clerk",
+  "company": "Putnam Toyota- Burlingame",
+  "location": "Burlingame, CA",
+  "salary": 58000,
+  "url": "https://to.indeed.com/aazvrshpggqx",
+  "description": "payroll clerk $28-33/hr"
+ },
+ {
+  "title": "Payroll/HR Administrator & Accounting Assistant",
+  "company": "SteelWave",
+  "location": "San Mateo, CA",
+  "salary": 75000,
+  "url": "https://to.indeed.com/aaqtvk8ldkjb",
+  "description": "payroll administrator assistant"
+ },
+ {
+  "title": "Payroll Technician II / Personnel Attendance",
+  "company": "Piedmont Unified School District",
+  "location": "Piedmont, CA",
+  "salary": 61200,
+  "url": "https://to.indeed.com/aa7stng67jf6",
+  "description": "payroll technician",
+  "contact": "hr@piedmont.k12.ca.us"
+ },
+ {
+  "title": "Payroll Administrator",
+  "company": "Samaritan House",
+  "location": "San Mateo, CA",
+  "salary": 95000,
+  "url": "https://to.indeed.com/aaxz2gzz2gcq",
+  "description": "payroll administrator $45.91/hr",
+  "email": "jobs@samaritanhousesanmateo.org"
+ },
+ {
+  "title": "AP PR Coordinator",
+  "company": "Washington Center",
+  "location": "San Leandro, CA",
+  "salary": 64000,
+  "url": "https://to.indeed.com/aamkdn4gvwjv",
+  "description": "payroll coordinator accounts payable"
+ },
+ {
+  "title": "Payroll/HR",
+  "company": "Blackstone Fresno",
+  "location": "San Jose, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aaqk9kdwwsnj",
+  "description": "payroll HR $30-34/hr"
+ },
+ {
+  "title": "Payroll Specialist (Temporary)",
+  "company": "Robert Half",
+  "location": "San Jose, CA",
+  "salary": 69000,
+  "url": "https://to.indeed.com/aa7dr4rmddwh",
+  "description": "payroll specialist temp $33-38/hr"
+ },
+ {
+  "title": "Payroll & Accounting Specialist (Temporary)",
+  "company": "LOVEFOODIES INC",
+  "location": "Palo Alto, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aabz8hh2n9dr",
+  "description": "payroll accounting specialist temp"
+ },
+ {
+  "title": "Payroll Specialist",
+  "company": "ASUS Computer International",
+  "location": "Fremont, CA",
+  "salary": 70304,
+  "url": "https://to.indeed.com/aatjd9wj89xj",
+  "description": "payroll specialist (posted Feb 2026, may be filled)"
+ },
+ {
+  "title": "Payroll Specialist - Union City",
+  "company": "Southern Glazer's Wine & Spirits",
+  "location": "Union City, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aa84zvvnp6rj",
+  "description": "payroll specialist"
+ },
+ {
+  "title": "Payroll Specialist",
+  "company": "Sacred Heart Schools, Atherton",
+  "location": "Atherton, CA",
+  "salary": 85000,
+  "url": "https://to.indeed.com/aanbp79c47xx",
+  "description": "payroll specialist $40.87-50.48/hr",
+  "contact": "hrteam@shschools.org"
+ }
 ]
