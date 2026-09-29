@@ -37,6 +37,17 @@ class Tradier:
 
 
 @dataclass
+class Ibkr:
+    host: str = "127.0.0.1"
+    port: int = 4002             # IB Gateway paper 4002 / live 4001; TWS paper 7497 / live 7496
+    client_id: int = 17
+    market_data_type: int = 1    # 1 live, 2 frozen, 3 delayed, 4 delayed-frozen
+    strike_window_pct: float = 0.03   # scan strikes within this fraction of spot (saves market-data lines)
+    strike_buffer: float = 30    # extra points beyond the window so the long leg is included
+    wait_seconds: float = 6.0    # how long to wait for quotes/greeks to arrive
+
+
+@dataclass
 class Notify:
     console: bool = True
     telegram_bot_token: str = ""
@@ -51,6 +62,7 @@ class Notify:
 @dataclass
 class Config:
     mode: str = "signal"
+    broker: str = "tradier"      # "tradier" or "ibkr"
     symbol: str = "SPX"
     option_root: str = "SPXW"
     dte: int = 0
@@ -60,10 +72,13 @@ class Config:
     schedule: Schedule = field(default_factory=Schedule)
     strategy: Strategy = field(default_factory=Strategy)
     tradier: Tradier = field(default_factory=Tradier)
+    ibkr: Ibkr = field(default_factory=Ibkr)
     notify: Notify = field(default_factory=Notify)
 
     def validate(self) -> None:
         s = self.strategy
+        if self.broker not in ("tradier", "ibkr"):
+            raise ValueError("broker must be 'tradier' or 'ibkr'")
         if self.mode not in ("signal", "trade"):
             raise ValueError("mode must be 'signal' or 'trade'")
         if not 0 < s.target_delta_min <= s.target_delta <= s.target_delta_max < 1:
@@ -88,12 +103,14 @@ def load_config(path: str | None) -> Config:
     cfg = Config()
     if path:
         data = tomllib.loads(Path(path).read_text())
-        for k in ("schedule", "strategy", "tradier", "notify"):
+        for k in ("schedule", "strategy", "tradier", "ibkr", "notify"):
             _fill(getattr(cfg, k), data.pop(k, {}))
         _fill(cfg, data)
     env = os.environ.get
     cfg.tradier.token = env("TRADIER_TOKEN", cfg.tradier.token)
     cfg.tradier.account_id = env("TRADIER_ACCOUNT_ID", cfg.tradier.account_id)
+    cfg.ibkr.host = env("IBKR_HOST", cfg.ibkr.host)
+    cfg.ibkr.port = int(env("IBKR_PORT", cfg.ibkr.port))
     n = cfg.notify
     n.telegram_bot_token = env("TELEGRAM_BOT_TOKEN", n.telegram_bot_token)
     n.telegram_chat_id = env("TELEGRAM_CHAT_ID", n.telegram_chat_id)

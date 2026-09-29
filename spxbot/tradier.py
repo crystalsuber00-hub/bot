@@ -33,11 +33,13 @@ class TradierClient:
         q = self._get("/markets/quotes", symbols=symbol)["quotes"]["quote"]
         return Quote(last=float(q["last"]), open=q.get("open"), prev_close=q.get("prevclose"))
 
-    def get_chain(self, symbol: str, expiration: str, root: str | None = None) -> list[OptionQuote]:
+    def get_chain(self, symbol: str, expiration: str, root: str | None = None, right: str | None = None) -> list[OptionQuote]:
         data = self._get("/markets/options/chains", symbol=symbol, expiration=expiration, greeks="true")
         out = []
         for o in self._as_list((data.get("options") or {}).get("option")):
             if root and o.get("root_symbol") != root:
+                continue
+            if right and o.get("option_type") != right:
                 continue
             out.append(self._parse_option(o))
         return out

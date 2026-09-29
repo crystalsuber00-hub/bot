@@ -1,0 +1,175 @@
+"""Interactive Brokers data + execution via ib_async (talks to a local IB Gateway / TWS).
+
+Option "symbols" used by the engine/state are self-describing keys so positions
+survive restarts: ``SPXW|20260930|P|6000``.
+"""
+from __future__ import annotations
+
+import logging
+import math
+import time
+
+from .config import Ibkr
+from .models import OptionQuote, Quote
+
+log = logging.getLogger("spxbot")
+
+
+def _px(x) -> float:
+    """IB uses nan / -1 for 'no quote'; treat as 0."""
+    return float(x) if x is not None and not math.isnan(x) and x > 0 else 0.0
+
+
+def _opt(x):
+    return float(x) if x is not None and not math.isnan(x) and x > 0 else None
+
+
+def make_key(root: str, expiration: str, right: str, strike: float) -> str:
+    return f"{root}|{expiration.replace('-', '')}|{'P' if right == 'put' else 'C'}|{strike:g}"
+
+
+def parse_key(key: str) -> tuple[str, str, str, float]:
+    root, ymd, r, strike = key.split("|")
+    return root, ymd, ("put" if r == "P" else "call"), float(strike)
+
+
+def tick_round(x: float, tick: float = 0.05) -> float:
+    return round(round(x / tick) * tick, 2)
+
+
+class IBKRClient:
+    def __init__(self, cfg: Ibkr, readonly: bool, underlying: str = "SPX", ib=None):
+        if ib is None:
+            from ib_async import IB  # optional dependency: pip install -e '.[ibkr]'
+            ib = IB()
+        self.ib, self.cfg, self.readonly, self.underlying = ib, cfg, readonly, underlying
+        self._idx = None
+        self._idx_ticker = None
+        self._tickers: dict[str, object] = {}  # kept subscriptions for open-position monitoring
+
+    # --- plumbing ----------------------------------------------------------
+    def sleep(self, seconds: float) -> None:
+        self.ib.sleep(seconds)
+
+    def _ensure(self) -> None:
+        if self.ib.isConnected():
+            return
+        log.info("connecting to IB at %s:%s (readonly=%s)", self.cfg.host, self.cfg.port, self.readonly)
+        self.ib.connect(self.cfg.host, self.cfg.port, clientId=self.cfg.client_id,
+                        readonly=self.readonly, timeout=15)
+        self.ib.reqMarketDataType(self.cfg.market_data_type)
+        self._idx = self._idx_ticker = None
+        self._tickers.clear()
+
+    def _wait(self, cond) -> None:
+        end = time.time() + self.cfg.wait_seconds
+        while not cond() and time.time() < end:
+            self.ib.sleep(0.2)
+
+    def _index(self):
+        from ib_async import Index
+        if self._idx is None:
+            idx = Index(self.underlying, "CBOE")
+            self.ib.qualifyContracts(idx)
+            self._idx = idx
+            self._idx_ticker = self.ib.reqMktData(idx, "", False, False)
+        return self._idx, self._idx_ticker
+
+    def _option_contract(self, key: str):
+        from ib_async import Option
+        root, ymd, right, strike = parse_key(key)
+        return Option(self.underlying, ymd, strike, "P" if right == "put" else "C", "SMART",
+                      currency="USD", tradingClass=root)
+
+    # --- market data -------------------------------------------------------
+    def get_quote(self, symbol: str) -> Quote:
+        self._ensure()
+        idx, t = self._index()
+        self._wait(lambda: _px(t.marketPrice()) > 0)
+        last = _px(t.marketPrice())
+        if not last:
+            raise RuntimeError(f"no {symbol} price from IB (market data subscription / market closed?)")
+        open_, prev = _opt(t.open), _opt(t.close)
+        if open_ is None or prev is None:  # index ticks don't always carry open/close: use daily bars
+            bars = self.ib.reqHistoricalData(idx, "", "2 D", "1 day", "TRADES", True, 1)
+            if bars:
+                open_ = open_ or _opt(bars[-1].open)
+                if len(bars) > 1:
+                    prev = prev or _opt(bars[-2].close)
+        return Quote(last=last, open=open_, prev_close=prev)
+
+    def get_chain(self, symbol: str, expiration: str, root: str | None = None,
+                  right: str | None = None) -> list[OptionQuote]:
+        """Quotes+greeks for strikes near spot on the side we need (keeps within IB's market-data line limit)."""
+        self._ensure()
+        idx, _ = self._index()
+        spot = self.get_quote(symbol).last
+        ymd = expiration.replace("-", "")
+        root = root or symbol
+        chains = self.ib.reqSecDefOptParams(symbol, "", "IND", idx.conId)
+        strikes = sorted({k for c in chains if c.tradingClass == root and ymd in c.expirations for k in c.strikes})
+        w, buf = spot * self.cfg.strike_window_pct, self.cfg.strike_buffer
+        want = []
+        for k in strikes:
+            if right in (None, "put") and spot - w - buf <= k <= spot:
+                want.append(make_key(root, expiration, "put", k))
+            if right in (None, "call") and spot <= k <= spot + w + buf:
+                want.append(make_key(root, expiration, "call", k))
+        if len(want) > 95:
+            log.warning("%d strikes requested; IB default is ~100 market-data lines", len(want))
+        return self._snapshot(want, keep=False)
+
+    def get_option_quotes(self, symbols: list[str]) -> dict[str, OptionQuote]:
+        self._ensure()
+        return {q.symbol: q for q in self._snapshot(symbols, keep=True)}
+
+    def _snapshot(self, keys: list[str], keep: bool) -> list[OptionQuote]:
+        contracts = {k: self._option_contract(k) for k in keys if k not in self._tickers}
+        if contracts:
+            self.ib.qualifyContracts(*contracts.values())
+        tickers = {}
+        for k in keys:
+            if k in self._tickers:
+                tickers[k] = self._tickers[k]
+            elif contracts[k].conId:  # unqualified = no such contract
+                tickers[k] = self.ib.reqMktData(contracts[k], "", False, False)
+        self._wait(lambda: all(t.modelGreeks is not None and (_px(t.bid) or _px(t.ask)) for t in tickers.values())
+                   if tickers else True)
+        out = []
+        for k, t in tickers.items():
+            _, _, right, strike = parse_key(k)
+            g = t.modelGreeks
+            out.append(OptionQuote(symbol=k, strike=strike, right=right, bid=_px(t.bid), ask=_px(t.ask),
+                                   delta=(g.delta if g is not None and g.delta is not None else None)))
+            if keep:
+                self._tickers[k] = t
+            else:
+                self.ib.cancelMktData(t.contract)
+        return out
+
+    # --- execution ---------------------------------------------------------
+    def _place(self, short_key: str, long_key: str, qty: int, price: float, opening: bool) -> str:
+        from ib_async import ComboLeg, Contract, LimitOrder
+        if self.readonly:
+            raise RuntimeError("IB client is read-only (signal mode); refusing to place orders")
+        self._ensure()
+        s, l = self._option_contract(short_key), self._option_contract(long_key)
+        self.ib.qualifyContracts(s, l)
+        if not (s.conId and l.conId):
+            raise RuntimeError("could not qualify spread legs with IB")
+        legs = [
+            ComboLeg(conId=s.conId, ratio=1, action="SELL" if opening else "BUY", exchange="SMART"),
+            ComboLeg(conId=l.conId, ratio=1, action="BUY" if opening else "SELL", exchange="SMART"),
+        ]
+        bag = Contract(symbol=self.underlying, secType="BAG", currency="USD", exchange="SMART", comboLegs=legs)
+        # IB prices a combo as net debit; a credit is a negative limit price.
+        order = LimitOrder("BUY", qty, tick_round(-price if opening else price))
+        order.tif = "DAY"
+        trade = self.ib.placeOrder(bag, order)
+        return str(trade.order.orderId)
+
+    def open_spread(self, short_sym, long_sym, qty, credit) -> str:
+        return self._place(short_sym, long_sym, qty, credit, opening=True)
+
+    def close_spread(self, short_sym, long_sym, qty, debit) -> str:
+        return self._place(short_sym, long_sym, qty, debit, opening=False)

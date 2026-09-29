@@ -24,12 +24,17 @@ def main() -> None:
         from .chart import make_chart
         print(make_chart(cfg, State(cfg.state_file), None if args.chart == "latest" else args.chart))
         return
-    if not cfg.tradier.token:
-        ap.error("set TRADIER_TOKEN (or tradier.token in config)")
-    if cfg.mode == "trade" and not cfg.tradier.account_id:
-        ap.error("trade mode needs TRADIER_ACCOUNT_ID")
+    if cfg.broker == "ibkr":
+        from .ibkr import IBKRClient
+        client = IBKRClient(cfg.ibkr, readonly=cfg.mode == "signal", underlying=cfg.symbol)
+    else:
+        if not cfg.tradier.token:
+            ap.error("set TRADIER_TOKEN (or tradier.token in config)")
+        if cfg.mode == "trade" and not cfg.tradier.account_id:
+            ap.error("trade mode needs TRADIER_ACCOUNT_ID")
+        client = TradierClient(cfg.tradier)
 
-    engine = Engine(cfg, TradierClient(cfg.tradier), Notifier(cfg.notify), State(cfg.state_file))
+    engine = Engine(cfg, client, Notifier(cfg.notify), State(cfg.state_file))
     engine.tick() if args.once else engine.run_forever()
 
 

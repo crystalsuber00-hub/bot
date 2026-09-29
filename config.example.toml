@@ -1,5 +1,6 @@
 # Copy to config.toml and edit. Secrets can also come from env vars (see README).
 
+broker = "tradier"         # "tradier" or "ibkr"
 mode = "signal"            # "signal" = alerts only (paper-tracks the trade); "trade" = also places orders
 symbol = "SPX"
 option_root = "SPXW"       # SPXW = daily/PM-settled options (needed for 0DTE)
@@ -30,6 +31,13 @@ force_close_time = ""      # e.g. "15:45" to flatten before the close; "" = off
 [tradier]
 # token / account_id: prefer env TRADIER_TOKEN and TRADIER_ACCOUNT_ID
 sandbox = true
+
+[ibkr]
+# Needs IB Gateway or TWS running with the API enabled (see README).
+host = "127.0.0.1"
+port = 4002                # Gateway paper 4002 / live 4001; TWS paper 7497 / live 7496
+client_id = 17
+market_data_type = 1       # 1 live, 3 delayed
 
 [notify]
 console = true

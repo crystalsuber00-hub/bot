@@ -7,6 +7,7 @@ dependencies = ["requests>=2.31"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+ibkr = ["ib_async>=1.0"]
 
 [project.scripts]
 spxbot = "spxbot.__main__:main"

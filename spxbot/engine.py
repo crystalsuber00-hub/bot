@@ -56,7 +56,8 @@ class Engine:
             return self._skip(date, why)
 
         expiration = (now.date() + timedelta(days=cfg.dte)).isoformat()
-        chain = self.client.get_chain(cfg.symbol, expiration, cfg.option_root)
+        chain = self.client.get_chain(cfg.symbol, expiration, cfg.option_root,
+                                      "put" if side == "put_credit" else "call")
         if not chain:
             return self._skip(date, f"no option chain for {expiration}")
         setup, why = build_setup(side, move_pct, chain, st)
@@ -135,4 +136,5 @@ class Engine:
                 self.tick()
             except Exception:
                 log.exception("tick failed")
-            time.sleep(self.cfg.poll_seconds)
+            # IB clients must keep their event loop pumped while idle
+            getattr(self.client, "sleep", time.sleep)(self.cfg.poll_seconds)

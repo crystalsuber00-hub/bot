@@ -31,7 +31,7 @@ class Fake:
         self.ch = chain()
 
     def get_quote(self, s): return self.q
-    def get_chain(self, s, e, r=None): return self.ch
+    def get_chain(self, s, e, r=None, right=None): return self.ch
     def get_option_quotes(self, syms):
         by = {o.symbol: o for o in self.ch}
         if self.mark is not None:  # force spread mid to self.mark
