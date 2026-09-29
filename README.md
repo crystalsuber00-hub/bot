@@ -124,3 +124,15 @@ python -m cryptobot paper --strategy breakout --params '{"entry":168,"exit":96}'
 `python -m cryptobot robust` runs the breakout rule with fixed parameters over four non-overlapping windows for five coins (20 tests, nothing tuned): 10 of 20 were profitable, i.e. a coin flip. It beat buy & hold mainly in the one crashing window, by being in cash. The SOL out-of-sample +17% did not hold up: the same rule lost 3% and 27% in two of SOL's four windows.
 
 `python -m cryptobot gate` is a pre-registered validation gate (rules in `cryptobot/gate.py`, fixed before running): select on the first 75% of data across all five coins, log every rejected trial, and let only one survivor touch the last 25% once. Results so far: round 1 had 0 of 18 survivors; round 2 added vol_trend, regime_trend and dip_buy and had 0 of 30, so the holdout was never used and there is nothing to deploy. Don't loosen the rules to get a pass; add genuinely new strategy ideas instead.
+
+---
+
+# spyopts (SPY option strategies, research only)
+
+`python -m spyopts --refresh` downloads SPY and VIX daily closes (1993 onward) and backtests monthly 30-day option trades held to expiry: long straddle, long strangle, long straddle only when VIX < 15, iron fly, iron condor, and short straddle (reference only: a small account can't hold it). Rules are pre-registered in `spyopts/backtest.py`; the holdout verdict is committed in `spy_gate_log.json`.
+
+Options are **Black-Scholes estimates** using the VIX as implied vol with a crude skew, not real quotes; SPY options only started trading in 2005, so earlier years are hypothetical.
+
+Result (2026-09 run, 403 trades):
+- Buying volatility (straddles, strangles) lost money in every development window and wiped out the test account. Buyers pay the VIX, and the VIX usually overstates how much SPY actually moves.
+- Selling it (iron condor, short straddle) won in development, as that same gap predicts. The iron condor was selected and **failed the holdout**: profitable with prices at the VIX, but flat (-0.1% a trade) and a 47% drawdown when implied vol is set 15% below the VIX, which is closer to real at-the-money pricing. Its edge sits inside the model's uncertainty, and every loss is a full -100% of the capital at risk.
