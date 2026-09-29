@@ -42,6 +42,12 @@ def _pending(jobs):
 
 
 def cmd_review(a, p, jobs):
+    if a.rescore:  # re-check earlier rejections/new listings against the current profile
+        for j in jobs.values():
+            if j["status"] in ("new", "rejected"):
+                j["score"] = sources.score(j, p)
+                j["status"] = "rejected" if j["score"] < 0 else "new"
+        print(f"rescored: {sum(j['status']=='new' for j in jobs.values())} now eligible")
     todo = _pending(jobs)
     if a.approve_above is not None:
         for j in todo:
@@ -197,6 +203,7 @@ def main(argv=None):
     s.add_argument("-s", "--source", action="append", choices=list(sources.SOURCES))
     s.add_argument("-f", "--file", action="append", help="JSON/CSV of listings")
     r = sub.add_parser("review", help="approve/skip queued listings")
+    r.add_argument("--rescore", action="store_true", help="re-check rejected listings against your current profile")
     r.add_argument("--approve-above", type=int, help="bulk-approve score >= N")
     d = sub.add_parser("apply", help="send approved applications")
     d.add_argument("--dry-run", action="store_true")

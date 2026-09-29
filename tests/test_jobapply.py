@@ -107,3 +107,15 @@ def test_contacts_file_fills_intro_and_watch_only_alerts(tmp_path, monkeypatch):
     assert len(alerts) == 1 and sent == []
     main(["watch", "--once"])
     assert len(alerts) == 1                                        # no repeat alert
+
+
+def test_rescore_reopens_location_rejects(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    prof = '[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\nsources=[]\nlocations=["Oakland"]\n'
+    (tmp_path / "profile.toml").write_text(prof)
+    (tmp_path / "l.csv").write_text("title,company,url,location\nPayroll Clerk,Co,http://j/1,\"Los Gatos, CA\"\n")
+    main(["search", "-f", "l.csv"])
+    assert next(iter(queue.load().values()))["status"] == "rejected"
+    (tmp_path / "profile.toml").write_text(prof.replace('["Oakland"]', '["Oakland", "Los Gatos"]'))
+    main(["review", "--rescore", "--approve-above", "1"])
+    assert next(iter(queue.load().values()))["status"] == "approved"
