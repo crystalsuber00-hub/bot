@@ -18,7 +18,7 @@ class Setup:
 
 
 def choose_side(quote: Quote, cfg: Strategy) -> tuple[Optional[str], float, str]:
-    """Contrarian: SPX up -> put credit spread, SPX down -> call credit spread.
+    """Sell the side price is moving away from (net bullish after an up move, bearish after a down move): SPX up -> put credit spread, SPX down -> call credit spread.
 
     Returns (side or None, move_pct, reason).
     """

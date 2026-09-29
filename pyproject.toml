@@ -1,7 +1,7 @@
 [project]
 name = "spxbot"
 version = "0.1.0"
-description = "Signal-based SPX credit spread bot (contrarian, 15-20 delta, one trade/day)"
+description = "Signal-based SPX credit spread bot (15-20 delta, sells the side away from price, one trade/day)"
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31"]
 

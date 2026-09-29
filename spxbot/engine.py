@@ -79,7 +79,7 @@ class Engine:
         trend = "up" if move_pct > 0 else "down"
         self.notify.send(
             f"ENTRY {kind} SPX x{pos.quantity}\n"
-            f"SPX {quote.last:.2f} ({move_pct:+.2f}% {trend} -> fade)\n"
+            f"SPX {quote.last:.2f} ({move_pct:+.2f}% {trend})\n"
             f"Sell {pos.short_strike:g} / Buy {pos.long_strike:g} exp {expiration}\n"
             f"Short delta {abs(pos.short_delta):.2f} | limit credit {pos.credit:.2f}\n"
             f"Take profit at {st.profit_target:.0%} (buy back <= {pos.credit * (1 - st.profit_target):.2f})"
