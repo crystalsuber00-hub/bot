@@ -26,6 +26,11 @@ reference = "open"         # measure the move from today's "open" or "prev_close
 quantity = 1
 profit_target = 0.50       # close at 50% of credit captured (use 0.60 for the upper end)
 stop_loss_multiple = 0     # 0 = off. e.g. 2.0 closes if it costs 2x credit to buy back
+max_move_pct = 0           # skip if SPX already moved more than this % by entry (0 = off), e.g. 0.6
+max_gap_pct = 0            # skip if today gapped more than this % vs prior close (0 = off), e.g. 0.8
+pause_after_losses = 2     # after 2 losing trades in a row ...
+pause_days = 3             # ... sit out 3 trading days (0 = off)
+skip_dates = []            # days to sit out, e.g. ["2026-10-28"]. Check federalreserve.gov (FOMC) and bls.gov (CPI, jobs)
 force_close_time = "15:45" # flatten before the close so a 0DTE can't ride into settlement; "" = off
 
 [execution]                # only used in mode = "trade"

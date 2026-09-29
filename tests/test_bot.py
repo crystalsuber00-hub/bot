@@ -177,3 +177,52 @@ def test_check_command_places_no_orders(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "put credit spread" in out and "Would sell" in out and "No orders were placed" in out
     assert f.orders == [] and sink.msgs[0][1] == {"event": "test"}
+
+
+def _closed(e, date, pnl_debit, credit=1.0):
+    """Insert a closed one-contract position: debit > credit means a loss."""
+    from spxbot.models import Position
+    e.state.upsert(Position(id=date, date=date, side="put_credit", expiration=date, short_symbol="a", long_symbol="b",
+                            short_strike=1, long_strike=0, credit=credit, quantity=1, short_delta=-0.17,
+                            spx_at_entry=1, entry_time="", status="closed", exit_debit=pnl_debit,
+                            exit_time=date + "T15:00:00"))
+
+
+def test_loss_streak_pause_skips_then_resumes(tmp_path):
+    e, f, sink = make(tmp_path, 6120)
+    _closed(e, "2026-09-24", 3.0)   # Thu loss
+    _closed(e, "2026-09-25", 3.0)   # Fri loss -> 2 in a row; pause Mon/Tue/Wed
+    e.tick(WED(9, 41))              # Wed 9/30: still paused (Mon 9/28, Tue 9/29 skipped, Wed is 3rd)
+    assert "loss-streak pause" in e.state.skipped("2026-09-30") and "2026-10-01" in e.state.skipped("2026-09-30")
+    from datetime import datetime
+    e.tick(datetime(2026, 10, 1, 9, 41, tzinfo=TZ))  # Thu: resumes
+    assert e.state.position_for("2026-10-01")
+
+
+def test_pause_not_triggered_after_a_win_or_when_off(tmp_path):
+    e, f, _ = make(tmp_path, 6120)
+    _closed(e, "2026-09-24", 3.0)
+    _closed(e, "2026-09-29", 0.2)   # win breaks the streak
+    e.tick(WED(9, 41))
+    assert e.state.position_for("2026-09-30")
+    (tmp_path / "off").mkdir()
+    e2, f2, _ = make(tmp_path / "off", 6120)
+    e2.cfg.strategy.pause_after_losses = 0
+    _closed(e2, "2026-09-28", 3.0); _closed(e2, "2026-09-29", 3.0)
+    e2.tick(WED(9, 41))
+    assert e2.state.position_for("2026-09-30")
+
+
+def test_skip_dates_and_volatility_filters(tmp_path):
+    e, f, _ = make(tmp_path, 6120)
+    e.cfg.strategy.skip_dates = ["2026-09-30"]
+    e.tick(WED(9, 41))
+    assert "sit-out" in e.state.skipped("2026-09-30")
+
+    from spxbot.config import Strategy
+    from spxbot.strategy import choose_side
+    assert choose_side(Quote(6120, 6100, 6100), Strategy(max_move_pct=0.3))[0] is None   # +0.33% > 0.3%
+    assert choose_side(Quote(6120, 6100, 6100), Strategy(max_move_pct=0.5))[0] == "put_credit"
+    gap = Quote(6120, 6100, 6000)  # opened +1.67% above prior close
+    assert choose_side(gap, Strategy(max_gap_pct=1.0))[0] is None
+    assert choose_side(gap, Strategy())[0] == "put_credit"

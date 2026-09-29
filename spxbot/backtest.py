@@ -198,6 +198,25 @@ def stats(trades: list[dict]) -> dict:
             "pf": sum(wins) / -sum(losses) if losses and sum(losses) else float("inf")}
 
 
+def apply_pause(trades: list[dict], n: int, pause_days: int) -> list[dict]:
+    """Replay trades in order, skipping days that fall inside a loss-streak pause."""
+    from datetime import date as _d
+    from .strategy import weekdays_between
+    kept, streak, last_loss = [], 0, None
+    for t in trades:
+        if not t or not t.get("traded"):
+            continue
+        d = _d.fromisoformat(t["date"])
+        if streak >= n and last_loss and weekdays_between(last_loss, d) < pause_days:
+            continue
+        kept.append(t)
+        if t["pnl"] < 0:
+            streak, last_loss = streak + 1, d
+        else:
+            streak = 0
+    return kept
+
+
 def run(days: list[dict], p: Params, st: Strategy | None = None) -> None:
     base = st or Strategy(spread_width=p.width, min_credit=0.30)
     print(f"{len(days)} usable days: {days[0]['date']} .. {days[-1]['date']}\n")
@@ -212,6 +231,11 @@ def run(days: list[dict], p: Params, st: Strategy | None = None) -> None:
             name = f"{mode}, {'stop 2x' if stop else 'no stop'}"
             print(f"{name:<26}{r['n']:>4}{r['win%']:>6.0f}{r['avg_win']:>9.0f}{r['avg_loss']:>10.0f}"
                   f"{r['total']:>9.0f}{r['per_trade']:>9.1f}{r['worst']:>8.0f}{r['maxdd']:>8.0f}")
+            if mode == "with":
+                pr = stats(apply_pause([simulate_day(d, mode, s, p) for d in days], 2, 3))
+                if pr:
+                    print(f"{name + ' +pause(2/3)':<26}{pr['n']:>4}{pr['win%']:>6.0f}{pr['avg_win']:>9.0f}"
+                          f"{pr['avg_loss']:>10.0f}{pr['total']:>9.0f}{pr['per_trade']:>9.1f}{pr['worst']:>8.0f}{pr['maxdd']:>8.0f}")
 
 
 def main() -> None:

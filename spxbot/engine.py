@@ -11,7 +11,7 @@ from .config import Config
 from .models import Position
 from .notify import Notifier
 from .state import State
-from .strategy import ExitSignal, build_setup, check_exit, choose_side
+from .strategy import ExitSignal, build_setup, check_exit, choose_side, pause_reason
 
 log = logging.getLogger("spxbot")
 
@@ -83,7 +83,7 @@ class Engine:
         if not self.state.position_for(date) and not self.state.skipped(date):
             start, end = self._entry_window(now)
             if start <= now <= end:
-                blocked = self._entry_blocked()
+                blocked = self._entry_blocked(now)
                 if blocked:
                     self._skip(date, blocked)
                 else:
@@ -96,7 +96,15 @@ class Engine:
         kf = self.cfg.execution.kill_file
         return bool(kf) and Path(kf).exists()
 
-    def _entry_blocked(self) -> str | None:
+    def _entry_blocked(self, now: datetime) -> str | None:
+        st = self.cfg.strategy
+        if now.date().isoformat() in [str(d) for d in st.skip_dates]:
+            return "scheduled sit-out day (skip_dates)"
+        closed = sorted((p for p in self.state.all_positions() if p.status == "closed" and p.exit_debit is not None),
+                        key=lambda p: (p.date, p.exit_time or ""))
+        paused = pause_reason([(p.date, p.realized()) for p in closed], now.date(), st)
+        if paused:
+            return paused
         if self._kill_requested():
             return f"kill switch active ({self.cfg.execution.kill_file} file exists)"
         halt = self.state.halt_info()

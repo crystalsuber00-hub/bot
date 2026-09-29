@@ -27,6 +27,11 @@ class Strategy:
     quantity: int = 1
     profit_target: float = 0.50
     stop_loss_multiple: float = 0
+    max_move_pct: float = 0.0    # skip days already moved more than this % by entry (0 = off)
+    max_gap_pct: float = 0.0     # skip days that gapped more than this % vs prior close (0 = off)
+    skip_dates: list = field(default_factory=list)   # "YYYY-MM-DD" days to sit out (Fed, CPI, jobs report...)
+    pause_after_losses: int = 2  # after this many losing trades in a row, sit out for pause_days (0 = off)
+    pause_days: int = 3          # trading days (Mon-Fri) to sit out
     force_close_time: str = "15:45"   # flatten before the close; "" = off
 
 
@@ -104,6 +109,11 @@ class Config:
             raise ValueError("reference must be 'open' or 'prev_close'")
         if s.force_close_time and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", s.force_close_time):
             raise ValueError("force_close_time must be HH:MM or empty")
+        for d in s.skip_dates:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(d)):
+                raise ValueError(f"skip_dates entry {d!r} must be YYYY-MM-DD")
+        if s.pause_after_losses < 0 or s.pause_days < 0 or s.max_move_pct < 0 or s.max_gap_pct < 0:
+            raise ValueError("pause/filter settings can't be negative")
         e = self.execution
         if e.nudge_step <= 0 or e.max_nudges < 0 or e.nudge_seconds < 1 or e.max_daily_loss < 0:
             raise ValueError("invalid [execution] settings")

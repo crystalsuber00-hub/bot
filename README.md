@@ -24,6 +24,14 @@ spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
 spxbot -c config.toml --check  # test connection, data and alerts; places no orders
 ```
+## Sitting out risky days
+All optional, in `[strategy]`, and they apply in both signal and trade mode. Skipped days send a "NO TRADE today" alert with the reason.
+- `pause_after_losses` / `pause_days` (default 2 / 3): after 2 losing trades in a row, sit out the next 3 trading days (Mon-Fri; market holidays aren't known to the bot). Each further loss triggers another pause.
+- `skip_dates`: days you list (Fed decisions, CPI, jobs report, anything else). The bot has no economic calendar, so you maintain this list from federalreserve.gov and bls.gov.
+- `max_move_pct`: skip if SPX has already moved more than this % by entry. `max_gap_pct`: skip if the open gapped more than this % vs the prior close. Both off by default; no values are tuned to the backtest, so choose them deliberately.
+
+None of these prevent losses; they only cut how many trades you take after trouble starts. In the 60-day backtest the pause never triggered for the follow-the-move rule (no two losses in a row), so it changed nothing there.
+
 ## Trade mode: order tracking and safety
 A position is only recorded as open when the broker confirms the fill, and P&L uses the actual fill prices.
 
