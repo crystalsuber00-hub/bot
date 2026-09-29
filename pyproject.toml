@@ -8,12 +8,14 @@ dependencies = ["requests>=2.31"]
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 ibkr = ["ib_async>=1.0"]
+research = ["anthropic>=1.0", "numpy>=1.26"]
 
 [project.scripts]
 spxbot = "spxbot.__main__:main"
+quantbot = "quantbot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot"]
+packages = ["spxbot", "quantbot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,17 @@
+{
+  "name": "energy_momentum_lowvol",
+  "hypothesis": "Energy trend persists; tilting toward calmer, steadier names avoids the crowded blow-off trades.",
+  "universe": "Energy",
+  "factors": [
+    {"name": "mom_6_1", "weight": 0.60},
+    {"name": "low_idio_vol", "weight": 0.25},
+    {"name": "consistency_12m", "weight": 0.15}
+  ],
+  "top_n": 5,
+  "weighting": "equal",
+  "max_weight": 0.25,
+  "rebalance": "weekly",
+  "band": 2,
+  "commission_bps": 5,
+  "slippage_bps": 5
+}

@@ -6,3 +6,5 @@ state.json
 .env
 history/
 logs/
+data/prices/
+runs/

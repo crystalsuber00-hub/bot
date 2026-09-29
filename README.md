@@ -1,5 +1,7 @@
 # spxbot
 
+> This repo also contains **quantbot**, a Claude-driven strategy research loop. See [quantbot](#quantbot-claude-strategy-research-loop) at the bottom.
+
 Signal bot for a SPX credit-spread routine:
 
 | Your rule | Implementation |
@@ -106,3 +108,49 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
 - Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
+
+## quantbot: Claude strategy research loop
+
+A separate tool from spxbot. It runs the loop **research, hypothesis, strategy, backtest, fail, improve, stress-test, validate** with Claude Opus 5.5 as the researcher and a local, deterministic backtester as the judge. Claude proposes. The validator decides. Claude can't mark its own work as passed.
+
+| Step | What happens |
+|---|---|
+| 1. Research | Claude reads the sector scan (11 SPDR sector ETFs against SPY) and per-stock stats, then ranks the opportunities. It isn't allowed to propose a strategy yet. |
+| 2. Hypotheses | Claude writes N fundamentally different strategy specs (universe, factors and weights, top_n, weighting, rebalance, no-trade band, costs) and gives the reason each edge might exist. |
+| 3. Backtest and iterate | Claude runs exploratory backtests (80 by default) and sends its best specs to the validator (8 submissions by default). Every submission goes into the rejection log. |
+| 4. Attack | Every spec that passed gets attacked: 2x or higher costs, dropping its best stocks, bear markets and rising-rate periods, calendar years, changed parameters. |
+| 5. Memo | `runs/<timestamp>/report.md` is generated from the tool log, not from Claude's claims. It contains the rejection log, the survivors with every check, the stress-test results, the API cost, and Claude's commentary. A passing spec is also saved as `candidate_*.json`. |
+
+**Acceptance criteria** (fixed in `quantbot/validate.py`, `Criteria`): beat SPY after costs over the trailing year; still beat SPY with 2x costs; max drawdown under 30%; Sharpe above 1.0; no single stock more than 40% of returns; identical results on two runs. Three checks go beyond the article: it must also beat SPY over 3 years, beat SPY with its top-contributing stock removed, and beat SPY with the rebalance day shifted (to catch results that depend on timing luck).
+
+**Held-out data:** by default the last 63 trading days are hidden from every exploration tool. Only the validator sees them, so Claude can't tune a strategy on the data that judges it. Change this with `--holdout-days` (0 turns it off).
+
+### Run
+```
+pip install -e '.[research]'
+export ANTHROPIC_API_KEY=...
+quantbot fetch                                   # ~5 years of daily prices into data/prices (Yahoo, free)
+quantbot scan                                    # sector strength vs SPY, no Claude
+quantbot backtest specs/energy_momentum_lowvol.json
+quantbot validate specs/energy_momentum_lowvol.json   # every acceptance check + stress suite, no Claude
+quantbot research                                # the full Claude loop -> runs/<timestamp>/report.md
+```
+Options for `research`: `--effort` (default `high`), `--hypotheses 4`, `--max-backtests 80`, `--max-submissions 8`, `--holdout-days 63`, `--model`.
+
+### Weekly automation
+`quantbot weekly` scans the sectors. If no sector leads SPY by more than `--threshold` (default 10%) over 3 months, it stops without calling Claude, so it costs nothing. Otherwise it runs the loop on the strongest sector with 3 hypotheses. It sends an alert only when a strategy passes the validator, using the same `NTFY_TOPIC` / `TELEGRAM_*` / `DISCORD_WEBHOOK_URL` / `WEBHOOK_URL` variables as spxbot. For example, with cron every Sunday at 18:05:
+```
+5 18 * * 0  cd /path/to/bot && mkdir -p logs && set -a && . ./.env && set +a && quantbot fetch && quantbot weekly >> logs/quantbot.log 2>&1
+```
+
+### Strategy spec
+A JSON file. Factors are ranked cross-sectionally and blended by weight, then the top `top_n` stocks are held:
+`universe` (a sector name or a list of tickers), `factors` (`[{"name", "weight"}]`), `top_n`, `weighting` (`equal` / `inverse_vol` / `score`), `max_weight` (unfilled weight stays in cash), `rebalance` (`daily` / `weekly` / `monthly`), `band` (keep a stock until its rank drops below `top_n + band`, which cuts churn), `regime_filter` (`none` / `spy_above_200d`), `commission_bps`, `slippage_bps`. The factor library is in `quantbot/factors.py` (momentum 12-1 / 6-1 / 3m, 1-month reversal, 200-day trend, low volatility, low idiosyncratic volatility, low beta, and two price-based quality proxies).
+
+Backtest timing: the signal uses the close on day t, the trade fills at the close on t+1, and returns count from t+2. Costs are charged on the traded notional.
+
+### Differences from the article
+- **No Minara.** Minara is a closed desktop app with no public API. This bot uses free Yahoo daily prices and its own backtester, so everything runs locally and you can read all of it.
+- **No fundamentals.** The article's operating-cash-flow factor (`jkp_ocf_at`) needs a fundamentals feed. Here, "quality" is estimated from price behavior (`consistency_12m`, `shallow_drawdown_6m`). The article's recipe rebuilt with these substitutes, on the article's 19 names, **fails** the validator on current data: 3.7% vs SPY 16.7% over the trailing year, with 64% of returns from one stock (DNN). The same factors on the wider 28-name Energy list pass (`specs/energy_momentum_lowvol.json`). That's one hand-picked variant, so treat it as an example of the tooling, not as evidence.
+- **Survivorship bias.** The universe lists in `quantbot/universe.py` are today's large caps. Backtests over them look better than reality would have.
+- **No live trading.** A pass means "worth a human looking at it, then paper trading it". It is not an order.
