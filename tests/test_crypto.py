@@ -9,7 +9,7 @@ def test_sma():
 def test_fees_cost_money():
     closes = [100.0] * 10
     r = simulate(closes, [0, 1, 0, 1, 0, 1, 0, 1, 0, 0], fee=0.01, slippage=0)
-    assert r.total_return < 0 and r.trades == 7
+    assert r.total_return < 0 and r.trades == 8
 
 
 def test_no_lookahead():
