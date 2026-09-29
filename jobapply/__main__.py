@@ -14,7 +14,7 @@ from .profile import load_profile
 
 def cmd_search(a, p, jobs):
     found = []
-    for src in a.source or list(sources.SOURCES):
+    for src in a.source or p.sources:
         for q in a.query or p.keywords:
             try:
                 found += sources.SOURCES[src](q)

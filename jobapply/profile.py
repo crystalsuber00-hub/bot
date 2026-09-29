@@ -29,6 +29,7 @@ class Profile:
         "My resume is attached, and I'd love to talk if there's a fit.\n\n"
         "Thank you,\n{name}\n{email} {phone}"
     )
+    sources: list[str] = field(default_factory=lambda: ["remotive", "remoteok"])
     daily_limit: int = 25          # max applications sent per day
     delay_seconds: int = 45        # pause between sends
     smtp_host: str = ""
