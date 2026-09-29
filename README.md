@@ -31,6 +31,12 @@ spxbot -c config.toml --chart 2026-09-30   # specific day -> history/2026-09-30.
 ```
 Open the HTML in a browser: blue line = cost to buy back the spread, grey dashes = entry credit, green dashes = exit target.
 
+## Backtest (free data, model prices)
+```
+python -m spxbot.backtest --refresh     # pulls SPX 5-min bars + VIX1D from Yahoo into data/, then simulates
+```
+Yahoo only serves ~60 days of 5-minute bars, so `data/` accumulates: re-run `--refresh` regularly and the sample grows. Options are **Black-Scholes estimates** (VIX1D as implied vol, crude put/call skew, $0.10 slippage, $0.65/leg commission), not real quotes, and stops are checked on 5-minute closes. It compares trading with the move, against it, and one-sided baselines.
+
 Tests: `pip install -e '.[dev]' && pytest`
 
 ## Assumptions to check

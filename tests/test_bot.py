@@ -134,3 +134,20 @@ def test_history_logged_and_chart_rendered(tmp_path):
     html = open(out).read()
     assert "<polyline" in html and "exit target" in html
     assert len(open(tmp_path / "h" / "2026-09-30.csv").read().splitlines()) == 4
+
+
+def test_backtest_pricing_and_day():
+    from spxbot.backtest import Params, bs, simulate_day
+    from spxbot.config import Strategy
+    c, cd = bs(6000, 6000, 0.001, 0.15, "call")
+    p, pd = bs(6000, 6000, 0.001, 0.15, "put")
+    assert abs((c - p)) < 1e-6 and abs(cd - pd - 1) < 1e-9  # put-call parity at r=q=0, delta parity
+    assert bs(6000, 5900, 0, 0.15, "put")[0] == 0
+
+    from datetime import timedelta
+    start = datetime(2026, 9, 30, 9, 30, tzinfo=TZ)
+    bars = [(start + timedelta(minutes=5 * i), 6100.0 + (3.0 if i >= 2 else 0), 6103.5, 6099.5, 6103.0 if i >= 2 else 6100.0) for i in range(78)]
+    day = {"date": "2026-09-30", "vol": 0.12, "bars": bars}
+    r = simulate_day(day, "with", Strategy(min_credit=0.1), Params())
+    assert r and r["traded"] and r["side"] == "put_credit" and r["pnl"] > 0  # flat tape: spread decays, target hit
+    assert simulate_day(day, "against", Strategy(min_credit=0.1), Params())["side"] == "call_credit"
