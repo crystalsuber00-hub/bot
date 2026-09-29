@@ -14,6 +14,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(prog="spxbot")
     ap.add_argument("-c", "--config", help="path to config.toml")
     ap.add_argument("--once", action="store_true", help="run a single tick and exit (for cron)")
+    ap.add_argument("--check", action="store_true",
+                    help="test connection, data, strike selection and alerts (places no orders), then exit")
     ap.add_argument("--clear-halt", action="store_true",
                     help="clear a freeze/halt after you've fixed the position at your broker, then exit")
     ap.add_argument("--chart", nargs="?", const="latest", metavar="DATE",
@@ -40,6 +42,10 @@ def main() -> None:
         if cfg.mode == "trade" and not cfg.tradier.account_id:
             ap.error("trade mode needs TRADIER_ACCOUNT_ID")
         client = TradierClient(cfg.tradier)
+
+    if args.check:
+        from .check import run_check
+        raise SystemExit(0 if run_check(cfg, client, Notifier(cfg.notify)) else 1)
 
     engine = Engine(cfg, client, Notifier(cfg.notify), State(cfg.state_file))
     engine.tick() if args.once else engine.run_forever()

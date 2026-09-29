@@ -22,6 +22,7 @@ cp config.example.toml config.toml
 export TRADIER_TOKEN=... NTFY_TOPIC=my-secret-topic TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=...
 spxbot -c config.toml          # long-running loop
 spxbot -c config.toml --once   # single tick, e.g. from cron every minute
+spxbot -c config.toml --check  # test connection, data and alerts; places no orders
 ```
 ## Trade mode: order tracking and safety
 A position is only recorded as open when the broker confirms the fill, and P&L uses the actual fill prices.

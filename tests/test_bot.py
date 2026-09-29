@@ -166,3 +166,14 @@ def test_backtest_pricing_and_day():
     r = simulate_day(day, "with", Strategy(min_credit=0.1), Params())
     assert r and r["traded"] and r["side"] == "put_credit" and r["pnl"] > 0  # flat tape: spread decays, target hit
     assert simulate_day(day, "against", Strategy(min_credit=0.1), Params())["side"] == "call_credit"
+
+
+def test_check_command_places_no_orders(tmp_path, capsys):
+    from spxbot.check import run_check
+    cfg = Config(mode="trade")
+    cfg.strategy.min_credit = 0.1
+    f, sink = Fake(6120), Sink()
+    assert run_check(cfg, f, sink, WED(9, 41)) is True
+    out = capsys.readouterr().out
+    assert "put credit spread" in out and "Would sell" in out and "No orders were placed" in out
+    assert f.orders == [] and sink.msgs[0][1] == {"event": "test"}
