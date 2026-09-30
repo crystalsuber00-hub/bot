@@ -14,7 +14,7 @@ spxbot = "spxbot.__main__:main"
 cryptobot = "cryptobot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot", "cryptobot", "spyopts"]
+packages = ["spxbot", "cryptobot", "spyopts", "leadgen"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
