@@ -49,7 +49,9 @@ def write(cfg: dict) -> str:
     new = [r for r in rows if r["status"] == "new" and (r["phone"] or r["email"])][:max(0, offer["daily_calls"] - len(due))]
     lines = [f"# Today: {date.today():%A %B %d}", "",
              f"{len(due)} follow-ups, {len(new)} new calls. After each call run the `mark` command shown "
-             "(statuses: called, voicemail, interested, won, lost, do_not_contact).", ""]
+             "(statuses: called, voicemail, interested, won, lost, do_not_contact).", "",
+             "Before each contact, search the name on Google for 30 seconds. The map data behind these leads "
+             "misses some websites and chains; if they already have a real site, mark them `lost \"has site\"`.", ""]
     if due:
         lines += ["## Follow-ups due", ""]
         for r in due:
@@ -65,6 +67,14 @@ def write(cfg: dict) -> str:
                   f"- Preview: {preview_url(r, offer['preview_base_url'])}",
                   f"- Say: \"{opener(r, you)}\"",
                   f"- `python -m leadgen mark {r['id']} <status> \"note\"`", ""]
+    walk = [r for r in rows if r["status"] == "new" and not r["phone"] and not r["email"] and r["address"]]
+    if walk:
+        walk.sort(key=lambda r: r["address"].split(" ", 1)[-1])  # group by street so you can walk them
+        lines += ["## Walk-ins (no phone listed; visit with the preview on your phone)", ""]
+        for r in walk[:15]:
+            lines += [f"- **{r['name']}** ({r['category']}), {r['address']}, {r['city']}: "
+                      f"{preview_url(r, offer['preview_base_url'])} `{r['id']}`"]
+        lines.append("")
     text = "\n".join(lines)
     (HOME / "today.md").write_text(text)
     return text
