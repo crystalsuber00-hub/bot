@@ -161,7 +161,9 @@ class StocksEngine:
         day = self.state.day(date)
         for t in [t for t in self.state.trades() if t.status == "open"]:
             self._manage(t, now, date, hhmm)
-        if self.k.entry_start <= hhmm < self.k.entry_end:
+        k = self.k
+        short = sum(t.date == date for t in self.state.trades()) < k.min_signals_per_day
+        if k.entry_start <= hhmm < k.entry_end or (short and hhmm < k.last_resort_end and hhmm >= k.entry_start):
             self._scan(day, now, date)
         if hhmm >= "16:00" and not day["summary"]:
             day["summary"] = True
@@ -199,7 +201,8 @@ class StocksEngine:
         k = self.k
         self.notify.send(f"0DTE stock map {date} (levels high to low)\n" + "\n".join(rows) +
                          f"\nSignals {k.entry_start}-{k.entry_end} ET, 1 contract under ${k.max_contract_cost:g}, "
-                         f"max {k.max_trades_per_day} today, all out by {k.exit_time}.",
+                         f"high conviction = {k.min_conviction}/7+, at least {k.min_signals_per_day} a day, "
+                         f"all out by {k.exit_time}.",
                          {"event": "map", "model": "stocks", "date": date, "maps": day["maps"],
                           "no_0dte": day["no_0dte"]})
 
@@ -208,11 +211,12 @@ class StocksEngine:
         k = self.k
         if not day.get("prepared"):
             self._prepare(day, now, date)
-        trades = self.state.trades()
-        if any(t.status == "open" for t in trades) or sum(t.date == date for t in trades) >= k.max_trades_per_day:
-            return
         for sym in k.watchlist:
-            if sym in day["no_0dte"]:
+            trades = self.state.trades()
+            n_today = sum(t.date == date for t in trades)
+            if k.max_trades_per_day and n_today >= k.max_trades_per_day:
+                return
+            if sym in day["no_0dte"] or any(t.symbol == sym and t.status == "open" for t in trades):
                 continue
             try:
                 bars = self._completed(sym, now)
@@ -237,9 +241,10 @@ class StocksEngine:
                       for m in k.market_symbols if m != sym}
             checks = conviction(r, rth, spot, market, k, rules.touch_tolerance)
             score = sum(ok for _, ok in checks)
-            if score < k.min_conviction:
+            need = self._needed(now.strftime("%H:%M"), n_today)
+            if score < need:
                 log.info("%s: %s setup at %.2f scored %d/7, below %d; no alert", sym, r.direction,
-                         r.level.price, score, k.min_conviction)
+                         r.level.price, score, need)
                 continue
             exp = date
             chain = self.client.get_chain(sym, exp, sym, r.right, near=max(spot * 0.05, 5))
@@ -248,7 +253,13 @@ class StocksEngine:
                 log.info("%s: %s setup, no 0DTE %s fits (%s)", sym, r.direction, r.right, why)
                 continue
             self._enter(sym, r, opt, exp, spot, now, date, day, rth, checks)
-            return
+
+    def _needed(self, hhmm: str, n_today: int) -> int:
+        """Conviction required right now: the full bar, lowered late in the day until the daily minimum is met."""
+        k = self.k
+        if n_today >= k.min_signals_per_day or hhmm < k.fallback_time:
+            return k.min_conviction
+        return k.fallback_min_conviction if hhmm < k.fallback_any_time else 0
 
     def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks) -> None:
         k = self.k
@@ -267,10 +278,13 @@ class StocksEngine:
         opened = rth[0].open
         rr = abs(t.target - spot) / abs(spot - t.stop) if spot != t.stop else 0
         n = sum(x.date == date for x in self.state.trades())
+        score = sum(ok for _, ok in checks)
+        grade = "HIGH CONVICTION" if score >= k.min_conviction else \
+            f"LOWER CONVICTION ({score}/7, sent to meet the {k.min_signals_per_day}-a-day minimum)"
         levels = " | ".join(f"{z['price']:.2f} {z['label']}" for z in reversed(day["maps"][sym]))
         self.notify.send(
-            f"0DTE {sym} {t.right.upper()} signal ({r.direction}) {now.strftime('%H:%M')} ET  [#{n} of max "
-            f"{k.max_trades_per_day} today]\n"
+            f"{grade}\n0DTE {sym} {t.right.upper()} signal ({r.direction}) {now.strftime('%H:%M')} ET  "
+            f"[signal #{n} today]\n"
             f"BUY {t.contracts}x {sym} {exp} ${t.strike:g} {t.right.upper()} @ ~{t.entry:.2f} = ${cost:.0f} "
             f"(under ${k.max_contract_cost:g})\n"
             f"Contract: bid {opt.bid:.2f} / ask {opt.ask:.2f} (spread {spread_pct:.0f}%), delta {abs(opt.delta):.2f}, "

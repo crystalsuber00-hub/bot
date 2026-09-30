@@ -151,7 +151,13 @@ class Stocks:
     entry_start: str = "09:40"
     entry_end: str = "11:30"
     exit_time: str = "15:50"          # 0DTE: out before the close
-    max_trades_per_day: int = 2       # one open at a time
+    max_trades_per_day: int = 0       # 0 = no limit: every qualifying setup is sent (one open per ticker)
+    # at least one signal a day: if none yet, the bar drops step by step
+    min_signals_per_day: int = 1
+    fallback_time: str = "11:00"      # no signal yet by now -> accept this conviction instead
+    fallback_min_conviction: int = 4
+    fallback_any_time: str = "11:20"  # still none -> any valid reaction at a level
+    last_resort_end: str = "14:00"    # still none after entry_end -> keep looking until this time
     bar_minutes: int = 5
     # the contract: nearest the money that fits the budget, not further out than min_delta
     min_delta: float = 0.20
@@ -231,8 +237,11 @@ class Config:
             raise ValueError("stocks: need a watchlist, max_contract_cost > 0, contracts >= 1, 0 < min_delta <= max_delta < 1")
         if not 0 < k.premium_stop_pct < 1 or k.premium_target_pct <= 0:
             raise ValueError("stocks: premium_stop_pct must be in (0, 1) and premium_target_pct > 0")
-        if not 0 <= k.min_conviction <= 7:
-            raise ValueError("stocks.min_conviction must be 0-7")
+        if not 0 <= k.fallback_min_conviction <= k.min_conviction <= 7:
+            raise ValueError("stocks: need 0 <= fallback_min_conviction <= min_conviction <= 7")
+        if not k.entry_start <= k.fallback_time <= k.fallback_any_time <= k.entry_end <= k.last_resort_end <= k.exit_time:
+            raise ValueError("stocks: need entry_start <= fallback_time <= fallback_any_time <= entry_end "
+                             "<= last_resort_end <= exit_time")
         if not k.entry_start < k.entry_end <= k.exit_time:
             raise ValueError("stocks: need entry_start < entry_end <= exit_time")
         m = self.spy03

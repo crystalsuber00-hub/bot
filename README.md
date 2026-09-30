@@ -149,7 +149,8 @@ spxbot -c stocks.toml           # live (add --until 16:10 to stop by itself)
 - **Exit plan alert** right after each entry: take-profit price (+50% on the option), stop price (-20%), the stock price that invalidates the idea, and the 15:50 time exit, ready to enter as a bracket order.
 - **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -16% (80% of the way to the stop).
 - **"EXIT NOW" alerts:** take profit hit, stop hit, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. They give the price, P&L and minutes held.
-- One signal open at a time, at most 2 a day.
+- **Every qualifying setup is sent** (no daily cap; one open signal per ticker).
+- **At least one signal a day:** if nothing reached 6/7 by 11:00, the bar drops to 4/7; by 11:20 any valid level reaction counts; if the morning ends empty the bot keeps looking until 14:00. These are headed **LOWER CONVICTION** so you can size down or skip them. If no stock reacts at a level at all, there is still no signal (it won't invent one).
 
 Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $150" is the most you can lose on one signal.
 

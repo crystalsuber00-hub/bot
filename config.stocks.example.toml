@@ -21,7 +21,13 @@ state_file = "stocks_state.json"
 entry_start = "09:40"      # new signals only in this window (Eastern time), like the 0/3 morning window
 entry_end = "11:30"
 exit_time = "15:50"        # 0DTE: out before the close
-max_trades_per_day = 2     # one open at a time
+max_trades_per_day = 0     # 0 = no limit: every qualifying setup is sent (one open per ticker)
+# At least one signal a day: if nothing qualified yet, the bar drops step by step (labeled LOWER CONVICTION).
+min_signals_per_day = 1
+fallback_time = "11:00"    # no signal yet -> accept fallback_min_conviction
+fallback_min_conviction = 4
+fallback_any_time = "11:20"  # still none -> any valid reaction at a level
+last_resort_end = "14:00"  # still none after entry_end -> keep looking until this time
 
 # The contract: nearest the money that fits the budget; for pricey stocks it moves further out, but not
 # below min_delta (a cheaper, far-out contract is not "less risk", it just expires worthless more often).

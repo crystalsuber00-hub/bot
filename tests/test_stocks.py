@@ -171,3 +171,40 @@ def test_low_conviction_setup_is_not_alerted(tmp_path):
     e.k.min_conviction = 6
     e.tick(at("09:50"))
     assert sink.events() == ["map"]
+
+
+def test_conviction_bar_drops_only_until_the_daily_minimum(tmp_path):
+    e, _, _ = engine(tmp_path)
+    e.k.min_conviction = 6
+    assert e._needed("10:30", 0) == 6
+    assert e._needed("11:00", 0) == 4
+    assert e._needed("11:20", 0) == 0
+    assert e._needed("11:20", 1) == 6  # minimum met: back to high conviction only
+
+
+def test_daily_minimum_sends_a_labeled_lower_conviction_signal(tmp_path):
+    e, _, sink = engine(tmp_path)
+    e.k.min_conviction = 6
+    e.tick(at("11:25"))  # nothing sent yet today, past fallback_any_time: any valid reaction counts
+    assert sink.events() == ["map", "entry", "exit_plan"]
+    assert sink.sent[1][0].startswith("LOWER CONVICTION (")
+
+
+def test_keeps_looking_after_the_window_until_one_is_sent(tmp_path):
+    e, _, sink = engine(tmp_path)
+    e.k.min_conviction = 6
+    e.tick(at("12:30"))  # past entry_end, before last_resort_end, still no signal today
+    assert "entry" in sink.events()
+    (tmp_path / "b").mkdir()
+    e2, _, sink2 = engine(tmp_path / "b")
+    e2.k.min_conviction = 6
+    e2.tick(at("14:05"))  # past last_resort_end: stop looking
+    assert "entry" not in sink2.events()
+
+
+def test_every_qualifying_ticker_is_sent(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    e.k.watchlist = ["TSLA", "ABC"]
+    feed.get_expirations = lambda s: [D]
+    e.tick(at("09:50"))
+    assert [p["symbol"] for _, p in sink.sent if p.get("event") == "entry"] == ["TSLA", "ABC"]
