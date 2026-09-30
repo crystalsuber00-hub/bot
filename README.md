@@ -145,7 +145,9 @@ spxbot -c stocks.toml           # live (add --until 16:10 to stop by itself)
 - **Signal (9:40-11:30):** a decisive 5-min bar off or through a level; bullish = call, bearish = put. Distances scale with each stock's average 5-min range, so the same rules fit IWM and TSLA.
 - **Strike:** the one nearest the money whose contract is under $200 right now, with a bid/ask spread under 10% of the price and delta 0.20-0.60. For expensive stocks this moves out of the money; if nothing fits, no signal.
 - **Entry alert:** contract, strike, cost, bid/ask and spread, delta, stock price vs the open, why, take-profit and stop in both option and stock prices, time exit, most you can lose, the stock's levels.
-- **Exits:** option +20% / -20%, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. Exit alerts give price, P&L and minutes held.
+- **Exit plan alert** right after each entry: take-profit price (+50% on the option), stop price (-20%), the stock price that invalidates the idea, and the 15:50 time exit, ready to enter as a bracket order.
+- **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -16% (80% of the way to the stop).
+- **"EXIT NOW" alerts:** take profit hit, stop hit, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. They give the price, P&L and minutes held.
 - One signal open at a time, at most 2 a day.
 
 Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $200" is the most you can lose on one signal.

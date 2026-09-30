@@ -87,13 +87,16 @@ def test_nothing_under_200_means_no_contract():
 def test_signal_is_one_0dte_contract_under_200(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.tick(at("09:50"))
-    assert sink.events() == ["map", "entry"]
+    assert sink.events() == ["map", "entry", "exit_plan"]
     assert "XYZ" in sink.sent[0][0] and "no 0DTE today" in sink.sent[0][0]
     t = sink.sent[1][1]
     assert t["symbol"] == "TSLA" and t["expiration"] == D and t["contracts"] == 1
     assert t["entry"] * 100 < 200 and t["right"] == "call"
     text = sink.sent[1][0]
     assert "BUY 1x TSLA 2026-09-30" in text and "Take profit" in text and "Stop" in text and "levels" in text
+    plan = sink.sent[2][1]
+    assert plan["take_profit"] == round(t["entry"] * 1.5, 2) and plan["option_stop"] == round(t["entry"] * 0.8, 2)
+    assert "TAKE PROFIT: sell at" in sink.sent[2][0] and "(+50%" in sink.sent[2][0]
 
 
 def test_exit_on_target_and_detailed_sell(tmp_path):
@@ -101,16 +104,34 @@ def test_exit_on_target_and_detailed_sell(tmp_path):
     e.tick(at("09:50"))
     t = sink.sent[1][1]
     feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 1.25, t["entry"] * 1.27, 0.5)
+    e.tick(at("09:52"))
+    assert sink.events()[-1] == "exit_plan"  # +26%: holding for +50%
+    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 1.41, t["entry"] * 1.43, 0.5)
+    e.tick(at("09:53"))
+    assert sink.events()[-1] == "near_target" and "ALMOST AT TAKE PROFIT" in sink.sent[-1][0]
+    e.tick(at("09:54"))
+    assert sink.events().count("near_target") == 1  # warned once
+    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 1.51, t["entry"] * 1.53, 0.5)
     e.tick(at("09:55"))
     assert sink.events()[-1] == "exit" and sink.sent[-1][1]["exit_reason"] == "target"
-    assert "held" in sink.sent[-1][0]
+    assert sink.sent[-1][0].startswith("EXIT NOW - TAKE PROFIT HIT") and "held" in sink.sent[-1][0]
+
+
+def test_near_stop_warning(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    e.tick(at("09:50"))
+    t = sink.sent[1][1]
+    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 0.82, t["entry"] * 0.84, 0.4)
+    e.tick(at("09:51"))
+    assert sink.events()[-1] == "near_stop" and "NEAR STOP" in sink.sent[-1][0]
 
 
 def test_check_exit_rules():
     k = Stocks()
     t = Trade(id="x", date=D, symbol="TSLA", option="o", right="put", strike=650, expiration=D, contracts=1,
               entry=1.50, entry_time="", stock_entry=650, stop=651, target=647, level=650.5, level_label="", why="")
-    assert check_exit(t, 1.81, 649, None, "10:00", k)[0] == "target"
+    assert check_exit(t, 2.25, 649, None, "10:00", k)[0] == "target"
+    assert check_exit(t, 1.81, 649, None, "10:00", k) is None  # +21% is not +50%
     assert check_exit(t, 1.19, 650, None, "10:00", k)[0] == "stop"
     assert check_exit(t, 1.40, 650, 651.2, "10:00", k)[0] == "invalidation"
     assert check_exit(t, 1.60, 646.9, None, "10:00", k)[0] == "level_target"

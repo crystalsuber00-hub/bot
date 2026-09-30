@@ -24,8 +24,9 @@ max_trades_per_day = 2     # one open at a time
 min_delta = 0.20
 max_delta = 0.60
 max_spread_pct = 0.10
-premium_target_pct = 0.20
-premium_stop_pct = 0.20
+premium_target_pct = 0.50   # take profit at +50% on the option
+premium_stop_pct = 0.20     # stop at -20% on the option
+warn_pct = 0.80             # "almost there" alert at 80% of the way to either
 
 # The reaction, in units of each stock's average 5-min bar range.
 touch_atr = 0.2

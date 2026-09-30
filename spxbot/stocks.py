@@ -255,6 +255,16 @@ class StocksEngine:
             f"  Room vs risk on {sym}: {rr:.1f}:1\n"
             f"{sym} levels: {levels}\n{FOOTER}",
             {"event": "entry", "model": "stocks", **asdict(t)})
+        self.notify.send(
+            f"EXIT PLAN {sym} ${t.strike:g} {t.right.upper()} (bought ~{t.entry:.2f})\n"
+            f"  TAKE PROFIT: sell at {tp:.2f} (+{k.premium_target_pct:.0%}, +${(tp - t.entry) * c:.0f})\n"
+            f"  STOP: sell if it drops to {sl:.2f} (-{k.premium_stop_pct:.0%}, -${(t.entry - sl) * c:.0f})\n"
+            f"  Also sell if {sym} closes a 5-min bar {'below' if up else 'above'} {t.stop:.2f}, "
+            f"or at {k.exit_time} ET no matter what.\n"
+            f"In thinkorswim you can enter it as one order: Buy -> 'with OCO bracket', "
+            f"limit {tp:.2f} / stop {sl:.2f}.",
+            {"event": "exit_plan", "model": "stocks", "take_profit": round(tp, 2), "option_stop": round(sl, 2),
+             "stock_stop": t.stop, "time_exit": k.exit_time, **asdict(t)})
 
     # --- exits -------------------------------------------------------------------
     def _manage(self, t: Trade, now: datetime, date: str, hhmm: str) -> None:
@@ -268,19 +278,39 @@ class StocksEngine:
         new = [b for b in bars if b.time > t.extra.get("last_seen", t.extra.get("bar", ""))]
         if new:
             t.extra["last_seen"] = new[-1].time
-        ex = check_exit(t, round(q.mid, 2), self.client.get_quote(t.symbol).last,
-                        new[-1].close if new else None, hhmm, self.k)
+        mid = round(q.mid, 2)
+        ex = check_exit(t, mid, self.client.get_quote(t.symbol).last, new[-1].close if new else None, hhmm, self.k)
+        if not ex:
+            self._warn(t, mid)
         if ex:
             self._close(t, round(q.mid, 2), ex[0], ex[1], now)
         else:
             self.state.upsert(t)
+
+    def _warn(self, t: Trade, mid: float) -> None:
+        """One heads-up each when the option is most of the way to its take-profit or its stop."""
+        k, c = self.k, t.contracts * 100
+        tp, sl = t.entry * (1 + k.premium_target_pct), t.entry * (1 - k.premium_stop_pct)
+        name = f"{t.symbol} ${t.strike:g} {t.right.upper()}"
+        if mid >= t.entry * (1 + k.warn_pct * k.premium_target_pct) and not t.extra.get("warned_tp"):
+            t.extra["warned_tp"] = True
+            self.notify.send(f"ALMOST AT TAKE PROFIT: {name} now {mid:.2f} ({(mid - t.entry) / t.entry:+.0%}, "
+                             f"{(mid - t.entry) * c:+.0f} $). Target {tp:.2f}. Get ready to sell.",
+                             {"event": "near_target", "model": "stocks", "mid": mid, "take_profit": round(tp, 2)})
+        if mid <= t.entry * (1 - k.warn_pct * k.premium_stop_pct) and not t.extra.get("warned_sl"):
+            t.extra["warned_sl"] = True
+            self.notify.send(f"NEAR STOP: {name} now {mid:.2f} ({(mid - t.entry) / t.entry:+.0%}, "
+                             f"{(mid - t.entry) * c:+.0f} $). Stop {sl:.2f}. Be ready to sell.",
+                             {"event": "near_stop", "model": "stocks", "mid": mid, "option_stop": round(sl, 2)})
 
     def _close(self, t: Trade, price: float, kind: str, text: str, now: datetime) -> None:
         t.status, t.exit, t.exit_reason = "closed", price, kind
         t.exit_time = now.isoformat(timespec="seconds")
         self.state.upsert(t)
         held = (now - datetime.fromisoformat(t.entry_time)).total_seconds() / 60
-        self.notify.send(f"SELL {t.contracts}x {t.symbol} {t.expiration} ${t.strike:g} {t.right.upper()} "
+        head = {"target": "TAKE PROFIT HIT", "stop": "STOP HIT", "time": "TIME EXIT",
+                "invalidation": "IDEA INVALIDATED", "level_target": "STOCK HIT TARGET"}.get(kind, "EXIT")
+        self.notify.send(f"EXIT NOW - {head}\nSELL {t.contracts}x {t.symbol} {t.expiration} ${t.strike:g} {t.right.upper()} "
                          f"@ ~{price:.2f} (bought ~{t.entry:.2f})\nReason: {text}\n"
                          f"P&L: {t.pnl():+.0f} $ ({(price - t.entry) / t.entry if t.entry else 0:+.0%}), "
                          f"held {held:.0f} min. Use a limit order near {price:.2f}.\n{FOOTER}",

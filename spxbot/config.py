@@ -156,8 +156,9 @@ class Stocks:
     max_delta: float = 0.60
     max_spread_pct: float = 0.10      # bid/ask spread / mid
     min_premium: float = 0.10
-    premium_target_pct: float = 0.20  # symmetric 20% target ...
-    premium_stop_pct: float = 0.20    # ... and 20% stop on the option
+    premium_target_pct: float = 0.50  # take profit at +50% on the option
+    premium_stop_pct: float = 0.20    # stop at -20% on the option
+    warn_pct: float = 0.80            # "almost there" alert at 80% of the way to the target or the stop
     # reaction rules, in units of the stock's average 5-min bar range (so they fit SPY, IWM or TSLA alike)
     touch_atr: float = 0.2
     confirm_atr: float = 0.2
