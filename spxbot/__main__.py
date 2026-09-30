@@ -52,6 +52,11 @@ def _main() -> None:
 
     cfg = load_config(args.config)
     spy03 = cfg.model in ("spy03", "stocks")
+    if cfg.model == "stocks" and args.report:
+        from .stocks import StocksState
+        from .stocks_report import build_report as stocks_report
+        print(stocks_report(StocksState(cfg.stocks.state_file), args.days))
+        return
     if spy03 and (args.report or args.chart or args.clear_halt):
         ap.error("--report/--chart/--clear-halt are for the spx_credit model; spy03 history is in "
                  + cfg.spy03.state_file)

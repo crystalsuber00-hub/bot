@@ -154,6 +154,13 @@ class StocksEngine:
             self._bars[symbol] = (cut, bars)
         return [b for b in bars if b.time < cut]
 
+    def _stale(self, rth: list[Bar], now: datetime) -> bool:
+        """True when the newest bar is old: market closed (holiday, early close) or the feed stopped."""
+        if not rth:
+            return True
+        last = datetime.fromisoformat(rth[-1].time).replace(tzinfo=self.tz)
+        return now - last > timedelta(minutes=self.k.bar_minutes + 10)
+
     def tick(self, now: Optional[datetime] = None) -> None:
         now = now or self.now()
         date, hhmm = now.date().isoformat(), now.strftime("%H:%M")
@@ -161,7 +168,10 @@ class StocksEngine:
             return
         day = self.state.day(date)
         for t in [t for t in self.state.trades() if t.status == "open"]:
-            self._manage(t, now, date, hhmm)
+            try:
+                self._manage(t, now, date, hhmm)
+            except Exception as e:  # keep managing the others; this one is retried next tick
+                log.warning("%s: manage failed (%s)", t.id, e)
         k = self.k
         short = sum(t.date == date for t in self.state.trades()) < k.min_signals_per_day
         if k.entry_start <= hhmm < k.entry_end or (short and hhmm < k.last_resort_end and hhmm >= k.entry_start):
@@ -248,7 +258,7 @@ class StocksEngine:
         bars = self._completed(sym, now)
         rth = [b for b in bars if b.time[11:] >= "09:30"]
         unit = bar_range(rth)
-        if not rth or unit <= 0 or day["last_bar"].get(sym) == rth[-1].time:
+        if self._stale(rth, now) or unit <= 0 or day["last_bar"].get(sym) == rth[-1].time:
             return
         day["last_bar"][sym] = rth[-1].time
         rules = rules_for(k, unit)
@@ -295,7 +305,7 @@ class StocksEngine:
                 log.warning("%s: no bars (%s)", sym, e)
                 continue
             unit = bar_range(rth)
-            if len(rth) >= 7 and unit > 0:
+            if len(rth) >= 7 and unit > 0 and not self._stale(rth, now):
                 cands.append(((rth[-1].close - rth[0].open) / unit, sym, rth, unit))  # move in average-bar units
         day["trend_tried"] = True
         for strength, sym, rth, unit in sorted(cands, key=lambda c: -abs(c[0])):
@@ -334,7 +344,8 @@ class StocksEngine:
                   entry=round(opt.mid, 2), entry_time=now.isoformat(timespec="seconds"), stock_entry=spot,
                   stop=round(r.invalidation, 2), target=round(r.target, 2), level=r.level.price,
                   level_label=r.level.label, why=r.why.replace("SPY", sym),
-                  extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks), "label": label or ""})
+                  extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks), "label": label or "",
+                         "entry_bid": opt.bid, "entry_ask": opt.ask})
         self.state.upsert(t)
         c = t.contracts * 100
         cost = t.entry * c
@@ -392,7 +403,11 @@ class StocksEngine:
                 self._close(t, last, "time", f"time exit {self.k.exit_time} (no live quote; last seen {last:.2f})", now)
             return
         t.extra["last_mid"] = round(q.mid, 2)
+        t.extra["last_bid"], t.extra["last_ask"] = q.bid, q.ask
         bars = self._completed(t.symbol, now)
+        if hhmm >= "13:00" and self._stale([b for b in bars if b.time[11:] >= "09:30"], now):
+            return self._close(t, t.extra["last_mid"], "time",
+                               "market closed early today (no new prices); the contract has expired", now)
         new = [b for b in bars if b.time > t.extra.get("last_seen", t.extra.get("bar", ""))]
         if new:
             t.extra["last_seen"] = new[-1].time
@@ -423,6 +438,7 @@ class StocksEngine:
 
     def _close(self, t: Trade, price: float, kind: str, text: str, now: datetime) -> None:
         t.status, t.exit, t.exit_reason = "closed", price, kind
+        t.extra["exit_bid"], t.extra["exit_ask"] = t.extra.get("last_bid"), t.extra.get("last_ask")
         t.exit_time = now.isoformat(timespec="seconds")
         self.state.upsert(t)
         held = (now - datetime.fromisoformat(t.entry_time)).total_seconds() / 60

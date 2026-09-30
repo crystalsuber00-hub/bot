@@ -24,6 +24,17 @@ BARS = [bar("09:30", 650.8, 651.0, 650.4, 650.5), bar("09:35", 650.5, 650.6, 650
         bar("09:40", 650.15, 650.2, 649.7, 649.95), bar("09:45", 649.95, 650.6, 649.9, 650.55)]
 
 
+def pattern_ending(hhmm):
+    """The BARS reaction pattern shifted so its last bar is the one that closed just before hhmm."""
+    h, m = map(int, hhmm.split(":"))
+    end = h * 60 + m - m % 5 - 5
+    out = []
+    for i, b in enumerate(BARS):
+        t = end - 5 * (len(BARS) - 1 - i)
+        out.append(Bar(f"{D}T{t // 60:02d}:{t % 60:02d}", b.open, b.high, b.low, b.close))
+    return out
+
+
 class Sink:
     def __init__(self):
         self.sent = []
@@ -183,21 +194,24 @@ def test_conviction_bar_drops_only_until_the_daily_minimum(tmp_path):
 
 
 def test_daily_minimum_sends_a_labeled_lower_conviction_signal(tmp_path):
-    e, _, sink = engine(tmp_path)
+    e, feed, sink = engine(tmp_path)
     e.k.min_conviction = 6
+    feed.get_bars = lambda s, day, m: pattern_ending("11:25")
     e.tick(at("11:25"))  # nothing sent yet today, past fallback_any_time: any valid reaction counts
     assert sink.events() == ["map", "entry", "exit_plan"]
     assert sink.sent[1][0].startswith("LOWER CONVICTION (")
 
 
 def test_keeps_looking_after_the_window_until_one_is_sent(tmp_path):
-    e, _, sink = engine(tmp_path)
+    e, feed, sink = engine(tmp_path)
     e.k.min_conviction = 6
+    feed.get_bars = lambda s, day, m: pattern_ending("12:30")
     e.tick(at("12:30"))  # past entry_end, before last_resort_end, still no signal today
     assert "entry" in sink.events()
     (tmp_path / "b").mkdir()
-    e2, _, sink2 = engine(tmp_path / "b")
+    e2, feed2, sink2 = engine(tmp_path / "b")
     e2.k.min_conviction = 6
+    feed2.get_bars = lambda s, day, m: pattern_ending("14:05")
     e2.tick(at("14:05"))  # past last_resort_end: stop looking
     assert "entry" not in sink2.events()
 
@@ -225,3 +239,32 @@ def test_trend_fallback_when_no_level_setup_all_day(tmp_path):
     assert len(entry) == 1 and entry[0][0].startswith("LAST-RESORT TREND SIGNAL") and entry[0][1]["right"] == "call"
     e.tick(at("13:40"))
     assert sum(p.get("event") == "entry" for _, p in sink.sent) == 1  # only once
+
+
+def test_no_signals_on_stale_data(tmp_path):
+    e, _, sink = engine(tmp_path)
+    e.tick(at("10:30"))  # newest bar is 09:45: market closed / feed stopped -> map only, no signal
+    assert "entry" not in sink.events()
+
+
+def test_early_close_day_closes_the_trade(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    e.tick(at("09:50"))
+    assert "entry" in sink.events()
+    feed.get_bars = lambda s, day, m: [bar(f"12:{mm:02d}", 650, 650.2, 649.9, 650.1) for mm in range(0, 60, 5)]
+    e.tick(at("13:20"))  # early close at 13:00: no bars after 12:55
+    ex = sink.sent[-1][1]
+    assert ex["event"] == "exit" and "closed early" in sink.sent[-1][0]
+    assert ex["extra"]["exit_bid"] is not None and ex["extra"]["entry_ask"] is not None
+
+
+def test_report_counts_mid_and_realistic_pnl(tmp_path):
+    from spxbot.stocks_report import build_report
+    e, feed, sink = engine(tmp_path)
+    e.tick(at("09:50"))
+    t = sink.sent[1][1]
+    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", 2.10, 2.14, 0.6)  # mid 2.12, +51%
+    e.tick(at("09:55"))
+    text = build_report(StocksState(e.k.state_file))
+    assert "1 trades" in text and "P&L at mid      +72 $" in text  # (2.12 - 1.40) x 100
+    assert "realistic      +65 $" in text  # sold at the 2.10 bid, bought at the 1.45 ask: +65, less $0.08 fees
