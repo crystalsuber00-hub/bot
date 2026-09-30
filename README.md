@@ -117,6 +117,13 @@ spxbot -c spy03.toml           # live signals (--until 16:10 to stop by itself)
 | 3DTE is continuation; no revenge | Afternoon signals need an intact morning thesis in the same direction. A losing morning signal or a morning thesis that was invalidated closes the afternoon. |
 | Exits: symmetric 20% target / 20% stop | Exits on option mid +20% / −20%, SPY closing through invalidation, SPY reaching the next zone, 0DTE at 12:00, 3DTE at 15:55 (`three_dte_exit_time = ""` to carry overnight). |
 
+### Backtest (free data, model prices)
+```
+python -m spxbot.spy03_backtest --refresh            # SPY 5-min bars + VIX1D/VIX9D from Yahoo into data/
+python -m spxbot.spy03_backtest -c spy03.toml        # test your own [spy03] settings
+```
+Replays the live engine bar by bar. Option prices are Black-Scholes estimates (VIX1D for 0DTE, VIX9D for 3DTE, $0.02 spread, $0.65/contract commission) and exits are checked on 5-minute closes, so fast moves overshoot the 20% stop. First run (59 days, Jul 8 - Sep 29 2026): 48 trades, 48% win rate, about breakeven after costs; stricter filters cut the trade count without raising the win rate. Treat the default rules as unproven.
+
 ### Using a Schwab account for the data (free, real-time)
 1. Go to [developer.schwab.com](https://developer.schwab.com), sign up (a separate developer login), and create an app under *Dashboard → Apps → Create App*: API product **Accounts and Trading Production** (includes market data), Callback URL exactly `https://127.0.0.1`. Wait until its status is **Ready For Use** (Schwab reviews new apps; it can take a few days).
 2. Put the app's key and secret in `.env`: `SCHWAB_APP_KEY=...`, `SCHWAB_APP_SECRET=...`, plus `SPXBOT_CONFIG=spy03.toml` and your `NTFY_TOPIC`.
