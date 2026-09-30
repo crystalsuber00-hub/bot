@@ -11,9 +11,10 @@ ibkr = ["ib_async>=1.0"]
 
 [project.scripts]
 spxbot = "spxbot.__main__:main"
+cryptobot = "cryptobot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot"]
+packages = ["spxbot", "cryptobot", "spyopts", "leadgen"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -106,3 +106,64 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
 - Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
+
+---
+
+# cryptobot (paper trading only)
+
+A separate, honest crypto tool. It places **no real orders**; nothing here can spend money.
+
+```
+python -m cryptobot backtest                       # ~2 years of hourly BTC-USD from Coinbase, cached in data/
+python -m cryptobot paper --strategy breakout --params '{"entry":168,"exit":96}'   # loops hourly, state in crypto_state.json
+```
+- Strategies are long/flat (`sma_cross`, `breakout`). Parameters are picked on the first 60% of the data and scored on the unseen last 40%; trust only the OUT-OF-SAMPLE line. Costs are 0.4% fee + 0.05% slippage per side.
+- Result on the 2026-09 run: buy & hold lost 10% out-of-sample; both strategies also lost (-9% and -4%) with much smaller drawdowns. **Neither made money.** That is the point of the tool: it shows this kind of strategy has no demonstrated edge, before you risk anything.
+- Test other coins with `--product ETH-USD`. Don't go live unless a strategy is profitable out-of-sample across several coins and periods, and even then past results don't predict future ones.
+
+`python -m cryptobot robust` runs the breakout rule with fixed parameters over four non-overlapping windows for five coins (20 tests, nothing tuned): 10 of 20 were profitable, i.e. a coin flip. It beat buy & hold mainly in the one crashing window, by being in cash. The SOL out-of-sample +17% did not hold up: the same rule lost 3% and 27% in two of SOL's four windows.
+
+`python -m cryptobot gate` is a pre-registered validation gate (rules in `cryptobot/gate.py`, fixed before running): select on the first 75% of data across all five coins, log every rejected trial, and let only one survivor touch the last 25% once. Results so far: round 1 had 0 of 18 survivors; round 2 added vol_trend, regime_trend and dip_buy and had 0 of 30, so the holdout was never used and there is nothing to deploy. Don't loosen the rules to get a pass; add genuinely new strategy ideas instead.
+
+---
+
+# spyopts (SPY option strategies, research only)
+
+`python -m spyopts --refresh` downloads SPY and VIX daily closes (1993 onward) and backtests monthly 30-day option trades held to expiry: long straddle, long strangle, long straddle only when VIX < 15, iron fly, iron condor, and short straddle (reference only: a small account can't hold it). Rules are pre-registered in `spyopts/backtest.py`; the holdout verdict is committed in `spy_gate_log.json`.
+
+Options are **Black-Scholes estimates** using the VIX as implied vol with a crude skew, not real quotes; SPY options only started trading in 2005, so earlier years are hypothetical.
+
+Result (2026-09 run, 403 trades):
+- Buying volatility (straddles, strangles) lost money in every development window and wiped out the test account. Buyers pay the VIX, and the VIX usually overstates how much SPY actually moves.
+- Selling it (iron condor, short straddle) won in development, as that same gap predicts. The iron condor was selected and **failed the holdout**: profitable with prices at the VIX, but flat (-0.1% a trade) and a 47% drawdown when implied vol is set 15% below the VIX, which is closer to real at-the-money pricing. Its edge sits inside the model's uncertainty, and every loss is a full -100% of the capital at risk.
+
+## spyopts.bot: paper iron condors on Alpaca
+
+Trades the backtested iron condor on an Alpaca **paper** account (the trading URL is hard-coded to paper): ~30-day SPY expiry, short strikes 3% out of the money, long wings 6% out, sized so max loss is 10% of account equity, entered 10:00-15:30 ET at the mid (re-quoted 0.05 lower every 10 minutes, 4 tries a day). It closes from 14:00 ET on the trading day before expiry, because SPY options settle into shares; the backtest held to expiry, so that's one untested difference. It compares its state with Alpaca's positions every run and halts on any mismatch (`--clear-halt` after you fix it). Unit-tested against a fake Alpaca only.
+
+```
+export ALPACA_KEY_ID=... ALPACA_SECRET_KEY=...   # paper keys
+python -m spyopts.bot --check     # keys, options level, sample quotes; no orders
+python -m spyopts.bot             # one run; --loop to keep running
+python -m spyopts.bot --status    # position and closed trades
+```
+To run it without your computer, `.github/workflows/spy-bot.yml` runs it every 15 minutes on weekdays via GitHub Actions and commits `spy_bot_state.json` back. Add the keys as repository secrets; it only runs from the default branch.
+
+The free `indicative` quote feed is delayed and modified, so paper fills are rough; set `ALPACA_FEED=opra` if you subscribe to real-time options data. With the tested structure one condor has about $23 between strikes at SPY ~$764 (Sept 2026), so it risks roughly $2,000 after the credit and the 10% rule needs about $20,000+ of equity; below that the bot sends a "NO TRADE" alert and does nothing.
+
+## Real-price check: Cboe strategy indexes (`python -m spyopts.cboe --refresh`)
+
+Cboe publishes benchmark indexes built from **actual SPX option prices**; CNDR is almost exactly the bot's trade (monthly iron condor, short ~20-delta, long ~5-delta wings, rest in 1-month T-bills). Because the index holds T-bills, the options only add the return **over cash**, and the indexes include **no commissions or bid-ask costs**.
+
+Result on the 2026-09 run (monthly, 2007-01 to 2026-09 unless noted):
+
+| | Over T-bills per year | Max drawdown | 12-month periods beating cash |
+|---|---|---|---|
+| CNDR iron condor, 1986 onward | +2.3% | 19% | 64% |
+| CNDR iron condor, since 2007 | +1.0% | 19% | 45% |
+| CNDR iron condor, last 10 years | **-1.5%** | 19% | 32% |
+| CNDR iron condor, last 1 year | +8.1% | 2% | 100% |
+| PUT (cash-secured puts) | +7.3% | 33% | 80% |
+| S&P 500 total return | +11.1% | 51% | 81% |
+
+The iron condor earned about as much as cash over the last 20 years **before** costs, and less than cash over the last 10. Retail bid-ask costs on four legs every month are plausibly larger than that edge. The strong last year is exactly the kind of run that tempts people in before a bad one; it is not evidence of an edge. In this real-price data, holding the S&P 500 beat every option strategy tested.

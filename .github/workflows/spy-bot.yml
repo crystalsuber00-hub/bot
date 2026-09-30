@@ -1,0 +1,33 @@
+# Runs the paper SPY iron-condor bot every 15 minutes on weekdays, on GitHub's servers.
+# Needs repository secrets ALPACA_KEY_ID and ALPACA_SECRET_KEY (paper keys); NTFY_TOPIC is optional.
+# Scheduled workflows only run from the repository's default branch.
+name: spy-bot
+on:
+  schedule:
+    - cron: "*/15 13-21 * * 1-5"   # UTC; covers 9:30-16:00 ET in both summer and winter time
+  workflow_dispatch:
+concurrency: spy-bot               # never two ticks at once
+permissions:
+  contents: write                  # to save the bot's state file back to the repo
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Bot tick
+        env:
+          ALPACA_KEY_ID: ${{ secrets.ALPACA_KEY_ID }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python -m spyopts.bot | tee -a spy_bot.log
+      - name: Save state
+        run: |
+          git config user.name "spy-bot"
+          git config user.email "spy-bot@users.noreply.github.com"
+          git add spy_bot_state.json spy_bot.log
+          git diff --cached --quiet || (git commit -m "spy-bot state" && git push)

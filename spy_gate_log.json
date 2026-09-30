@@ -1,0 +1,5 @@
+{
+ "strategy": "iron_condor",
+ "passed": false,
+ "summary": "Selected on dev only: iron_condor. Holdout (used once):\n  base     win 65%  mean +12.0%  worst -100%  $2,000 -> $5,280  maxDD 34%\n  iv 0.85  win 63%  mean -0.1%  worst -100%  $2,000 -> $1,646  maxDD 47%\n  2x cost  win 65%  mean +10.2%  worst -107%  $2,000 -> $4,412  maxDD 36%\nVERDICT: FAIL. Nothing to deploy."
+}
