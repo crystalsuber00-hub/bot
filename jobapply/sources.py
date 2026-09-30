@@ -107,4 +107,5 @@ def score(job: dict, p: Profile) -> int:
         return -1
     if p.min_salary and job["salary"] and job["salary"] < p.min_salary:
         return -1
-    return sum(k.lower() in text for k in p.keywords)
+    kws = dict.fromkeys(k.lower() for k in p.keywords + p.title_keywords)  # title words count too
+    return sum(k in text for k in kws)

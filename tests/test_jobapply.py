@@ -146,3 +146,10 @@ def test_cover_letter_cap_makes_the_rest_resume_only(tmp_path, monkeypatch, caps
     main(["apply"])
     assert copied == [True, True, False, False]
     assert "resume only" in capsys.readouterr().out
+
+
+def test_accounts_payable_titles_are_accepted_and_scored():
+    p = Profile(name="A", email="a@x.com", keywords=["payroll"])
+    j = sources._job("t", "Accounts Payable Specialist", "Co", "u")
+    assert sources.score(j, p) >= 1
+    assert sources.score(sources._job("t", "Office Manager", "Co", "u2"), p) == -1
