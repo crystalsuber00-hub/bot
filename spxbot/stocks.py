@@ -45,6 +45,28 @@ def rules_for(k: Stocks, unit: float) -> Spy03:
                    max_premium=round(k.max_contract_cost / 100 - 0.01, 2))  # strictly under the cap
 
 
+def conviction(r, rth: list[Bar], spot: float, market: dict[str, list[Bar]], k: Stocks,
+               touch: float) -> list[tuple[str, bool]]:
+    """The 7-point checklist behind a setup. `market` = regular-session bars of SPY/QQQ (the stock itself excluded)."""
+    up = r.direction == "bullish"
+    b, L, label = r.bar, r.level.price, r.level.label
+    rng = b.high - b.low
+    earlier = [x for x in rth if x.time < b.time]
+    fresh = not any(x.low - touch <= L <= x.high + touch for x in earlier)
+    opened = rth[0].open
+    agree = [((m[-1].close > m[0].open) if up else (m[-1].close < m[0].open)) for m in market.values() if m]
+    key = any(w in label for w in ("prior-day high", "prior-day low", "pre-market", "your level"))
+    return [
+        ("Key level (prior-day or pre-market high/low)", key),
+        ("Two levels in the same zone", "+" in label),
+        ("First test of the level today", fresh),
+        (f"With the stock's move since the open ({'up' if up else 'down'})", (spot > opened) if up else (spot < opened)),
+        ("Market agrees (" + "/".join(market) + ")", bool(agree) and all(agree)),
+        (f"Strong candle (body >= {k.strong_body_ratio:.0%})", rng > 0 and abs(b.close - b.open) / rng >= k.strong_body_ratio),
+        (f"Room to run >= {k.strong_reward_risk:g}:1", r.reward_risk >= k.strong_reward_risk),
+    ]
+
+
 @dataclass
 class Trade:
     id: str
@@ -210,23 +232,32 @@ class StocksEngine:
             r, _ = find_reaction(rth, [Level(**z) for z in day["maps"][sym]], rules)
             if r is None:
                 continue
-            exp = date
             spot = self.client.get_quote(sym).last
+            market = {m: [x for x in self._completed(m, now) if x.time[11:] >= "09:30"]
+                      for m in k.market_symbols if m != sym}
+            checks = conviction(r, rth, spot, market, k, rules.touch_tolerance)
+            score = sum(ok for _, ok in checks)
+            if score < k.min_conviction:
+                log.info("%s: %s setup at %.2f scored %d/7, below %d; no alert", sym, r.direction,
+                         r.level.price, score, k.min_conviction)
+                continue
+            exp = date
             chain = self.client.get_chain(sym, exp, sym, r.right, near=max(spot * 0.05, 5))
             opt, why = pick_contract(chain, r.right, spot, rules)  # priced now: one contract under the cap
             if opt is None:
                 log.info("%s: %s setup, no 0DTE %s fits (%s)", sym, r.direction, r.right, why)
                 continue
-            self._enter(sym, r, opt, exp, spot, now, date, day, rth)
+            self._enter(sym, r, opt, exp, spot, now, date, day, rth, checks)
             return
 
-    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth) -> None:
+    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks) -> None:
         k = self.k
         t = Trade(id=f"{date}-{sym}-{now.strftime('%H%M')}", date=date, symbol=sym, option=opt.symbol,
                   right=r.right, strike=opt.strike, expiration=exp, contracts=k.contracts,
                   entry=round(opt.mid, 2), entry_time=now.isoformat(timespec="seconds"), stock_entry=spot,
                   stop=round(r.invalidation, 2), target=round(r.target, 2), level=r.level.price,
-                  level_label=r.level.label, why=r.why.replace("SPY", sym), extra={"bar": r.bar.time})
+                  level_label=r.level.label, why=r.why.replace("SPY", sym),
+                  extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks)})
         self.state.upsert(t)
         c = t.contracts * 100
         cost = t.entry * c
@@ -246,6 +277,8 @@ class StocksEngine:
             f"expires today 4:00 PM ET. Use a limit order near {t.entry:.2f}; don't chase above {opt.ask:.2f}.\n"
             f"Stock: {sym} {spot:.2f} ({(spot - opened) / opened * 100:+.2f}% vs open {opened:.2f})\n"
             f"Why: {t.why}\n"
+            f"Conviction {sum(ok for _, ok in checks)}/7:\n"
+            + "".join(f"  {'[x]' if ok else '[ ]'} {name}\n" for name, ok in checks) +
             f"Plan:\n"
             f"  Take profit: option {tp:.2f} (+{k.premium_target_pct:.0%}, +${(tp - t.entry) * c:.0f}) "
             f"or {sym} {'reaches' if up else 'falls to'} {t.target:.2f} (next level)\n"

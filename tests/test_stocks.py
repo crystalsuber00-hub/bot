@@ -1,10 +1,11 @@
-"""0DTE stock option signals: one contract under $200, chosen at the moment of the signal."""
+"""0DTE stock option signals: one contract under $150, chosen at the moment of the signal, high conviction only."""
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from spxbot.config import Config, Stocks
 from spxbot.models import Bar, OptionQuote, Quote
-from spxbot.stocks import StocksEngine, StocksState, Trade, check_exit, rules_for
+from spxbot.spy03 import Level, Reaction
+from spxbot.stocks import StocksEngine, StocksState, Trade, check_exit, conviction, rules_for
 from spxbot.spy03 import pick_contract
 
 NY = ZoneInfo("America/New_York")
@@ -66,32 +67,34 @@ class Feed:
 
 def engine(tmp_path):
     cfg = Config(model="stocks")
-    cfg.stocks = Stocks(watchlist=["XYZ", "TSLA"], use_premarket=False, state_file=str(tmp_path / "s.json"))
+    cfg.stocks = Stocks(watchlist=["XYZ", "TSLA"], use_premarket=False, state_file=str(tmp_path / "s.json"),
+                        min_conviction=0)  # these tests are about the flow, not the grade
     feed, sink = Feed(), Sink()
     return StocksEngine(cfg, feed, sink, StocksState(cfg.stocks.state_file)), feed, sink
 
 
-def test_contract_must_cost_under_200():
+def test_contract_must_cost_under_150():
     rules = rules_for(Stocks(), 1.0)
-    assert rules.max_premium == 1.99
+    assert rules.max_premium == 1.49
     opt, _ = pick_contract(Feed().chain, "call", 650.55, rules)
-    assert opt.symbol == "TSLA651C"  # 650C costs $250; 651C at $195 is the nearest strike under $200
+    assert opt.symbol == "TSLA652C"  # 650C $250 and 651C $195 are too much; 652C at $140 is the nearest under $150
 
 
-def test_nothing_under_200_means_no_contract():
+def test_nothing_under_150_means_no_contract():
     chain = [OptionQuote("A", 650, "call", 2.45, 2.55, 0.52), OptionQuote("B", 651, "call", 2.00, 2.08, 0.45)]
     opt, _ = pick_contract(chain, "call", 650.5, rules_for(Stocks(), 1.0))
     assert opt is None
 
 
-def test_signal_is_one_0dte_contract_under_200(tmp_path):
+def test_signal_is_one_0dte_contract_under_150(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.tick(at("09:50"))
     assert sink.events() == ["map", "entry", "exit_plan"]
     assert "XYZ" in sink.sent[0][0] and "no 0DTE today" in sink.sent[0][0]
     t = sink.sent[1][1]
     assert t["symbol"] == "TSLA" and t["expiration"] == D and t["contracts"] == 1
-    assert t["entry"] * 100 < 200 and t["right"] == "call"
+    assert t["entry"] * 100 < 150 and t["right"] == "call" and t["strike"] == 652
+    assert "Conviction" in sink.sent[1][0] and "[x]" in sink.sent[1][0]
     text = sink.sent[1][0]
     assert "BUY 1x TSLA 2026-09-30" in text and "Take profit" in text and "Stop" in text and "levels" in text
     plan = sink.sent[2][1]
@@ -137,3 +140,34 @@ def test_check_exit_rules():
     assert check_exit(t, 1.60, 646.9, None, "10:00", k)[0] == "level_target"
     assert check_exit(t, 1.60, 649, None, "15:50", k)[0] == "time"
     assert check_exit(t, 1.60, 649, None, "15:49", k) is None
+
+
+def _reaction(label, body=(649.95, 650.60, 649.90, 650.55), rr=2.35):
+    o, h, l, c = body
+    return Reaction("bullish", Level(650.2, label), bar("09:45", o, h, l, c), c, 649.72, 652.5, rr, "")
+
+
+def test_conviction_all_seven():
+    rth = [bar("09:30", 649.0, 649.5, 648.9, 649.4), bar("09:35", 649.4, 649.8, 649.3, 649.7),
+           bar("09:40", 649.7, 650.0, 649.6, 649.95), bar("09:45", 649.95, 650.60, 649.90, 650.55)]
+    market = {"SPY": [bar("09:30", 600, 601, 599, 600.5), bar("09:45", 600.5, 602, 600, 601.5)]}
+    checks = conviction(_reaction("prior-day high + $650 zone"), rth, 650.55, market, Stocks(), 0.1)
+    assert sum(ok for _, ok in checks) == 7
+
+
+def test_conviction_misses_are_counted():
+    rth = list(BARS)  # opened 650.80, now 650.55: bullish setup against the day's move; level touched earlier
+    market = {"SPY": [bar("09:30", 600, 601, 599, 600.5), bar("09:45", 600.5, 601, 599, 599.5)]}  # market down
+    checks = dict(conviction(_reaction("prior close", rr=1.6), rth, 650.55, market, Stocks(), 0.1))
+    assert not checks["Key level (prior-day or pre-market high/low)"]
+    assert not checks["Two levels in the same zone"]
+    assert not checks["First test of the level today"]
+    assert not checks["Market agrees (SPY)"]
+    assert sum(checks.values()) < Stocks().min_conviction
+
+
+def test_low_conviction_setup_is_not_alerted(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    e.k.min_conviction = 6
+    e.tick(at("09:50"))
+    assert sink.events() == ["map"]

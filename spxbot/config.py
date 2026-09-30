@@ -143,7 +143,9 @@ class Stocks:
     `max_contract_cost`. Signal-only: alerts + paper tracking, never places orders."""
     watchlist: list = field(default_factory=lambda: [
         "SPY", "QQQ", "IWM", "META", "AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "AMD", "GOOGL", "PLTR"])
-    max_contract_cost: float = 200.0  # $; one contract must cost LESS than this at the moment of the signal
+    max_contract_cost: float = 150.0  # $; one contract must cost LESS than this at the moment of the signal
+    min_conviction: int = 6           # alert only setups that pass this many of the 7 conviction checks
+    market_symbols: list = field(default_factory=lambda: ["SPY", "QQQ"])  # "market agrees" check
     contracts: int = 1
     state_file: str = "stocks_state.json"
     entry_start: str = "09:40"
@@ -168,6 +170,8 @@ class Stocks:
     min_reward_risk: float = 1.5
     default_reward_risk: float = 2.0
     use_premarket: bool = True
+    strong_body_ratio: float = 0.7    # conviction check: candle body >= this share of its range
+    strong_reward_risk: float = 2.0   # conviction check: room to the next level >= this x the risk
 
 
 @dataclass
@@ -227,6 +231,8 @@ class Config:
             raise ValueError("stocks: need a watchlist, max_contract_cost > 0, contracts >= 1, 0 < min_delta <= max_delta < 1")
         if not 0 < k.premium_stop_pct < 1 or k.premium_target_pct <= 0:
             raise ValueError("stocks: premium_stop_pct must be in (0, 1) and premium_target_pct > 0")
+        if not 0 <= k.min_conviction <= 7:
+            raise ValueError("stocks.min_conviction must be 0-7")
         if not k.entry_start < k.entry_end <= k.exit_time:
             raise ValueError("stocks: need entry_start < entry_end <= exit_time")
         m = self.spy03

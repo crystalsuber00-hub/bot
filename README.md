@@ -135,22 +135,23 @@ Schwab's login lasts **7 days** and can't be extended: repeat step 3 once a week
 What's mine, not the guide's: the guide says "what counts as clean" is a live judgement call, so every number in the reaction rules (tolerances, body ratio, chase distance, invalidation buffer, 1.5:1 room) and the 12:00 0DTE cutoff are my mechanical stand-ins; tune them in `spy03.toml`. The pass/fail rules are unit-tested on made-up bars only, not backtested, and haven't run against live Tradier/IB data. The guide's 73% win rate and P&L figures are the author's claims and say nothing about how these rules will do. Tradier needs a production token (sandbox data is delayed); IB needs SPY + OPRA data and a `client_id` different from the SPX bot's.
 
 ## 0DTE stock option signals (small accounts)
-Same level -> reaction rules as SPY 0/3, run on a watchlist of high-volume stocks and ETFs (default: SPY, QQQ, IWM, META, AAPL, TSLA, MSFT, NVDA, AMZN, AMD, GOOGL, PLTR; any share price). Every signal is **one 0DTE contract that costs less than $200** at the moment of the signal. Signal-only: alerts and paper tracking, no orders.
+Same level -> reaction rules as SPY 0/3, run on a watchlist of high-volume stocks and ETFs (default: SPY, QQQ, IWM, META, AAPL, TSLA, MSFT, NVDA, AMZN, AMD, GOOGL, PLTR; any share price). Every signal is **one 0DTE contract that costs less than $150** at the moment of the signal, and only setups scoring **at least 6 of 7 conviction checks** are alerted. Signal-only: alerts and paper tracking, no orders.
 ```
 cp config.stocks.example.toml stocks.toml
-spxbot -c stocks.toml --check   # per ticker: price, today's expiration, the call and put it would pick under $200
+spxbot -c stocks.toml --check   # per ticker: price, today's expiration, the call and put it would pick under $150
 spxbot -c stocks.toml           # live (add --until 16:10 to stop by itself)
 ```
 - **9:40 map alert:** every ticker's price, change vs yesterday and its levels (prior-day high/low/close, pre-market high/low). Tickers with no option expiring today are marked and skipped that day; which stocks have same-day expirations depends on the exchange listing that week.
 - **Signal (9:40-11:30):** a decisive 5-min bar off or through a level; bullish = call, bearish = put. Distances scale with each stock's average 5-min range, so the same rules fit IWM and TSLA.
-- **Strike:** the one nearest the money whose contract is under $200 right now, with a bid/ask spread under 10% of the price and delta 0.20-0.60. For expensive stocks this moves out of the money; if nothing fits, no signal.
+- **Conviction checklist (alerts need 6/7, `min_conviction`):** key level (prior-day or pre-market high/low), two levels in the same zone, first test of the level today, with the stock's move since the open, SPY and QQQ moving the same way, strong candle (body >= 70%), room to the next level >= 2:1. The alert shows which boxes are ticked. It grades how much lines up; it has not been shown to raise the win rate (on SPY, stricter filters didn't).
+- **Strike:** the one nearest the money whose contract is under $150 right now, with a bid/ask spread under 10% of the price and delta 0.20-0.60. For expensive stocks this moves out of the money; if nothing fits, no signal.
 - **Entry alert:** contract, strike, cost, bid/ask and spread, delta, stock price vs the open, why, take-profit and stop in both option and stock prices, time exit, most you can lose, the stock's levels.
 - **Exit plan alert** right after each entry: take-profit price (+50% on the option), stop price (-20%), the stock price that invalidates the idea, and the 15:50 time exit, ready to enter as a bracket order.
 - **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -16% (80% of the way to the stop).
 - **"EXIT NOW" alerts:** take profit hit, stop hit, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. They give the price, P&L and minutes held.
 - One signal open at a time, at most 2 a day.
 
-Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $200" is the most you can lose on one signal.
+Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $150" is the most you can lose on one signal.
 
 ## Assumptions to check
 - "Price movement" = SPX now vs. today's open at entry time. Set `reference = "prev_close"` for gap-inclusive, and `min_move_pct` to skip flat days.

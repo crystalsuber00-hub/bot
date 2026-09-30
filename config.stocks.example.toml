@@ -1,5 +1,6 @@
 # 0DTE option signals on high-volume stocks and ETFs (SPY 0/3 level -> reaction rules).
-# Every signal is ONE contract that costs less than $200 at the moment of the signal, expiring the same day.
+# Every signal is ONE contract that costs less than $150 at the moment of the signal, expiring the same day,
+# and only setups that pass at least 6 of the 7 conviction checks are alerted.
 # Copy to stocks.toml and run: spxbot -c stocks.toml     (check first: spxbot -c stocks.toml --check)
 # Signal-only: alerts + paper tracking. This model never places orders.
 
@@ -11,7 +12,10 @@ lock_port = 47204          # different from the other bots so they can run toget
 [stocks]
 # Any share price is fine. Tickers without an option expiring today are skipped that day.
 watchlist = ["SPY", "QQQ", "IWM", "META", "AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "AMD", "GOOGL", "PLTR"]
-max_contract_cost = 200    # one contract must cost LESS than this ($1.99 premium or lower)
+max_contract_cost = 150    # one contract must cost LESS than this ($1.49 premium or lower)
+min_conviction = 6         # of 7 checks: key level, two levels together, first test, with the stock's move,
+                           # market (SPY/QQQ) agrees, strong candle, room to run >= 2:1. Lower = more alerts.
+market_symbols = ["SPY", "QQQ"]
 contracts = 1
 state_file = "stocks_state.json"
 entry_start = "09:40"      # new signals only in this window (Eastern time), like the 0/3 morning window
