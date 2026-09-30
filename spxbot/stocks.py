@@ -261,8 +261,9 @@ class StocksEngine:
             f"  STOP: sell if it drops to {sl:.2f} (-{k.premium_stop_pct:.0%}, -${(t.entry - sl) * c:.0f})\n"
             f"  Also sell if {sym} closes a 5-min bar {'below' if up else 'above'} {t.stop:.2f}, "
             f"or at {k.exit_time} ET no matter what.\n"
-            f"In thinkorswim you can enter it as one order: Buy -> 'with OCO bracket', "
-            f"limit {tp:.2f} / stop {sl:.2f}.",
+            f"Robinhood: after it fills, place a Stop Limit sell: stop {sl:.2f}, limit {max(sl - 0.10, 0.01):.2f}. "
+            f"Sell at {tp:.2f} yourself when the take-profit alert comes (Robinhood may not allow both orders at "
+            f"once). Stops there use the option price only; watch for EXIT NOW on the {sym} price rule.",
             {"event": "exit_plan", "model": "stocks", "take_profit": round(tp, 2), "option_stop": round(sl, 2),
              "stock_stop": t.stop, "time_exit": k.exit_time, **asdict(t)})
 
