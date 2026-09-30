@@ -241,5 +241,21 @@
   "salary": 52000,
   "url": "https://to.indeed.com/aax9nfpfg88x",
   "description": "accounts payable clerk $25-28/hr"
+ },
+ {
+  "title": "Accounts Payable Specialist",
+  "company": "Westside Community Services",
+  "location": "San Francisco, CA",
+  "salary": 83200,
+  "url": "https://to.indeed.com/aavtgqfqbxjw",
+  "description": "accounts payable specialist $40/hr"
+ },
+ {
+  "title": "Automotive Accounts Payable Clerk",
+  "company": "Del Grande Dealer Group",
+  "location": "San Jose, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aazt22kwqwly",
+  "description": "accounts payable clerk automotive $25-30/hr"
  }
 ]
