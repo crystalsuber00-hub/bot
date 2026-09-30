@@ -15,3 +15,5 @@ xsp_state.json
 history_xsp/
 stocks.toml
 stocks_state.json
+data/massive/
+data/massive_backtest.json
