@@ -51,7 +51,7 @@ def _main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     cfg = load_config(args.config)
-    spy03 = cfg.model == "spy03"
+    spy03 = cfg.model in ("spy03", "stocks")
     if spy03 and (args.report or args.chart or args.clear_halt):
         ap.error("--report/--chart/--clear-halt are for the spx_credit model; spy03 history is in "
                  + cfg.spy03.state_file)
@@ -85,13 +85,49 @@ def _main() -> None:
     elif cfg.broker == "ibkr":
         from .ibkr import IBKRClient
         client = IBKRClient(cfg.ibkr, readonly=spy03 or cfg.mode == "signal",
-                            underlying=cfg.spy03.symbol if spy03 else cfg.symbol)
+                            underlying=cfg.spy03.symbol if cfg.model == "spy03" else cfg.symbol)
     else:
         if not cfg.tradier.token:
             ap.error("set TRADIER_TOKEN (or tradier.token in config)")
         if cfg.mode == "trade" and not spy03 and not cfg.tradier.account_id:
             ap.error("trade mode needs TRADIER_ACCOUNT_ID")
         client = TradierClient(cfg.tradier)
+
+    if cfg.model == "stocks":
+        from .stocks import StocksEngine, StocksState
+        if cfg.broker == "ibkr":
+            ap.error("model 'stocks' needs broker 'schwab' or 'tradier'")
+        engine = StocksEngine(cfg, client, Notifier(cfg.notify), StocksState(cfg.stocks.state_file))
+        if args.check:
+            from datetime import date as _date
+            from .spy03 import pick_contract, pick_expiration
+            from .stocks import rules_for
+            k, today = cfg.stocks, _date.today()
+            for sym in k.watchlist:
+                try:
+                    px = client.get_quote(sym).last
+                    exp = pick_expiration(client.get_expirations(sym), today, 0)
+                    if not exp:
+                        print(f"[--] {sym} {px:.2f}: no option expiring today")
+                        continue
+                    picks = []
+                    for right in ("call", "put"):
+                        o, why = pick_contract(client.get_chain(sym, exp, sym, right, near=max(px * 0.05, 5)),
+                                               right, px, rules_for(k, 1.0))
+                        picks.append(f"{o.strike:g}{right[0].upper()} ${o.mid * 100:.0f} (delta {abs(o.delta):.2f})"
+                                     if o else f"no {right} under ${k.max_contract_cost:g}")
+                    print(f"[ok] {sym} {px:.2f}: 0DTE {exp} -> " + ", ".join(picks))
+                except Exception as e:
+                    print(f"[!!] {sym}: {e}")
+            engine.notify.send("0DTE stock signals test alert: notifications work.", {"event": "test"})
+            print("[ok] test alert sent. No orders are ever placed by this model.")
+            return
+        if args.once:
+            return engine.tick()
+        lock = single_instance(cfg.lock_port)  # keep the reference: the lock lasts while the socket is open
+        if lock is None:
+            raise SystemExit("spxbot is already running (lock port in use); not starting a second copy")
+        return engine.run_forever(args.until)
 
     if spy03:
         from .spy03_engine import Spy03Engine, Spy03State

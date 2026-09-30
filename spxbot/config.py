@@ -138,6 +138,38 @@ class Spy03:
 
 
 @dataclass
+class Stocks:
+    """0DTE option signals on high-volume stocks/ETFs: SPY 0/3 level -> reaction rules, one contract under
+    `max_contract_cost`. Signal-only: alerts + paper tracking, never places orders."""
+    watchlist: list = field(default_factory=lambda: [
+        "SPY", "QQQ", "IWM", "META", "AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "AMD", "GOOGL", "PLTR"])
+    max_contract_cost: float = 200.0  # $; one contract must cost LESS than this at the moment of the signal
+    contracts: int = 1
+    state_file: str = "stocks_state.json"
+    entry_start: str = "09:40"
+    entry_end: str = "11:30"
+    exit_time: str = "15:50"          # 0DTE: out before the close
+    max_trades_per_day: int = 2       # one open at a time
+    bar_minutes: int = 5
+    # the contract: nearest the money that fits the budget, not further out than min_delta
+    min_delta: float = 0.20
+    max_delta: float = 0.60
+    max_spread_pct: float = 0.10      # bid/ask spread / mid
+    min_premium: float = 0.10
+    premium_target_pct: float = 0.20  # symmetric 20% target ...
+    premium_stop_pct: float = 0.20    # ... and 20% stop on the option
+    # reaction rules, in units of the stock's average 5-min bar range (so they fit SPY, IWM or TSLA alike)
+    touch_atr: float = 0.2
+    confirm_atr: float = 0.2
+    max_chase_atr: float = 1.0
+    stop_atr: float = 0.8             # the idea is wrong if the stock closes this far back through the level
+    min_body_ratio: float = 0.5
+    min_reward_risk: float = 1.5
+    default_reward_risk: float = 2.0
+    use_premarket: bool = True
+
+
+@dataclass
 class Config:
     model: str = "spx_credit"    # "spx_credit" (the credit-spread routine) or "spy03" (SPY 0/3 signals)
     mode: str = "signal"
@@ -157,6 +189,7 @@ class Config:
     schwab: Schwab = field(default_factory=Schwab)
     notify: Notify = field(default_factory=Notify)
     spy03: Spy03 = field(default_factory=Spy03)
+    stocks: Stocks = field(default_factory=Stocks)
 
     def validate(self) -> None:
         s = self.strategy
@@ -164,8 +197,8 @@ class Config:
             raise ValueError("broker must be 'tradier', 'ibkr' or 'schwab'")
         if self.model == "spx_credit" and self.mode == "trade" and self.broker == "tradier" and self.symbol != "SPX":
             raise ValueError("Tradier trade mode only supports SPX; use signal mode (alerts) for XSP")
-        if self.broker == "schwab" and self.model != "spy03":
-            raise ValueError("broker 'schwab' is data-only and currently supported for model = 'spy03'")
+        if self.broker == "schwab" and self.model not in ("spy03", "stocks"):
+            raise ValueError("broker 'schwab' is data-only and currently supported for models 'spy03' and 'stocks'")
         if self.mode not in ("signal", "trade"):
             raise ValueError("mode must be 'signal' or 'trade'")
         if not 0 < s.target_delta_min <= s.target_delta <= s.target_delta_max < 1:
@@ -186,8 +219,15 @@ class Config:
             raise ValueError("invalid [execution] settings")
         if s.spread_width <= 0 or s.quantity < 1:
             raise ValueError("spread_width and quantity must be positive")
-        if self.model not in ("spx_credit", "spy03"):
-            raise ValueError("model must be 'spx_credit' or 'spy03'")
+        if self.model not in ("spx_credit", "spy03", "stocks"):
+            raise ValueError("model must be 'spx_credit', 'spy03' or 'stocks'")
+        k = self.stocks
+        if not k.watchlist or k.max_contract_cost <= 0 or k.contracts < 1 or not 0 < k.min_delta <= k.max_delta < 1:
+            raise ValueError("stocks: need a watchlist, max_contract_cost > 0, contracts >= 1, 0 < min_delta <= max_delta < 1")
+        if not 0 < k.premium_stop_pct < 1 or k.premium_target_pct <= 0:
+            raise ValueError("stocks: premium_stop_pct must be in (0, 1) and premium_target_pct > 0")
+        if not k.entry_start < k.entry_end <= k.exit_time:
+            raise ValueError("stocks: need entry_start < entry_end <= exit_time")
         m = self.spy03
         hhmm = r"([01]\d|2[0-3]):[0-5]\d"
         for k in ("zero_dte_start", "zero_dte_end", "three_dte_start", "three_dte_end", "zero_dte_exit_time"):
@@ -222,7 +262,7 @@ def load_config(path: str | None) -> Config:
     cfg = Config()
     if path:
         data = tomllib.loads(Path(path).read_text())
-        for k in ("schedule", "strategy", "execution", "tradier", "ibkr", "schwab", "notify", "spy03"):
+        for k in ("schedule", "strategy", "execution", "tradier", "ibkr", "schwab", "notify", "spy03", "stocks"):
             _fill(getattr(cfg, k), data.pop(k, {}))
         _fill(cfg, data)
     env = os.environ.get
