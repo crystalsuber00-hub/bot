@@ -162,6 +162,8 @@ class Config:
         s = self.strategy
         if self.broker not in ("tradier", "ibkr", "schwab"):
             raise ValueError("broker must be 'tradier', 'ibkr' or 'schwab'")
+        if self.model == "spx_credit" and self.mode == "trade" and self.broker == "tradier" and self.symbol != "SPX":
+            raise ValueError("Tradier trade mode only supports SPX; use signal mode (alerts) for XSP")
         if self.broker == "schwab" and self.model != "spy03":
             raise ValueError("broker 'schwab' is data-only and currently supported for model = 'spy03'")
         if self.mode not in ("signal", "trade"):
