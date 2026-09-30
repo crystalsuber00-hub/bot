@@ -82,3 +82,12 @@ class DayRecord:
     position: Optional[Position] = None
     skipped_reason: Optional[str] = None
     extra: dict = field(default_factory=dict)
+
+
+@dataclass
+class Bar:
+    time: str  # bar start, "YYYY-MM-DDTHH:MM" in exchange time (America/New_York)
+    open: float
+    high: float
+    low: float
+    close: float

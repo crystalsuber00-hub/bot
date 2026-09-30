@@ -10,7 +10,9 @@ import math
 import time
 
 from .config import Ibkr
-from .models import OptionQuote, OrderStatus, Quote
+from .models import Bar, OptionQuote, OrderStatus, Quote
+
+INDEXES = {"SPX", "XSP", "NDX", "RUT", "VIX"}
 
 log = logging.getLogger("spxbot")
 
@@ -66,10 +68,15 @@ class IBKRClient:
         while not cond() and time.time() < end:
             self.ib.sleep(0.2)
 
+    @property
+    def _sec_type(self) -> str:
+        return "IND" if self.underlying in INDEXES else "STK"
+
     def _index(self):
-        from ib_async import Index
+        """The underlying contract (an index like SPX, or a stock/ETF like SPY) and its live ticker."""
+        from ib_async import Index, Stock
         if self._idx is None:
-            idx = Index(self.underlying, "CBOE")
+            idx = Index(self.underlying, "CBOE") if self._sec_type == "IND" else Stock(self.underlying, "SMART", "USD")
             self.ib.qualifyContracts(idx)
             self._idx = idx
             self._idx_ticker = self.ib.reqMktData(idx, "", False, False)
@@ -99,18 +106,23 @@ class IBKRClient:
         return Quote(last=last, open=open_, prev_close=prev)
 
     def get_chain(self, symbol: str, expiration: str, root: str | None = None,
-                  right: str | None = None) -> list[OptionQuote]:
-        """Quotes+greeks for strikes near spot on the side we need (keeps within IB's market-data line limit)."""
+                  right: str | None = None, near: float | None = None) -> list[OptionQuote]:
+        """Quotes+greeks for strikes near spot on the side we need (keeps within IB's market-data line limit).
+        near: only strikes within this many points of spot, both sides (e.g. at-the-money SPY)."""
         self._ensure()
         idx, _ = self._index()
         spot = self.get_quote(symbol).last
         ymd = expiration.replace("-", "")
         root = root or symbol
-        chains = self.ib.reqSecDefOptParams(symbol, "", "IND", idx.conId)
+        chains = self.ib.reqSecDefOptParams(symbol, "", self._sec_type, idx.conId)
         strikes = sorted({k for c in chains if c.tradingClass == root and ymd in c.expirations for k in c.strikes})
         w, buf = spot * self.cfg.strike_window_pct, self.cfg.strike_buffer
         want = []
         for k in strikes:
+            if near is not None:
+                if abs(k - spot) <= near:
+                    want += [make_key(root, expiration, r, k) for r in ("put", "call") if right in (None, r)]
+                continue
             if right in (None, "put") and spot - w - buf <= k <= spot:
                 want.append(make_key(root, expiration, "put", k))
             if right in (None, "call") and spot <= k <= spot + w + buf:
@@ -118,6 +130,37 @@ class IBKRClient:
         if len(want) > 95:
             log.warning("%d strikes requested; IB default is ~100 market-data lines", len(want))
         return self._snapshot(want, keep=False)
+
+    def get_bars(self, symbol: str, day: str, minutes: int) -> list[Bar]:
+        """Intraday bars for `day` (must be today or recent), pre-market included, times in New York."""
+        from zoneinfo import ZoneInfo
+        self._ensure()
+        idx, _ = self._index()
+        size = f"{minutes} min" + ("s" if minutes > 1 else "")
+        ny = ZoneInfo("America/New_York")
+        from datetime import datetime
+        end = "" if day == datetime.now(ny).date().isoformat() else f"{day.replace('-', '')} 20:00:00 US/Eastern"
+        bars = self.ib.reqHistoricalData(idx, end, "1 D", size, "TRADES", False, 2)
+        out = []
+        for b in bars or []:
+            t = b.date.astimezone(ny).strftime("%Y-%m-%dT%H:%M")
+            if t.startswith(day) and t[11:] < "16:00":
+                out.append(Bar(t, float(b.open), float(b.high), float(b.low), float(b.close)))
+        return out
+
+    def get_daily(self, symbol: str, start: str, end: str) -> list[Bar]:
+        self._ensure()
+        idx, _ = self._index()
+        bars = self.ib.reqHistoricalData(idx, "", "10 D", "1 day", "TRADES", True, 1)
+        out = [Bar(str(b.date)[:10], float(b.open), float(b.high), float(b.low), float(b.close)) for b in bars or []]
+        return [b for b in out if start <= b.time <= end]
+
+    def get_expirations(self, symbol: str) -> list[str]:
+        self._ensure()
+        idx, _ = self._index()
+        chains = self.ib.reqSecDefOptParams(symbol, "", self._sec_type, idx.conId)
+        ymd = {e for c in chains if c.tradingClass == symbol for e in c.expirations}
+        return sorted(f"{e[:4]}-{e[4:6]}-{e[6:]}" for e in ymd)
 
     def get_option_quotes(self, symbols: list[str]) -> dict[str, OptionQuote]:
         self._ensure()

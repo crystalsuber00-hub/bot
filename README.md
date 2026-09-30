@@ -99,6 +99,26 @@ Yahoo only serves ~60 days of 5-minute bars, so `data/` accumulates: re-run `--r
 
 Tests: `pip install -e '.[dev]' && pytest`
 
+## SPY 0/3 live signals (second model)
+A separate, **signal-only** model built from the *SPY 0/3 – DTE Timing Guide*: buy SPY calls/puts at level reactions, 0DTE in the morning, 3DTE in the afternoon. It never places orders; it sends alerts and paper-tracks each signal at the option mid.
+```
+cp config.spy03.example.toml spy03.toml
+spxbot -c spy03.toml --check   # data, today's map, 0DTE/3DTE contract picks, test alert
+spxbot -c spy03.toml           # live signals (--until 16:10 to stop by itself)
+```
+| Guide rule | What the bot does |
+|---|---|
+| Clock first: 9:30–11:30 0DTE, 11:30–1:00 no trade, 1:00–4:00 3DTE | New signals only inside the two windows. Alerts at 11:30 (middle checkpoint, thesis status) and 1:00 (3DTE window open or closed, and why). |
+| The map: prior-day high/low, pre-market high/low, whole-dollar zones; keep only a few | Builds the map once at the open, merges levels within $0.30, keeps your `manual_levels` plus the nearest few (`max_zones`), and sends it as the first alert. |
+| A touch is not a trade | Needs a completed 5-min bar that touches the level and closes ≥ $0.10 past it with a decisive body (≥ 50% of the range). Wicks, chop around the level, moves already > $0.60 past it, and < 1.5:1 room to the next zone are **passed on**, and you get a "PASS" alert saying why (the guide's "trade I didn't take"). |
+| Bullish → call, bearish → put; invalidation before entry | Invalidation = level ∓ $0.45 on a bar close; target = next zone. Both are in the entry alert. |
+| Contract fits the window | Morning: 0DTE. Afternoon: first expiration ≥ 3 trading days out. Nearest-the-money strike with delta 0.40–0.60, bid/ask spread ≤ 10% of mid, premium $0.30–$5. |
+| Risk: ~1% per idea, daily loss cap, no adding | Contracts = 1% of `account_size` ÷ (premium × 100 × 20% stop). Skips if 1 contract is over budget. One signal open at a time, 1 morning + 1 afternoon max, stops after `max_daily_loss`. |
+| 3DTE is continuation; no revenge | Afternoon signals need an intact morning thesis in the same direction. A losing morning signal or a morning thesis that was invalidated closes the afternoon. |
+| Exits: symmetric 20% target / 20% stop | Exits on option mid +20% / −20%, SPY closing through invalidation, SPY reaching the next zone, 0DTE at 12:00, 3DTE at 15:55 (`three_dte_exit_time = ""` to carry overnight). |
+
+What's mine, not the guide's: the guide says "what counts as clean" is a live judgement call, so every number in the reaction rules (tolerances, body ratio, chase distance, invalidation buffer, 1.5:1 room) and the 12:00 0DTE cutoff are my mechanical stand-ins; tune them in `spy03.toml`. The pass/fail rules are unit-tested on made-up bars only, not backtested, and haven't run against live Tradier/IB data. The guide's 73% win rate and P&L figures are the author's claims and say nothing about how these rules will do. Tradier needs a production token (sandbox data is delayed); IB needs SPY + OPRA data and a `client_id` different from the SPX bot's.
+
 ## Assumptions to check
 - "Price movement" = SPX now vs. today's open at entry time. Set `reference = "prev_close"` for gap-inclusive, and `min_move_pct` to skip flat days.
 - Defaults are 0DTE SPXW, $10 wide, 1 contract, min credit $0.50 — none of these were in your description, so adjust.

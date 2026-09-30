@@ -40,6 +40,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     cfg = load_config(args.config)
+    spy03 = cfg.model == "spy03"
+    if spy03 and (args.report or args.chart or args.clear_halt):
+        ap.error("--report/--chart/--clear-halt are for the spx_credit model; spy03 history is in "
+                 + cfg.spy03.state_file)
     if args.report:
         from .report import build_report
         print(build_report(cfg, State(cfg.state_file), args.days))
@@ -55,13 +59,26 @@ def main() -> None:
         return
     if cfg.broker == "ibkr":
         from .ibkr import IBKRClient
-        client = IBKRClient(cfg.ibkr, readonly=cfg.mode == "signal", underlying=cfg.symbol)
+        client = IBKRClient(cfg.ibkr, readonly=spy03 or cfg.mode == "signal",
+                            underlying=cfg.spy03.symbol if spy03 else cfg.symbol)
     else:
         if not cfg.tradier.token:
             ap.error("set TRADIER_TOKEN (or tradier.token in config)")
-        if cfg.mode == "trade" and not cfg.tradier.account_id:
+        if cfg.mode == "trade" and not spy03 and not cfg.tradier.account_id:
             ap.error("trade mode needs TRADIER_ACCOUNT_ID")
         client = TradierClient(cfg.tradier)
+
+    if spy03:
+        from .spy03_engine import Spy03Engine, Spy03State
+        engine = Spy03Engine(cfg, client, Notifier(cfg.notify), Spy03State(cfg.spy03.state_file))
+        if args.check:
+            raise SystemExit(0 if engine.check() else 1)
+        if args.once:
+            return engine.tick()
+        lock = single_instance(cfg.lock_port)
+        if lock is None:
+            raise SystemExit("spxbot is already running (lock port in use); not starting a second copy")
+        return engine.run_forever(args.until)
 
     if args.check:
         from .check import run_check

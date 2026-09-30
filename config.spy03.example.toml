@@ -1,0 +1,70 @@
+# SPY 0/3 live signals (from the "SPY 0/3 - The DTE Timing Guide").
+# Copy to spy03.toml and run: spxbot -c spy03.toml
+# Signal-only: alerts + paper tracking. This model never places orders.
+
+model = "spy03"
+broker = "tradier"         # "tradier" or "ibkr" (data only)
+poll_seconds = 30
+lock_port = 47202          # different from the SPX bot so both can run at once
+
+[spy03]
+symbol = "SPY"
+state_file = "spy03_state.json"
+
+# The clock (Eastern). 0DTE eligible in the morning, nothing in the middle, 3DTE in the afternoon.
+zero_dte_start = "09:30"
+zero_dte_end = "11:30"
+three_dte_start = "13:00"
+three_dte_end = "15:30"        # last new 3DTE signal
+zero_dte_exit_time = "12:00"   # an open 0DTE is closed here (not in the guide; pick your own cutoff)
+three_dte_exit_time = "15:55"  # "" = let 3DTE signals carry overnight
+three_dte_days = 3
+
+# The map. Your own levels always stay on it; the rest is trimmed to the nearest few (three-zone rule).
+manual_levels = []             # e.g. [650, 652.5]; update each morning before the open
+use_prior_day = true           # prior-day high / low / close
+use_premarket = true           # pre-market high / low
+round_step = 5.0               # whole-dollar zones every $5 (0 = off)
+max_zones = 4
+
+# The reaction (a touch is not a trade). 5-minute bars.
+bar_minutes = 5
+touch_tolerance = 0.10
+confirm_distance = 0.10        # close at least this far past the level
+min_body_ratio = 0.5           # decisive bar, not just a wick
+max_level_crosses = 3          # chop filter
+max_chase = 0.60               # further than this past the level = chasing, skip
+invalidation_buffer = 0.45     # thesis wrong if SPY closes this far back through the level
+min_reward_risk = 1.5          # room to the next zone vs distance to invalidation
+
+# The contract: near the money, liquid.
+min_delta = 0.40
+max_delta = 0.60
+max_spread_pct = 0.10
+min_premium = 0.30
+max_premium = 5.00
+
+# The risk.
+premium_target_pct = 0.20      # symmetric 20% target ...
+premium_stop_pct = 0.20        # ... and 20% stop on the option premium
+account_size = 10000
+risk_pct = 0.01                # 1% of the account at risk per idea
+max_contracts = 10
+max_morning_trades = 1
+max_afternoon_trades = 1
+max_daily_loss = 200
+require_morning_thesis = true
+skip_dates = []                # FOMC / CPI / jobs days you want to sit out
+
+[tradier]
+sandbox = false                # sandbox data is delayed; live signals need a production token
+
+[ibkr]
+host = "127.0.0.1"
+port = 4002
+client_id = 18                 # different from the SPX bot's client_id if both run
+market_data_type = 1
+
+[notify]
+console = true
+# same env vars as the SPX bot: NTFY_TOPIC, TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID, DISCORD_WEBHOOK_URL, WEBHOOK_URL
