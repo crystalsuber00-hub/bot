@@ -143,6 +143,12 @@ What's mine, not the guide's: the guide says "what counts as clean" is a live ju
 
 Before release this path was run end to end over 20 real trading days (Sep 1-29 2026): the real engine and Schwab client against a fake Schwab API replaying Yahoo 5-min prices, with model option prices. Result: no errors, a signal every day, every contract 0DTE and under $150, every trade closed by 15:50. It has not yet talked to the real Schwab API; `--check` on deploy day is that test.
 
+## Getting an answer faster than weeks of paper trading
+- **Shadow tracking (on by default, `track_all_setups`):** every setup below the alert bar is paper-tracked silently with real Schwab quotes. `spxbot -c stocks.toml --report` shows alerted and shadow results separately and by conviction score, so you learn 3-5x faster whether higher scores really do better.
+- **Real historical option prices:** a month of Massive (formerly Polygon) Options Starter (~$29) or ThetaData Value (~$40) gives 1-2 years of real option prices, enough to backtest these exact rules on hundreds of trades in hours instead of months of forward testing.
+
+Exit settings were chosen by a 59-day model test (Jul 8 - Sep 29 2026, estimated option prices): a -35% stop beat -20%, -50%, no stop and +30%/-35% for high-conviction signals under cheap, normal and expensive price assumptions, but none of the settings was reliably profitable with every signal included.
+
 ## 0DTE stock option signals (small accounts)
 Same level -> reaction rules as SPY 0/3, run on a watchlist of high-volume stocks and ETFs (default: SPY, QQQ, IWM, META, AAPL, TSLA, MSFT, NVDA, AMZN, AMD, GOOGL, PLTR; any share price). Every signal is **one 0DTE contract that costs less than $150** at the moment of the signal, and only setups scoring **at least 6 of 7 conviction checks** are alerted. Signal-only: alerts and paper tracking, no orders.
 ```
@@ -155,11 +161,11 @@ spxbot -c stocks.toml           # live (add --until 16:10 to stop by itself)
 - **Conviction checklist (alerts need 6/7, `min_conviction`):** key level (prior-day or pre-market high/low), two levels in the same zone, first test of the level today, with the stock's move since the open, SPY and QQQ moving the same way, strong candle (body >= 70%), room to the next level >= 2:1. The alert shows which boxes are ticked. It grades how much lines up; it has not been shown to raise the win rate (on SPY, stricter filters didn't).
 - **Strike:** the one nearest the money whose contract is under $150 right now, with a bid/ask spread under 10% of the price and delta 0.20-0.60. For expensive stocks this moves out of the money; if nothing fits, no signal.
 - **Entry alert:** contract, strike, cost, bid/ask and spread, delta, stock price vs the open, why, take-profit and stop in both option and stock prices, time exit, most you can lose, the stock's levels.
-- **Exit plan alert** right after each entry: take-profit price (+50% on the option), stop price (-20%), the stock price that invalidates the idea, and the 15:50 time exit, ready to enter as a bracket order.
-- **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -16% (80% of the way to the stop).
+- **Exit plan alert** right after each entry: take-profit price (+50% on the option), stop price (-35%), the stock price that invalidates the idea, and the 15:50 time exit, ready to enter as a bracket order.
+- **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -28% (80% of the way to the stop).
 - **"EXIT NOW" alerts:** take profit hit, stop hit, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. They give the price, P&L and minutes held.
 - **Every qualifying setup is sent** (no daily cap; one open signal per ticker).
-- **At least one signal a day:** if nothing reached 6/7 by 11:00, the bar drops to 4/7; by 11:20 any level reaction counts, with looser candle/room rules; if the morning ends empty the bot keeps looking until 14:00, and at 13:30 it sends the day's strongest trending ticker whose contract fits. These are headed **LOWER CONVICTION** or **LAST-RESORT TREND SIGNAL** so you can size down or skip them. The only day with no signal is one where no ticker has a same-day contract under $150.
+- **Only 6/7+ setups alert you by default; some days have none.** Optional daily minimum (`min_signals_per_day = 1`, off by default because the forced trades lost money in every test): if nothing reached 6/7 by 11:00, the bar drops to 4/7; by 11:20 any level reaction counts, with looser candle/room rules; if the morning ends empty the bot keeps looking until 14:00, and at 13:30 it sends the day's strongest trending ticker whose contract fits. These are headed **LOWER CONVICTION** or **LAST-RESORT TREND SIGNAL** so you can size down or skip them. The only day with no signal is one where no ticker has a same-day contract under $150.
 
 Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $150" is the most you can lose on one signal.
 

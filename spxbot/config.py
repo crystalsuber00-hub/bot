@@ -145,6 +145,7 @@ class Stocks:
         "SPY", "QQQ", "IWM", "META", "AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "AMD", "GOOGL", "PLTR"])
     max_contract_cost: float = 150.0  # $; one contract must cost LESS than this at the moment of the signal
     min_conviction: int = 6           # alert only setups that pass this many of the 7 conviction checks
+    track_all_setups: bool = True     # also paper-track, silently, every setup below the bar (for --report)
     market_symbols: list = field(default_factory=lambda: ["SPY", "QQQ"])  # "market agrees" check
     contracts: int = 1
     state_file: str = "stocks_state.json"
@@ -153,7 +154,7 @@ class Stocks:
     exit_time: str = "15:50"          # 0DTE: out before the close
     max_trades_per_day: int = 0       # 0 = no limit: every qualifying setup is sent (one open per ticker)
     # at least one signal a day: if none yet, the bar drops step by step
-    min_signals_per_day: int = 1
+    min_signals_per_day: int = 0      # 0 = off (forced trades lost money in every test); 1 = at least one a day
     fallback_time: str = "11:00"      # no signal yet by now -> accept this conviction instead
     fallback_min_conviction: int = 4
     fallback_any_time: str = "11:20"  # still none -> any valid reaction at a level
@@ -169,7 +170,7 @@ class Stocks:
     max_spread_pct: float = 0.10      # bid/ask spread / mid
     min_premium: float = 0.10
     premium_target_pct: float = 0.50  # take profit at +50% on the option
-    premium_stop_pct: float = 0.20    # stop at -20% on the option
+    premium_stop_pct: float = 0.35    # stop at -35% on the option (-20% was hit by normal 0DTE noise in tests)
     warn_pct: float = 0.80            # "almost there" alert at 80% of the way to the target or the stop
     # reaction rules, in units of the stock's average 5-min bar range (so they fit SPY, IWM or TSLA alike)
     touch_atr: float = 0.2

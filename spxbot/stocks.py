@@ -94,6 +94,11 @@ class Trade:
     def pnl(self) -> float:
         return 0.0 if self.exit is None else (self.exit - self.entry) * 100 * self.contracts
 
+    @property
+    def shadow(self) -> bool:
+        """Tracked silently for --report (below the alert bar); never alerted."""
+        return bool(self.extra.get("shadow"))
+
 
 def check_exit(t: Trade, mid: float, stock: float, last_close: Optional[float], hhmm: str,
                k: Stocks) -> Optional[tuple[str, str]]:
@@ -173,7 +178,7 @@ class StocksEngine:
             except Exception as e:  # keep managing the others; this one is retried next tick
                 log.warning("%s: manage failed (%s)", t.id, e)
         k = self.k
-        short = sum(t.date == date for t in self.state.trades()) < k.min_signals_per_day
+        short = sum(t.date == date and not t.shadow for t in self.state.trades()) < k.min_signals_per_day
         if k.entry_start <= hhmm < k.entry_end or (short and hhmm < k.last_resort_end and hhmm >= k.entry_start):
             self._scan(day, now, date)
         if hhmm >= "16:00" and not day["summary"]:
@@ -234,10 +239,10 @@ class StocksEngine:
             self._prepare(day, now, date)
         for sym in k.watchlist:
             trades = self.state.trades()
-            n_today = sum(t.date == date for t in trades)
+            n_today = sum(t.date == date and not t.shadow for t in trades)
             if k.max_trades_per_day and n_today >= k.max_trades_per_day:
                 return
-            if sym in day["no_0dte"] or any(t.symbol == sym and t.status == "open" for t in trades):
+            if sym in day["no_0dte"] or any(t.symbol == sym and t.status == "open" and not t.shadow for t in trades):
                 continue
             try:
                 self._scan_one(sym, day, now, date, n_today)
@@ -245,7 +250,7 @@ class StocksEngine:
                 log.warning("%s: scan failed (%s)", sym, e)
         hhmm = now.strftime("%H:%M")
         if (k.trend_fallback_time and hhmm >= k.trend_fallback_time and not day.get("trend_tried")
-                and sum(t.date == date for t in self.state.trades()) < k.min_signals_per_day):
+                and sum(t.date == date and not t.shadow for t in self.state.trades()) < k.min_signals_per_day):
             try:
                 self._trend_fallback(day, now, date)
             except Exception as e:
@@ -277,19 +282,23 @@ class StocksEngine:
         checks = conviction(r, rth, spot, market, k, rules.touch_tolerance)
         score = sum(ok for _, ok in checks)
         need = self._needed(now.strftime("%H:%M"), n_today)
-        if score < need:
+        shadow = score < need
+        if shadow:
             log.info("%s: %s setup at %.2f scored %d/7, below %d; no alert", sym, r.direction,
                      r.level.price, score, need)
-            return
-        self._contract_and_enter(sym, r, rules, spot, now, date, day, rth, checks)
+            busy = any(t.symbol == sym and t.status == "open" for t in self.state.trades())
+            if not k.track_all_setups or busy:
+                return
+        self._contract_and_enter(sym, r, rules, spot, now, date, day, rth, checks, shadow=shadow)
 
-    def _contract_and_enter(self, sym, r, rules, spot, now, date, day, rth, checks, label=None) -> bool:
+    def _contract_and_enter(self, sym, r, rules, spot, now, date, day, rth, checks, label=None,
+                            shadow=False) -> bool:
         chain = self.client.get_chain(sym, date, sym, r.right, near=max(spot * 0.05, 5))
         opt, why = pick_contract(chain, r.right, spot, rules)  # priced now: one contract under the cap
         if opt is None:
             log.info("%s: %s setup, no 0DTE %s fits (%s)", sym, r.direction, r.right, why)
             return False
-        self._enter(sym, r, opt, date, spot, now, date, day, rth, checks, label)
+        self._enter(sym, r, opt, date, spot, now, date, day, rth, checks, label, shadow)
         return True
 
     def _trend_fallback(self, day: dict, now: datetime, date: str) -> None:
@@ -337,7 +346,7 @@ class StocksEngine:
             return k.min_conviction
         return k.fallback_min_conviction if hhmm < k.fallback_any_time else 0
 
-    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks, label=None) -> None:
+    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks, label=None, shadow=False) -> None:
         k = self.k
         t = Trade(id=f"{date}-{sym}-{now.strftime('%H%M')}", date=date, symbol=sym, option=opt.symbol,
                   right=r.right, strike=opt.strike, expiration=exp, contracts=k.contracts,
@@ -345,8 +354,12 @@ class StocksEngine:
                   stop=round(r.invalidation, 2), target=round(r.target, 2), level=r.level.price,
                   level_label=r.level.label, why=r.why.replace("SPY", sym),
                   extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks), "label": label or "",
-                         "entry_bid": opt.bid, "entry_ask": opt.ask})
+                         "entry_bid": opt.bid, "entry_ask": opt.ask, "shadow": shadow})
+        if shadow:
+            t.id += "-shadow"
         self.state.upsert(t)
+        if shadow:
+            return
         c = t.contracts * 100
         cost = t.entry * c
         tp, sl = t.entry * (1 + k.premium_target_pct), t.entry * (1 - k.premium_stop_pct)
@@ -354,7 +367,7 @@ class StocksEngine:
         spread_pct = (opt.ask - opt.bid) / opt.mid * 100 if opt.mid else 0
         opened = rth[0].open
         rr = abs(t.target - spot) / abs(spot - t.stop) if spot != t.stop else 0
-        n = sum(x.date == date for x in self.state.trades())
+        n = sum(x.date == date and not x.shadow for x in self.state.trades())
         score = sum(ok for _, ok in checks)
         grade = label or ("HIGH CONVICTION" if score >= k.min_conviction else
                           f"LOWER CONVICTION ({score}/7, sent to meet the {k.min_signals_per_day}-a-day minimum)")
@@ -422,6 +435,8 @@ class StocksEngine:
 
     def _warn(self, t: Trade, mid: float) -> None:
         """One heads-up each when the option is most of the way to its take-profit or its stop."""
+        if t.shadow:
+            return
         k, c = self.k, t.contracts * 100
         tp, sl = t.entry * (1 + k.premium_target_pct), t.entry * (1 - k.premium_stop_pct)
         name = f"{t.symbol} ${t.strike:g} {t.right.upper()}"
@@ -441,6 +456,8 @@ class StocksEngine:
         t.extra["exit_bid"], t.extra["exit_ask"] = t.extra.get("last_bid"), t.extra.get("last_ask")
         t.exit_time = now.isoformat(timespec="seconds")
         self.state.upsert(t)
+        if t.shadow:
+            return
         held = (now - datetime.fromisoformat(t.entry_time)).total_seconds() / 60
         head = {"target": "TAKE PROFIT HIT", "stop": "STOP HIT", "time": "TIME EXIT",
                 "invalidation": "IDEA INVALIDATED", "level_target": "STOCK HIT TARGET"}.get(kind, "EXIT")
@@ -451,7 +468,7 @@ class StocksEngine:
                          {"event": "exit", "model": "stocks", "pnl": t.pnl(), **asdict(t)})
 
     def _summary(self, date: str) -> None:
-        today = [t for t in self.state.trades() if t.date == date]
+        today = [t for t in self.state.trades() if t.date == date and not t.shadow]
         body = "\n".join(f"  {t.symbol} {t.strike:g}{t.right[0].upper()}: {t.pnl():+.0f} $ ({t.exit_reason or 'open'})"
                          for t in today) or "  no trade today"
         self.notify.send(f"0DTE stock signals {date}\n{body}", {"event": "summary", "model": "stocks", "date": date})

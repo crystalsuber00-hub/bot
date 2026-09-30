@@ -109,7 +109,7 @@ def test_signal_is_one_0dte_contract_under_150(tmp_path):
     text = sink.sent[1][0]
     assert "BUY 1x TSLA 2026-09-30" in text and "Take profit" in text and "Stop" in text and "levels" in text
     plan = sink.sent[2][1]
-    assert plan["take_profit"] == round(t["entry"] * 1.5, 2) and plan["option_stop"] == round(t["entry"] * 0.8, 2)
+    assert plan["take_profit"] == round(t["entry"] * 1.5, 2) and plan["option_stop"] == round(t["entry"] * 0.65, 2)
     assert "TAKE PROFIT: sell at" in sink.sent[2][0] and "(+50%" in sink.sent[2][0]
 
 
@@ -135,7 +135,7 @@ def test_near_stop_warning(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.tick(at("09:50"))
     t = sink.sent[1][1]
-    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 0.82, t["entry"] * 0.84, 0.4)
+    feed.quotes[t["option"]] = OptionQuote(t["option"], t["strike"], "call", t["entry"] * 0.70, t["entry"] * 0.72, 0.4)
     e.tick(at("09:51"))
     assert sink.events()[-1] == "near_stop" and "NEAR STOP" in sink.sent[-1][0]
 
@@ -146,7 +146,8 @@ def test_check_exit_rules():
               entry=1.50, entry_time="", stock_entry=650, stop=651, target=647, level=650.5, level_label="", why="")
     assert check_exit(t, 2.25, 649, None, "10:00", k)[0] == "target"
     assert check_exit(t, 1.81, 649, None, "10:00", k) is None  # +21% is not +50%
-    assert check_exit(t, 1.19, 650, None, "10:00", k)[0] == "stop"
+    assert check_exit(t, 0.97, 650, None, "10:00", k)[0] == "stop"  # -35%
+    assert check_exit(t, 1.19, 650, None, "10:00", k) is None  # -21% is normal noise, not a stop
     assert check_exit(t, 1.40, 650, 651.2, "10:00", k)[0] == "invalidation"
     assert check_exit(t, 1.60, 646.9, None, "10:00", k)[0] == "level_target"
     assert check_exit(t, 1.60, 649, None, "15:50", k)[0] == "time"
@@ -180,6 +181,7 @@ def test_conviction_misses_are_counted():
 def test_low_conviction_setup_is_not_alerted(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.k.min_conviction = 6
+    e.k.min_signals_per_day = 1
     e.tick(at("09:50"))
     assert sink.events() == ["map"]
 
@@ -187,6 +189,8 @@ def test_low_conviction_setup_is_not_alerted(tmp_path):
 def test_conviction_bar_drops_only_until_the_daily_minimum(tmp_path):
     e, _, _ = engine(tmp_path)
     e.k.min_conviction = 6
+    e.k.min_signals_per_day = 1
+    e.k.min_signals_per_day = 1
     assert e._needed("10:30", 0) == 6
     assert e._needed("11:00", 0) == 4
     assert e._needed("11:20", 0) == 0
@@ -196,6 +200,7 @@ def test_conviction_bar_drops_only_until_the_daily_minimum(tmp_path):
 def test_daily_minimum_sends_a_labeled_lower_conviction_signal(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.k.min_conviction = 6
+    e.k.min_signals_per_day = 1
     feed.get_bars = lambda s, day, m: pattern_ending("11:25")
     e.tick(at("11:25"))  # nothing sent yet today, past fallback_any_time: any valid reaction counts
     assert sink.events() == ["map", "entry", "exit_plan"]
@@ -205,12 +210,14 @@ def test_daily_minimum_sends_a_labeled_lower_conviction_signal(tmp_path):
 def test_keeps_looking_after_the_window_until_one_is_sent(tmp_path):
     e, feed, sink = engine(tmp_path)
     e.k.min_conviction = 6
+    e.k.min_signals_per_day = 1
     feed.get_bars = lambda s, day, m: pattern_ending("12:30")
     e.tick(at("12:30"))  # past entry_end, before last_resort_end, still no signal today
     assert "entry" in sink.events()
     (tmp_path / "b").mkdir()
     e2, feed2, sink2 = engine(tmp_path / "b")
     e2.k.min_conviction = 6
+    e2.k.min_signals_per_day = 1
     feed2.get_bars = lambda s, day, m: pattern_ending("14:05")
     e2.tick(at("14:05"))  # past last_resort_end: stop looking
     assert "entry" not in sink2.events()
@@ -226,6 +233,7 @@ def test_every_qualifying_ticker_is_sent(tmp_path):
 
 def test_trend_fallback_when_no_level_setup_all_day(tmp_path):
     e, feed, sink = engine(tmp_path)
+    e.k.min_signals_per_day = 1
     up = [bar(f"{9 + (30 + 5 * i) // 60:02d}:{(30 + 5 * i) % 60:02d}", 640 + i, 641.2 + i, 639.8 + i, 641 + i)
           for i in range(48)]  # steady climb 09:30-13:25, never pulling back to a level
     feed.get_bars = lambda s, day, m: list(up)
@@ -268,3 +276,35 @@ def test_report_counts_mid_and_realistic_pnl(tmp_path):
     text = build_report(StocksState(e.k.state_file))
     assert "1 trades" in text and "P&L at mid      +72 $" in text  # (2.12 - 1.40) x 100
     assert "realistic      +65 $" in text  # sold at the 2.10 bid, bought at the 1.45 ask: +65, less $0.08 fees
+
+
+def test_defaults_are_minus_35_stop_and_no_forced_signals():
+    k = Stocks()
+    assert k.premium_stop_pct == 0.35 and k.min_signals_per_day == 0 and k.track_all_setups
+
+
+def test_below_the_bar_is_tracked_silently_and_reported(tmp_path):
+    from spxbot.stocks_report import build_report
+    e, feed, sink = engine(tmp_path)
+    e.k.min_conviction = 6  # the test setup scores lower -> shadow
+    e.tick(at("09:50"))
+    assert sink.events() == ["map"]  # nothing sent to the phone
+    [t] = e.state.trades()
+    assert t.shadow and t.status == "open"
+    feed.quotes[t.option] = OptionQuote(t.option, t.strike, "call", t.entry * 1.5, t.entry * 1.54, 0.6)
+    e.tick(at("09:55"))
+    assert sink.events() == ["map"]  # its exit is silent too
+    assert e.state.trades()[0].exit_reason == "target"
+    text = build_report(StocksState(e.k.state_file))
+    assert "shadow (not sent)    1 trades" in text and "alerted            no trades" in text
+
+
+def test_shadow_does_not_block_a_real_alert_on_the_same_ticker(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    e.k.min_conviction = 6
+    e.tick(at("09:50"))
+    assert e.state.trades()[0].shadow
+    e.k.min_conviction = 0  # a later setup clears the bar
+    feed.get_bars = lambda s, day, m: pattern_ending("10:10")
+    e.tick(at("10:10"))
+    assert "entry" in sink.events()

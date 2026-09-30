@@ -25,6 +25,8 @@ def realistic(t: Trade) -> Optional[float]:
 
 
 def kind(t: Trade) -> str:
+    if t.shadow:
+        return "shadow"
     label = t.extra.get("label") or ""
     if label.startswith("LAST-RESORT"):
         return "trend fallback"
@@ -52,14 +54,23 @@ def build_report(state: StocksState, days: Optional[int] = None) -> str:
         start = (date.today() - timedelta(days=days)).isoformat()
         trades = [t for t in trades if t.date >= start]
     trades.sort(key=lambda t: t.entry_time)
-    if not trades:
+    shadows = [t for t in trades if t.shadow]
+    trades = [t for t in trades if not t.shadow]
+    if not trades and not shadows:
         return "No closed signals recorded yet. Let the bot run for a few weeks, then try again."
-    out = [f"0DTE stock signals {trades[0].date} .. {trades[-1].date}: {len({t.date for t in trades})} days",
-           _line("all", trades)]
+    span = trades or shadows
+    out = [f"0DTE stock signals {span[0].date} .. {span[-1].date}: {len({t.date for t in span})} days",
+           _line("alerted", trades)]
     for k in ("high conviction", "lower conviction", "trend fallback"):
         sub = [t for t in trades if kind(t) == k]
         if sub:
             out.append(_line(k, sub))
+    if shadows:
+        out.append(_line("shadow (not sent)", shadows))
+        for c in range(7, -1, -1):
+            sub = [t for t in trades + shadows if t.extra.get("conviction") == c]
+            if sub:
+                out.append(_line(f"  scored {c}/7", sub))
     out.append("\nBy exit reason: " + ", ".join(
         f"{r} {sum(t.exit_reason == r for t in trades)}" for r in sorted({t.exit_reason for t in trades})))
     by_sym = {}
@@ -72,7 +83,7 @@ def build_report(state: StocksState, days: Optional[int] = None) -> str:
         out.append(f"  {t.entry_time[:16].replace('T', ' ')} {t.symbol:<5} {t.strike:g}{t.right[0].upper():<2}"
                    f" {t.entry:>5.2f} -> {t.exit:>5.2f} {t.exit_reason:<12} {t.pnl():>+6.0f} $"
                    + (f"  (realistic {r:+.0f} $)" if r is not None else "") + f"  [{kind(t)}]")
-    n = len(trades)
+    n = len(trades) + len(shadows)
     out.append(f"\n{n} trades is {'far too few' if n < 30 else 'still few' if n < 100 else 'a start'} "
                "to tell skill from luck; judge the realistic column after 50-100 trades.")
     return "\n".join(out)
