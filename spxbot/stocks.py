@@ -1,4 +1,4 @@
-"""0DTE option signals on stocks: SPY 0/3 level -> reaction rules on any stock, one contract under $200.
+"""0DTE option signals on stocks: SPY 0/3 level -> reaction rules on any stock, one contract under $150, high conviction only.
 
 Each morning every watchlist stock (any share price) gets its own map (prior-day high/low/close, pre-market
 high/low). A decisive 5-min bar off / through a level in the entry window is a signal: bullish -> call,
