@@ -157,6 +157,10 @@ class Stocks:
     fallback_time: str = "11:00"      # no signal yet by now -> accept this conviction instead
     fallback_min_conviction: int = 4
     fallback_any_time: str = "11:20"  # still none -> any valid reaction at a level
+    relaxed_body_ratio: float = 0.35  # from fallback_any_time (daily minimum not met): looser reaction rules
+    relaxed_reward_risk: float = 1.0
+    relaxed_chase_atr: float = 1.5
+    trend_fallback_time: str = "13:30"  # still none -> send the day's strongest trending ticker ("" = off)
     last_resort_end: str = "14:00"    # still none after entry_end -> keep looking until this time
     bar_minutes: int = 5
     # the contract: nearest the money that fits the budget, not further out than min_delta
@@ -239,6 +243,8 @@ class Config:
             raise ValueError("stocks: premium_stop_pct must be in (0, 1) and premium_target_pct > 0")
         if not 0 <= k.fallback_min_conviction <= k.min_conviction <= 7:
             raise ValueError("stocks: need 0 <= fallback_min_conviction <= min_conviction <= 7")
+        if k.trend_fallback_time and not k.entry_start <= k.trend_fallback_time <= k.last_resort_end:
+            raise ValueError("stocks: trend_fallback_time must be between entry_start and last_resort_end")
         if not k.entry_start <= k.fallback_time <= k.fallback_any_time <= k.entry_end <= k.last_resort_end <= k.exit_time:
             raise ValueError("stocks: need entry_start <= fallback_time <= fallback_any_time <= entry_end "
                              "<= last_resort_end <= exit_time")

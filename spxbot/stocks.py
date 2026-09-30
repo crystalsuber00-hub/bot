@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 from .config import Config, Spy03, Stocks
 from .models import Bar
 from .notify import Notifier
-from .spy03 import Level, build_map, find_reaction, pick_contract, pick_expiration
+from .spy03 import Level, Reaction, build_map, find_reaction, pick_contract, pick_expiration
 
 log = logging.getLogger("spxbot")
 FOOTER = "Educational signal, not financial advice."
@@ -147,8 +147,9 @@ class StocksEngine:
         step = self.k.bar_minutes
         boundary = now.replace(minute=now.minute - now.minute % step, second=0, microsecond=0)
         cut = boundary.strftime("%Y-%m-%dT%H:%M")
+        expect = (boundary - timedelta(minutes=step)).strftime("%Y-%m-%dT%H:%M")  # the bar that just closed
         key, bars = self._bars.get(symbol, ("", []))
-        if key != cut:
+        if key != cut or not any(b.time == expect for b in bars):  # new bar due, or the feed hadn't caught up
             bars = self.client.get_bars(symbol, now.date().isoformat(), step)
             self._bars[symbol] = (cut, bars)
         return [b for b in bars if b.time < cut]
@@ -171,35 +172,45 @@ class StocksEngine:
         self.state.save()
 
     # --- the morning map ----------------------------------------------------------
-    def _prepare(self, day: dict, now: datetime, date: str) -> None:
-        """Once a day: levels for every ticker, whether it has an option expiring today, one map alert."""
-        rows = []
+    def _map_for(self, sym: str, day: dict, now: datetime, date: str) -> Optional[str]:
+        """Build one ticker's levels (and note whether it has a 0DTE today). Returns its map line, or None."""
+        bars = self._completed(sym, now)
+        rth = [b for b in bars if b.time[11:] >= "09:30"]
+        if not rth:
+            return None
         start = (now - timedelta(days=10)).date().isoformat()
+        daily = [b for b in self.client.get_daily(sym, start, date) if b.time < date]
+        prior = daily[-1] if daily else None
+        pre = [b for b in bars if b.time[11:] < "09:30"]
+        levels = build_map(prior, pre, rth[0].open, rules_for(self.k, bar_range(rth)))
+        if not pick_expiration(self.client.get_expirations(sym), now.date(), 0) and sym not in day["no_0dte"]:
+            day["no_0dte"].append(sym)
+        day["maps"][sym] = [z.to_dict() for z in levels]
+        last = rth[-1].close
+        chg = f"{(last - prior.close) / prior.close * 100:+.1f}%" if prior else ""
+        tag = "" if sym not in day["no_0dte"] else "  [no 0DTE today, skipped]"
+        return f"{sym} {last:.2f} {chg}{tag}\n    " + " | ".join(f"{z.price:.2f} {z.label}" for z in reversed(levels))
+
+    def _prepare(self, day: dict, now: datetime, date: str) -> None:
+        """Levels for every ticker; one map alert once data is flowing. Tickers that fail are retried later."""
+        rows = []
         for sym in self.k.watchlist:
+            if sym in day["maps"]:
+                continue
             try:
-                bars = self._completed(sym, now)
-                rth = [b for b in bars if b.time[11:] >= "09:30"]
-                if not rth:
-                    rows.append(f"{sym}: no data yet")
-                    continue
-                daily = [b for b in self.client.get_daily(sym, start, date) if b.time < date]
-                prior = daily[-1] if daily else None
-                pre = [b for b in bars if b.time[11:] < "09:30"]
-                levels = build_map(prior, pre, rth[0].open, rules_for(self.k, bar_range(rth)))
-                day["maps"][sym] = [z.to_dict() for z in levels]
-                if not pick_expiration(self.client.get_expirations(sym), now.date(), 0):
-                    day["no_0dte"].append(sym)
-                last = rth[-1].close
-                chg = f"{(last - prior.close) / prior.close * 100:+.1f}%" if prior else ""
-                tag = "" if sym not in day["no_0dte"] else "  [no 0DTE today, skipped]"
-                lv = " | ".join(f"{z.price:.2f} {z.label}" for z in reversed(levels))
-                rows.append(f"{sym} {last:.2f} {chg}{tag}\n    {lv}")
+                row = self._map_for(sym, day, now, date)
             except Exception as e:
                 log.warning("%s: map failed (%s)", sym, e)
-                rows.append(f"{sym}: data error")
+                row = None
+            if row:
+                rows.append(row)
+        if day.get("prepared") or not rows:
+            return  # already announced, or no data at all yet (market holiday / feed not up): try again next tick
         day["prepared"] = True
+        missing = [s for s in self.k.watchlist if s not in day["maps"]]
         k = self.k
         self.notify.send(f"0DTE stock map {date} (levels high to low)\n" + "\n".join(rows) +
+                         (f"\nNo data yet (retrying): {', '.join(missing)}" if missing else "") +
                          f"\nSignals {k.entry_start}-{k.entry_end} ET, 1 contract under ${k.max_contract_cost:g}, "
                          f"high conviction = {k.min_conviction}/7+, at least {k.min_signals_per_day} a day, "
                          f"all out by {k.exit_time}.",
@@ -209,7 +220,7 @@ class StocksEngine:
     # --- entries -----------------------------------------------------------------
     def _scan(self, day: dict, now: datetime, date: str) -> None:
         k = self.k
-        if not day.get("prepared"):
+        if not day.get("prepared") or len(day["maps"]) < len(k.watchlist):
             self._prepare(day, now, date)
         for sym in k.watchlist:
             trades = self.state.trades()
@@ -219,40 +230,95 @@ class StocksEngine:
             if sym in day["no_0dte"] or any(t.symbol == sym and t.status == "open" for t in trades):
                 continue
             try:
-                bars = self._completed(sym, now)
+                self._scan_one(sym, day, now, date, n_today)
+            except Exception as e:  # one bad ticker must not stop the others
+                log.warning("%s: scan failed (%s)", sym, e)
+        hhmm = now.strftime("%H:%M")
+        if (k.trend_fallback_time and hhmm >= k.trend_fallback_time and not day.get("trend_tried")
+                and sum(t.date == date for t in self.state.trades()) < k.min_signals_per_day):
+            try:
+                self._trend_fallback(day, now, date)
+            except Exception as e:
+                log.warning("trend fallback failed (%s)", e)
+
+    def _scan_one(self, sym: str, day: dict, now: datetime, date: str, n_today: int) -> None:
+        k = self.k
+        if sym not in day["maps"]:
+            return
+        bars = self._completed(sym, now)
+        rth = [b for b in bars if b.time[11:] >= "09:30"]
+        unit = bar_range(rth)
+        if not rth or unit <= 0 or day["last_bar"].get(sym) == rth[-1].time:
+            return
+        day["last_bar"][sym] = rth[-1].time
+        rules = rules_for(k, unit)
+        if n_today < k.min_signals_per_day and now.strftime("%H:%M") >= k.fallback_any_time:
+            rules = replace(rules, min_body_ratio=k.relaxed_body_ratio, min_reward_risk=k.relaxed_reward_risk,
+                            max_chase=k.relaxed_chase_atr * unit, max_level_crosses=5)
+        r, _ = find_reaction(rth, [Level(**z) for z in day["maps"][sym]], rules)
+        if r is None:
+            return
+        spot = self.client.get_quote(sym).last
+        if abs(spot - r.level.price) > rules.max_chase:
+            log.info("%s: price %.2f already ran past %.2f (no chasing)", sym, spot, r.level.price)
+            return
+        market = {m: [x for x in self._completed(m, now) if x.time[11:] >= "09:30"]
+                  for m in k.market_symbols if m != sym}
+        checks = conviction(r, rth, spot, market, k, rules.touch_tolerance)
+        score = sum(ok for _, ok in checks)
+        need = self._needed(now.strftime("%H:%M"), n_today)
+        if score < need:
+            log.info("%s: %s setup at %.2f scored %d/7, below %d; no alert", sym, r.direction,
+                     r.level.price, score, need)
+            return
+        self._contract_and_enter(sym, r, rules, spot, now, date, day, rth, checks)
+
+    def _contract_and_enter(self, sym, r, rules, spot, now, date, day, rth, checks, label=None) -> bool:
+        chain = self.client.get_chain(sym, date, sym, r.right, near=max(spot * 0.05, 5))
+        opt, why = pick_contract(chain, r.right, spot, rules)  # priced now: one contract under the cap
+        if opt is None:
+            log.info("%s: %s setup, no 0DTE %s fits (%s)", sym, r.direction, r.right, why)
+            return False
+        self._enter(sym, r, opt, date, spot, now, date, day, rth, checks, label)
+        return True
+
+    def _trend_fallback(self, day: dict, now: datetime, date: str) -> None:
+        """Daily minimum still not met late in the day: the strongest trending ticker whose contract fits."""
+        k = self.k
+        cands = []
+        for sym in k.watchlist:
+            if sym in day["no_0dte"] or sym not in day["maps"]:
+                continue
+            try:
+                rth = [b for b in self._completed(sym, now) if b.time[11:] >= "09:30"]
             except Exception as e:
                 log.warning("%s: no bars (%s)", sym, e)
                 continue
-            rth = [b for b in bars if b.time[11:] >= "09:30"]
             unit = bar_range(rth)
-            if not rth or unit <= 0:
-                continue
-            rules = rules_for(k, unit)
-            if sym not in day["maps"]:
-                continue
-            if day["last_bar"].get(sym) == rth[-1].time:
-                continue
-            day["last_bar"][sym] = rth[-1].time
-            r, _ = find_reaction(rth, [Level(**z) for z in day["maps"][sym]], rules)
-            if r is None:
-                continue
-            spot = self.client.get_quote(sym).last
-            market = {m: [x for x in self._completed(m, now) if x.time[11:] >= "09:30"]
-                      for m in k.market_symbols if m != sym}
-            checks = conviction(r, rth, spot, market, k, rules.touch_tolerance)
-            score = sum(ok for _, ok in checks)
-            need = self._needed(now.strftime("%H:%M"), n_today)
-            if score < need:
-                log.info("%s: %s setup at %.2f scored %d/7, below %d; no alert", sym, r.direction,
-                         r.level.price, score, need)
-                continue
-            exp = date
-            chain = self.client.get_chain(sym, exp, sym, r.right, near=max(spot * 0.05, 5))
-            opt, why = pick_contract(chain, r.right, spot, rules)  # priced now: one contract under the cap
-            if opt is None:
-                log.info("%s: %s setup, no 0DTE %s fits (%s)", sym, r.direction, r.right, why)
-                continue
-            self._enter(sym, r, opt, exp, spot, now, date, day, rth, checks)
+            if len(rth) >= 7 and unit > 0:
+                cands.append(((rth[-1].close - rth[0].open) / unit, sym, rth, unit))  # move in average-bar units
+        day["trend_tried"] = True
+        for strength, sym, rth, unit in sorted(cands, key=lambda c: -abs(c[0])):
+            up = strength > 0
+            last, recent = rth[-1], rth[-6:]
+            stop = (min(b.low for b in recent) - 0.2 * unit) if up else (max(b.high for b in recent) + 0.2 * unit)
+            risk = abs(last.close - stop)
+            target = last.close + 2 * risk if up else last.close - 2 * risk
+            r = Reaction("bullish" if up else "bearish", Level(round(rth[0].open, 2), "today's open"), last,
+                         last.close, round(stop, 2), round(target, 2), 2.0,
+                         f"{sym} is the day's strongest {'up' if up else 'down'} trend that fits the budget "
+                         f"({(last.close - rth[0].open) / rth[0].open * 100:+.2f}% since the open); no level setup today")
+            try:
+                spot = self.client.get_quote(sym).last
+                market = {m: [x for x in self._completed(m, now) if x.time[11:] >= "09:30"]
+                          for m in k.market_symbols if m != sym}
+                checks = conviction(r, rth, spot, market, k, 0.2 * unit)
+                if self._contract_and_enter(sym, r, rules_for(k, unit), spot, now, date, day, rth, checks,
+                                            label="LAST-RESORT TREND SIGNAL (no level setup today; take it small or skip)"):
+                    return
+            except Exception as e:
+                log.warning("%s: trend fallback failed (%s)", sym, e)
+        log.info("trend fallback: no ticker had a 0DTE contract under $%g", k.max_contract_cost)
 
     def _needed(self, hhmm: str, n_today: int) -> int:
         """Conviction required right now: the full bar, lowered late in the day until the daily minimum is met."""
@@ -261,14 +327,14 @@ class StocksEngine:
             return k.min_conviction
         return k.fallback_min_conviction if hhmm < k.fallback_any_time else 0
 
-    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks) -> None:
+    def _enter(self, sym, r, opt, exp, spot, now, date, day, rth, checks, label=None) -> None:
         k = self.k
         t = Trade(id=f"{date}-{sym}-{now.strftime('%H%M')}", date=date, symbol=sym, option=opt.symbol,
                   right=r.right, strike=opt.strike, expiration=exp, contracts=k.contracts,
                   entry=round(opt.mid, 2), entry_time=now.isoformat(timespec="seconds"), stock_entry=spot,
                   stop=round(r.invalidation, 2), target=round(r.target, 2), level=r.level.price,
                   level_label=r.level.label, why=r.why.replace("SPY", sym),
-                  extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks)})
+                  extra={"bar": r.bar.time, "conviction": sum(ok for _, ok in checks), "label": label or ""})
         self.state.upsert(t)
         c = t.contracts * 100
         cost = t.entry * c
@@ -279,8 +345,8 @@ class StocksEngine:
         rr = abs(t.target - spot) / abs(spot - t.stop) if spot != t.stop else 0
         n = sum(x.date == date for x in self.state.trades())
         score = sum(ok for _, ok in checks)
-        grade = "HIGH CONVICTION" if score >= k.min_conviction else \
-            f"LOWER CONVICTION ({score}/7, sent to meet the {k.min_signals_per_day}-a-day minimum)"
+        grade = label or ("HIGH CONVICTION" if score >= k.min_conviction else
+                          f"LOWER CONVICTION ({score}/7, sent to meet the {k.min_signals_per_day}-a-day minimum)")
         levels = " | ".join(f"{z['price']:.2f} {z['label']}" for z in reversed(day["maps"][sym]))
         self.notify.send(
             f"{grade}\n0DTE {sym} {t.right.upper()} signal ({r.direction}) {now.strftime('%H:%M')} ET  "
@@ -299,7 +365,7 @@ class StocksEngine:
             f"  Stop: option {sl:.2f} (-{k.premium_stop_pct:.0%}, -${(t.entry - sl) * c:.0f}) "
             f"or {sym} closes a 5-min bar {'below' if up else 'above'} {t.stop:.2f}\n"
             f"  Time exit: {k.exit_time} ET at the latest. Most you can lose: ${cost:.0f} if it expires worthless.\n"
-            f"  Room vs risk on {sym}: {rr:.1f}:1\n"
+            f"  Room vs risk on {sym}: {r.reward_risk:.1f}:1 at the signal candle, {rr:.1f}:1 from the price now\n"
             f"{sym} levels: {levels}\n{FOOTER}",
             {"event": "entry", "model": "stocks", **asdict(t)})
         self.notify.send(
@@ -321,7 +387,11 @@ class StocksEngine:
         q = self.client.get_option_quotes([t.option]).get(t.option)
         if q is None or (q.bid <= 0 and q.ask <= 0):
             log.warning("no quote for %s", t.option)
+            if hhmm >= self.k.exit_time:
+                last = t.extra.get("last_mid", t.entry)
+                self._close(t, last, "time", f"time exit {self.k.exit_time} (no live quote; last seen {last:.2f})", now)
             return
+        t.extra["last_mid"] = round(q.mid, 2)
         bars = self._completed(t.symbol, now)
         new = [b for b in bars if b.time > t.extra.get("last_seen", t.extra.get("bar", ""))]
         if new:
@@ -384,6 +454,9 @@ class StocksEngine:
             except Exception as e:
                 fails += 1
                 log.exception("tick failed")
-                if fails == 3:
+                if type(e).__name__ == "SchwabLoginNeeded" and fails == 1:
+                    self.notify.send(f"SCHWAB LOGIN NEEDED - no signals until you log in again.\n{e}",
+                                     {"event": "login_needed"})
+                elif fails == 3:
                     self.notify.send(f"0DTE stock signals can't reach the data: {e!r}.", {"event": "unreachable"})
             getattr(self.client, "sleep", time.sleep)(self.cfg.poll_seconds)

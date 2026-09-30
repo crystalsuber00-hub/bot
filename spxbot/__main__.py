@@ -69,7 +69,9 @@ def _main() -> None:
         print(make_chart(cfg, State(cfg.state_file), None if args.chart == "latest" else args.chart))
         return
     if cfg.broker == "schwab":
+        from . import schwab as _schwab
         from .schwab import SchwabClient, auth_url
+        _schwab.CONFIG_HINT = args.config or "<config>"
         if not (cfg.schwab.app_key and cfg.schwab.app_secret):
             ap.error("set SCHWAB_APP_KEY and SCHWAB_APP_SECRET (from your app on developer.schwab.com)")
         client = SchwabClient(cfg.schwab)
@@ -98,11 +100,24 @@ def _main() -> None:
         if cfg.broker == "ibkr":
             ap.error("model 'stocks' needs broker 'schwab' or 'tradier'")
         engine = StocksEngine(cfg, client, Notifier(cfg.notify), StocksState(cfg.stocks.state_file))
+        if cfg.broker == "schwab":
+            left = client.refresh_days_left()
+            relogin = f"spxbot -c {args.config} --schwab-login"
+            if args.check:
+                if left <= 0:
+                    raise SystemExit(f"[!!] Not logged in to Schwab (or the 7-day login expired). Run:  {relogin}")
+                print(f"[{'ok' if left > 1.5 else '!!'}] Schwab login valid for {left * 24:.0f} more hours"
+                      + ("" if left > 1.5 else f" - log in again soon:  {relogin}"))
+            elif left < 1.5:
+                engine.notify.send(f"Schwab login expires in {max(left, 0) * 24:.0f} h. Run:  {relogin}",
+                                   {"event": "login_expiring"})
         if args.check:
-            from datetime import date as _date
+            from datetime import datetime as _dt
+            from zoneinfo import ZoneInfo
             from .spy03 import pick_contract, pick_expiration
             from .stocks import rules_for
-            k, today = cfg.stocks, _date.today()
+            k, today = cfg.stocks, _dt.now(ZoneInfo(cfg.schedule.timezone)).date()  # market date, not the Mac's
+            failed = 0
             for sym in k.watchlist:
                 try:
                     px = client.get_quote(sym).last
@@ -118,9 +133,13 @@ def _main() -> None:
                                      if o else f"no {right} under ${k.max_contract_cost:g}")
                     print(f"[ok] {sym} {px:.2f}: 0DTE {exp} -> " + ", ".join(picks))
                 except Exception as e:
+                    failed += 1
                     print(f"[!!] {sym}: {e}")
             engine.notify.send("0DTE stock signals test alert: notifications work.", {"event": "test"})
-            print("[ok] test alert sent. No orders are ever placed by this model.")
+            print("[ok] test alert sent - check your phone. No orders are ever placed by this model.")
+            if failed:
+                raise SystemExit(f"[!!] {failed} ticker(s) failed - see above.")
+            print("[ok] ready.")
             return
         if args.once:
             return engine.tick()

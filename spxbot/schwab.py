@@ -22,6 +22,7 @@ from .models import Bar, OptionQuote, Quote
 API = "https://api.schwabapi.com"
 NY = ZoneInfo("America/New_York")
 REFRESH_DAYS = 7
+CONFIG_HINT = "<config>"  # set by the CLI so messages name the real config file
 
 
 class SchwabLoginNeeded(RuntimeError):
@@ -80,16 +81,17 @@ class SchwabClient:
 
     def _access(self) -> str:
         if not self.tok.get("refresh_token"):
-            raise SchwabLoginNeeded("not logged in to Schwab: run  spxbot -c <config> --schwab-login")
+            raise SchwabLoginNeeded(f"not logged in to Schwab: run  spxbot -c {CONFIG_HINT} --schwab-login")
         if time.time() >= self.tok.get("access_expires", 0):
             if self.refresh_days_left() <= 0:
-                raise SchwabLoginNeeded("Schwab login expired (7-day limit): run  spxbot -c <config> --schwab-login")
+                raise SchwabLoginNeeded(f"Schwab login expired (7-day limit): run  spxbot -c {CONFIG_HINT} --schwab-login")
             self._store(self._token_request({"grant_type": "refresh_token",
                                              "refresh_token": self.tok["refresh_token"]}), new_login=False)
         return self.tok["access_token"]
 
-    def _get(self, path: str, **params) -> dict:
-        r = self.s.get(f"{API}/marketdata/v1{path}", params=params, timeout=15,
+    def _get(self, path: str, query: str | None = None, **params) -> dict:
+        """`query` = a pre-encoded query string (option symbols contain spaces: sent as %20, not '+')."""
+        r = self.s.get(f"{API}/marketdata/v1{path}", params=query if query is not None else params, timeout=15,
                        headers={"Authorization": f"Bearer {self._access()}", "Accept": "application/json"})
         if r.status_code == 401:
             self.tok["access_expires"] = 0  # force a refresh on the next call
@@ -157,7 +159,7 @@ class SchwabClient:
         return out
 
     def get_option_quotes(self, symbols: list[str]) -> dict[str, OptionQuote]:
-        data = self._get("/quotes", symbols=",".join(symbols), fields="quote,reference")
+        data = self._get("/quotes", query=f"symbols={quote(','.join(symbols), safe=',')}&fields=quote,reference")
         out = {}
         for sym, v in data.items():
             if sym not in symbols or "quote" not in v:

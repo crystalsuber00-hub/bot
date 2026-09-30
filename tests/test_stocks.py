@@ -208,3 +208,20 @@ def test_every_qualifying_ticker_is_sent(tmp_path):
     feed.get_expirations = lambda s: [D]
     e.tick(at("09:50"))
     assert [p["symbol"] for _, p in sink.sent if p.get("event") == "entry"] == ["TSLA", "ABC"]
+
+
+def test_trend_fallback_when_no_level_setup_all_day(tmp_path):
+    e, feed, sink = engine(tmp_path)
+    up = [bar(f"{9 + (30 + 5 * i) // 60:02d}:{(30 + 5 * i) % 60:02d}", 640 + i, 641.2 + i, 639.8 + i, 641 + i)
+          for i in range(48)]  # steady climb 09:30-13:25, never pulling back to a level
+    feed.get_bars = lambda s, day, m: list(up)
+    feed.get_quote = lambda s: Quote(up[-1].close)
+    feed.get_daily = lambda s, a, b: [Bar("2026-09-29", 600, 601, 599, 600.5)]  # levels far away
+    feed.chain = [OptionQuote("TSLA688C", 688, "call", 1.20, 1.26, 0.45)]
+    e.tick(at("13:25"))
+    assert "entry" not in sink.events()
+    e.tick(at("13:31"))
+    entry = [(t, p) for t, p in sink.sent if p.get("event") == "entry"]
+    assert len(entry) == 1 and entry[0][0].startswith("LAST-RESORT TREND SIGNAL") and entry[0][1]["right"] == "call"
+    e.tick(at("13:40"))
+    assert sum(p.get("event") == "entry" for _, p in sink.sent) == 1  # only once

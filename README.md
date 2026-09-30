@@ -134,6 +134,15 @@ Schwab's login lasts **7 days** and can't be extended: repeat step 3 once a week
 
 What's mine, not the guide's: the guide says "what counts as clean" is a live judgement call, so every number in the reaction rules (tolerances, body ratio, chase distance, invalidation buffer, 1.5:1 room) and the 12:00 0DTE cutoff are my mechanical stand-ins; tune them in `spy03.toml`. The pass/fail rules are unit-tested on made-up bars only, not backtested, and haven't run against live Tradier/IB data. The guide's 73% win rate and P&L figures are the author's claims and say nothing about how these rules will do. Tradier needs a production token (sandbox data is delayed); IB needs SPY + OPRA data and a `client_id` different from the SPX bot's.
 
+## Deploy day (Mac, Schwab data, stock signals)
+1. `bash scripts/setup_mac.sh` - checks Python 3.11+, installs into `.venv`, creates `stocks.toml` and `.env`. It tells you what's missing; re-run it after each step.
+2. Put `NTFY_TOPIC`, `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET` in `.env` (`open -e .env`). Install the ntfy phone app and subscribe to the same topic.
+3. Log in (once a week): `. .venv/bin/activate && set -a && . ./.env && set +a && spxbot -c stocks.toml --schwab-login`
+4. `spxbot -c stocks.toml --check` must end with `[ok] ready.` and a test alert on your phone.
+5. Run it: `spxbot -c stocks.toml --until 16:10`, or `bash scripts/install_mac.sh` for every weekday at 9:15 ET (Mac awake, plugged in). Logs: `logs/spxbot.log`.
+
+Before release this path was run end to end over 20 real trading days (Sep 1-29 2026): the real engine and Schwab client against a fake Schwab API replaying Yahoo 5-min prices, with model option prices. Result: no errors, a signal every day, every contract 0DTE and under $150, every trade closed by 15:50. It has not yet talked to the real Schwab API; `--check` on deploy day is that test.
+
 ## 0DTE stock option signals (small accounts)
 Same level -> reaction rules as SPY 0/3, run on a watchlist of high-volume stocks and ETFs (default: SPY, QQQ, IWM, META, AAPL, TSLA, MSFT, NVDA, AMZN, AMD, GOOGL, PLTR; any share price). Every signal is **one 0DTE contract that costs less than $150** at the moment of the signal, and only setups scoring **at least 6 of 7 conviction checks** are alerted. Signal-only: alerts and paper tracking, no orders.
 ```
@@ -150,7 +159,7 @@ spxbot -c stocks.toml           # live (add --until 16:10 to stop by itself)
 - **"Almost there" alerts**, once each: at +40% (80% of the way to the take-profit) and at -16% (80% of the way to the stop).
 - **"EXIT NOW" alerts:** take profit hit, stop hit, the stock closing a 5-min bar back through the level, the stock reaching the next level, or 15:50. They give the price, P&L and minutes held.
 - **Every qualifying setup is sent** (no daily cap; one open signal per ticker).
-- **At least one signal a day:** if nothing reached 6/7 by 11:00, the bar drops to 4/7; by 11:20 any valid level reaction counts; if the morning ends empty the bot keeps looking until 14:00. These are headed **LOWER CONVICTION** so you can size down or skip them. If no stock reacts at a level at all, there is still no signal (it won't invent one).
+- **At least one signal a day:** if nothing reached 6/7 by 11:00, the bar drops to 4/7; by 11:20 any level reaction counts, with looser candle/room rules; if the morning ends empty the bot keeps looking until 14:00, and at 13:30 it sends the day's strongest trending ticker whose contract fits. These are headed **LOWER CONVICTION** or **LAST-RESORT TREND SIGNAL** so you can size down or skip them. The only day with no signal is one where no ticker has a same-day contract under $150.
 
 Not backtested: there's no free history of single-stock option prices. The same rules on SPY backtested as roughly breakeven (see SPY 0/3 above), so paper trade these first. A 0DTE contract can go to $0 the same day; "under $150" is the most you can lose on one signal.
 

@@ -28,7 +28,7 @@ class Notifier:
                 title, _, body = text.partition("\n")
                 event = (payload or {}).get("event")
                 headers = {
-                    "Title": title,
+                    "Title": title.encode("latin-1", "replace").decode("latin-1"),  # HTTP headers are latin-1
                     "Tags": {"entry": "chart_with_upwards_trend", "exit": "moneybag", "skip": "zzz"}.get(event, "bell"),
                     "Priority": "default" if event == "skip" else "high",
                 }
@@ -38,5 +38,5 @@ class Notifier:
                               data=(body or title).encode(), headers=headers, timeout=10)
             if c.webhook_url and payload is not None:
                 requests.post(c.webhook_url, json=payload, timeout=10)
-        except requests.RequestException as e:  # never let alerting kill the bot
+        except Exception as e:  # never let alerting kill the bot
             log.warning("notification failed: %s", e)
