@@ -117,6 +117,14 @@ spxbot -c spy03.toml           # live signals (--until 16:10 to stop by itself)
 | 3DTE is continuation; no revenge | Afternoon signals need an intact morning thesis in the same direction. A losing morning signal or a morning thesis that was invalidated closes the afternoon. |
 | Exits: symmetric 20% target / 20% stop | Exits on option mid +20% / −20%, SPY closing through invalidation, SPY reaching the next zone, 0DTE at 12:00, 3DTE at 15:55 (`three_dte_exit_time = ""` to carry overnight). |
 
+### Using a Schwab account for the data (free, real-time)
+1. Go to [developer.schwab.com](https://developer.schwab.com), sign up (a separate developer login), and create an app under *Dashboard → Apps → Create App*: API product **Accounts and Trading Production** (includes market data), Callback URL exactly `https://127.0.0.1`. Wait until its status is **Ready For Use** (Schwab reviews new apps; it can take a few days).
+2. Put the app's key and secret in `.env`: `SCHWAB_APP_KEY=...`, `SCHWAB_APP_SECRET=...`, plus `SPXBOT_CONFIG=spy03.toml` and your `NTFY_TOPIC`.
+3. `set -a; . ./.env; set +a` then `spxbot -c spy03.toml --schwab-login`: open the printed link, log in with your **brokerage** login, allow access, and paste back the address of the error page it lands on. The token is saved in `schwab_token.json` (keep it private).
+4. `spxbot -c spy03.toml --check`, then run it (or install the weekday auto-start; it uses `SPXBOT_CONFIG`).
+
+Schwab's login lasts **7 days** and can't be extended: repeat step 3 once a week. The bot alerts you when less than 1.5 days are left, and sends "can't reach the broker/data" if it has expired. The Schwab connection is read-only market data; the bot doesn't use any account or trading endpoints. It was tested against recorded responses, not a live Schwab session yet.
+
 What's mine, not the guide's: the guide says "what counts as clean" is a live judgement call, so every number in the reaction rules (tolerances, body ratio, chase distance, invalidation buffer, 1.5:1 room) and the 12:00 0DTE cutoff are my mechanical stand-ins; tune them in `spy03.toml`. The pass/fail rules are unit-tested on made-up bars only, not backtested, and haven't run against live Tradier/IB data. The guide's 73% win rate and P&L figures are the author's claims and say nothing about how these rules will do. Tradier needs a production token (sandbox data is delayed); IB needs SPY + OPRA data and a `client_id` different from the SPX bot's.
 
 ## Assumptions to check

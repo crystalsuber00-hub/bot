@@ -3,7 +3,7 @@
 # Signal-only: alerts + paper tracking. This model never places orders.
 
 model = "spy03"
-broker = "tradier"         # "tradier" or "ibkr" (data only)
+broker = "schwab"          # "schwab", "tradier" or "ibkr" (data only)
 poll_seconds = 30
 lock_port = 47202          # different from the SPX bot so both can run at once
 
@@ -55,6 +55,11 @@ max_afternoon_trades = 1
 max_daily_loss = 200
 require_morning_thesis = true
 skip_dates = []                # FOMC / CPI / jobs days you want to sit out
+
+[schwab]
+# app_key / app_secret: prefer env SCHWAB_APP_KEY and SCHWAB_APP_SECRET
+callback_url = "https://127.0.0.1"   # must match your app's Callback URL exactly
+token_file = "schwab_token.json"     # created by --schwab-login; keep it private
 
 [tradier]
 sandbox = false                # sandbox data is delayed; live signals need a production token

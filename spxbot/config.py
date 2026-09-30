@@ -67,6 +67,14 @@ class Ibkr:
 
 
 @dataclass
+class Schwab:
+    app_key: str = ""            # prefer env SCHWAB_APP_KEY
+    app_secret: str = ""         # prefer env SCHWAB_APP_SECRET
+    callback_url: str = "https://127.0.0.1"   # must match the Callback URL of your app on developer.schwab.com
+    token_file: str = "schwab_token.json"
+
+
+@dataclass
 class Notify:
     console: bool = True
     telegram_bot_token: str = ""
@@ -146,13 +154,16 @@ class Config:
     execution: Execution = field(default_factory=Execution)
     tradier: Tradier = field(default_factory=Tradier)
     ibkr: Ibkr = field(default_factory=Ibkr)
+    schwab: Schwab = field(default_factory=Schwab)
     notify: Notify = field(default_factory=Notify)
     spy03: Spy03 = field(default_factory=Spy03)
 
     def validate(self) -> None:
         s = self.strategy
-        if self.broker not in ("tradier", "ibkr"):
-            raise ValueError("broker must be 'tradier' or 'ibkr'")
+        if self.broker not in ("tradier", "ibkr", "schwab"):
+            raise ValueError("broker must be 'tradier', 'ibkr' or 'schwab'")
+        if self.broker == "schwab" and self.model != "spy03":
+            raise ValueError("broker 'schwab' is data-only and currently supported for model = 'spy03'")
         if self.mode not in ("signal", "trade"):
             raise ValueError("mode must be 'signal' or 'trade'")
         if not 0 < s.target_delta_min <= s.target_delta <= s.target_delta_max < 1:
@@ -209,12 +220,14 @@ def load_config(path: str | None) -> Config:
     cfg = Config()
     if path:
         data = tomllib.loads(Path(path).read_text())
-        for k in ("schedule", "strategy", "execution", "tradier", "ibkr", "notify", "spy03"):
+        for k in ("schedule", "strategy", "execution", "tradier", "ibkr", "schwab", "notify", "spy03"):
             _fill(getattr(cfg, k), data.pop(k, {}))
         _fill(cfg, data)
     env = os.environ.get
     cfg.tradier.token = env("TRADIER_TOKEN", cfg.tradier.token)
     cfg.tradier.account_id = env("TRADIER_ACCOUNT_ID", cfg.tradier.account_id)
+    cfg.schwab.app_key = env("SCHWAB_APP_KEY", cfg.schwab.app_key)
+    cfg.schwab.app_secret = env("SCHWAB_APP_SECRET", cfg.schwab.app_secret)
     cfg.ibkr.host = env("IBKR_HOST", cfg.ibkr.host)
     cfg.ibkr.port = int(env("IBKR_PORT", cfg.ibkr.port))
     n = cfg.notify

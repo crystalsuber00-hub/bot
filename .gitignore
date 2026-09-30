@@ -8,3 +8,5 @@ history/
 logs/
 spy03_state.json
 spy03.toml
+schwab_token.json
+schwab_token.tmp

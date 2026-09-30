@@ -8,4 +8,5 @@ if (Test-Path .env) {
     [Environment]::SetEnvironmentVariable($k.Trim(), $v.Trim().Trim('"'), 'Process')
   }
 }
-& .\.venv\Scripts\spxbot.exe -c config.toml --until 16:10 *>> logs\spxbot.log
+$cfg = if ($env:SPXBOT_CONFIG) { $env:SPXBOT_CONFIG } else { "config.toml" }
+& .\.venv\Scripts\spxbot.exe -c $cfg --until 16:10 *>> logs\spxbot.log

@@ -5,4 +5,4 @@ cd "$(dirname "$0")/.."
 mkdir -p logs
 if [ -f .env ]; then set -a; . ./.env; set +a; fi   # NTFY_TOPIC=... etc.
 . .venv/bin/activate
-exec spxbot -c config.toml --until 16:10 >> logs/spxbot.log 2>&1
+exec spxbot -c "${SPXBOT_CONFIG:-config.toml}" --until 16:10 >> logs/spxbot.log 2>&1

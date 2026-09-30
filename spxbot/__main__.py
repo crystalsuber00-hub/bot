@@ -22,6 +22,15 @@ def single_instance(port: int):
 
 
 def main() -> None:
+    try:
+        _main()
+    except RuntimeError as e:
+        if type(e).__name__ != "SchwabLoginNeeded":
+            raise
+        raise SystemExit(f"spxbot: {e}")
+
+
+def _main() -> None:
     ap = argparse.ArgumentParser(prog="spxbot")
     ap.add_argument("-c", "--config", help="path to config.toml")
     ap.add_argument("--once", action="store_true", help="run a single tick and exit (for cron)")
@@ -36,6 +45,8 @@ def main() -> None:
                     help="clear a freeze/halt after you've fixed the position at your broker, then exit")
     ap.add_argument("--chart", nargs="?", const="latest", metavar="DATE",
                     help="write an HTML chart of a day's spread (YYYY-MM-DD, default latest) and exit")
+    ap.add_argument("--schwab-login", action="store_true",
+                    help="log in to Schwab (needed once, then every 7 days), then exit")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -57,7 +68,21 @@ def main() -> None:
         from .chart import make_chart
         print(make_chart(cfg, State(cfg.state_file), None if args.chart == "latest" else args.chart))
         return
-    if cfg.broker == "ibkr":
+    if cfg.broker == "schwab":
+        from .schwab import SchwabClient, auth_url
+        if not (cfg.schwab.app_key and cfg.schwab.app_secret):
+            ap.error("set SCHWAB_APP_KEY and SCHWAB_APP_SECRET (from your app on developer.schwab.com)")
+        client = SchwabClient(cfg.schwab)
+        if args.schwab_login:
+            print("1. Open this link, log in with your Schwab brokerage login, and allow access:\n\n   "
+                  + auth_url(cfg.schwab) + "\n\n2. The browser then shows an error page on "
+                  f"{cfg.schwab.callback_url} - that's expected. Copy the WHOLE address bar and paste it here.")
+            client.login(input("\nPasted address: "))
+            print(f"Logged in. Token saved to {cfg.schwab.token_file}; valid for 7 days.")
+            return
+    elif args.schwab_login:
+        ap.error("--schwab-login needs broker = \"schwab\" in the config")
+    elif cfg.broker == "ibkr":
         from .ibkr import IBKRClient
         client = IBKRClient(cfg.ibkr, readonly=spy03 or cfg.mode == "signal",
                             underlying=cfg.spy03.symbol if spy03 else cfg.symbol)
@@ -71,6 +96,9 @@ def main() -> None:
     if spy03:
         from .spy03_engine import Spy03Engine, Spy03State
         engine = Spy03Engine(cfg, client, Notifier(cfg.notify), Spy03State(cfg.spy03.state_file))
+        if cfg.broker == "schwab" and client.refresh_days_left() < 1.5 and not args.check:
+            engine.notify.send(f"Schwab login expires in {max(client.refresh_days_left(), 0) * 24:.0f} h. "
+                               "Run: spxbot -c <config> --schwab-login", {"event": "login_expiring"})
         if args.check:
             raise SystemExit(0 if engine.check() else 1)
         if args.once:
