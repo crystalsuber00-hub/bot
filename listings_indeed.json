@@ -257,5 +257,29 @@
   "salary": 57000,
   "url": "https://to.indeed.com/aazt22kwqwly",
   "description": "accounts payable clerk automotive $25-30/hr"
+ },
+ {
+  "title": "Payroll Specialist",
+  "company": "Peterson Caterpillar",
+  "location": "San Leandro, CA",
+  "salary": 88000,
+  "url": "https://to.indeed.com/aaxdgb6t2nd4",
+  "description": "payroll specialist $39.45-46/hr"
+ },
+ {
+  "title": "Payroll / Medical Records / Administrative Coordinator",
+  "company": "New Haven Home Health Services, Inc.",
+  "location": "Daly City, CA",
+  "salary": 57200,
+  "url": "https://to.indeed.com/aa4k6k6ccskv",
+  "description": "payroll coordinator medical records $25-30/hr"
+ },
+ {
+  "title": "Benefits Payroll Specialist (Temporary)",
+  "company": "AcctPositions",
+  "location": "Oakland, CA",
+  "salary": 92000,
+  "url": "https://to.indeed.com/aa8vzz8bt7bv",
+  "description": "payroll specialist benefits temporary $40-49/hr (posted July)"
  }
 ]
