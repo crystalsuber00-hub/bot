@@ -10,7 +10,7 @@ How it fits together:
 - **This folder becomes its own public GitHub repo,** for example
   `readthistwice`. Instagram downloads each image from a public web address, so
   the media has to be public. Everything in it goes public on Instagram anyway.
-  Keep it separate from your trading bot repo, which stays private.
+  Keep it separate from your trading bot repo.
 - **GitHub Pages serves `posts/` and `reels/`.** This is the `pages.yml`
   workflow.
 - **`autopost.yml` publishes** at most one post per run. A post more than 3 hours
