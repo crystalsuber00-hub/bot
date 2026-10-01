@@ -60,10 +60,11 @@ def notifier_from_env() -> Notifier:
 
 class Watcher:
     def __init__(self, api: Client, notifier: Notifier, watchlist: list[dict], state_path: str,
-                 min_usd: float = 1000, consensus_hours: float = 24, sells: bool = True, bankroll: float = 0):
+                 min_usd: float = 1000, consensus_hours: float = 24, sells: bool = True, bankroll: float = 0,
+                 trader=None):
         self.api, self.n, self.watch = api, notifier, watchlist
         self.min_usd, self.consensus_s, self.sells, self.bankroll = min_usd, consensus_hours * 3600, sells, bankroll
-        self.path = Path(state_path)
+        self.path, self.trader = Path(state_path), trader
         self.state = json.loads(self.path.read_text()) if self.path.exists() else {"seen": {}, "buys": []}
 
     def save(self):
@@ -81,6 +82,12 @@ class Watcher:
                 continue
             alerts += self._digest(w, [r for r in rows if r["timestamp"] > last])
         alerts += self._consensus()
+        if self.trader:
+            for a in alerts:
+                if a.get("asset") and a.get("side") and (note := self.trader.on_alert(a)):
+                    a["text"] += f"\n{note}"
+                    a["auto"] = note
+            alerts += [{"event": "exit", "text": n} for n in self.trader.refresh()]
         for a in alerts:
             self.n.send(a["text"], a)
         self.save()
@@ -94,7 +101,8 @@ class Watcher:
             a = agg[k]
             a["usd"] += float(r.get("usdcSize", 0))
             a["shares"] += float(r.get("size", 0))
-            a.update(title=r.get("title", ""), outcome=r.get("outcome", ""), slug=r.get("eventSlug", ""), t=r["timestamp"])
+            a.update(title=r.get("title", ""), outcome=r.get("outcome", ""), slug=r.get("eventSlug", ""),
+                     market=r.get("slug", ""), t=r["timestamp"])
         out = []
         for (side, asset), a in agg.items():
             if a["usd"] < self.min_usd or (side == "SELL" and not self.sells):
@@ -118,7 +126,7 @@ class Watcher:
                     f"https://polymarket.com/event/{a['slug']}")
             out.append({"event": "entry" if side == "BUY" else "exit", "text": text, "wallet": w["wallet"],
                         "side": side, "asset": asset, "usd": a["usd"], "price": px, "title": a["title"],
-                        "outcome": a["outcome"], "slug": a["slug"], "t": a["t"], "plan": plan})
+                        "outcome": a["outcome"], "slug": a["slug"], "market": a["market"], "t": a["t"], "plan": plan})
             if side == "BUY":
                 self.state["buys"].append({"wallet": w["wallet"], "name": w["name"], "asset": asset, "t": a["t"],
                                            "usd": a["usd"], "title": a["title"], "outcome": a["outcome"],

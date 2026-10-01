@@ -36,8 +36,20 @@ def main(argv=None):
     w.add_argument("--bankroll", type=float, default=0,
                    help="your account size in $: adds a live-price COPY/SKIP plan and stake to each alert")
     w.add_argument("--every", type=int, default=60, help="seconds between polls")
+    w.add_argument("--autotrade", action="store_true",
+                   help="copy game-winner buys onto Polymarket US; PAPER trades unless --live is also given")
+    w.add_argument("--live", action="store_true",
+                   help="with --autotrade: place REAL orders (needs POLYMARKET_KEY_ID / POLYMARKET_SECRET_KEY)")
+    w.add_argument("--max-slip", type=float, default=0.03, help="max all-in price above the copied fill")
+    w.add_argument("--max-losses", type=int, default=3, help="stop buying for the day after this many losses")
     w.add_argument("--once", action="store_true")
     w.add_argument("-v", "--verbose", action="store_true")
+
+    t = sub.add_parser("trades", help="show copy-trading results (paper and live)")
+    t.add_argument("--out", default="polyscan_out")
+    t.add_argument("--live", action="store_true", help="show the live account's log instead of paper")
+    t.add_argument("--bankroll", type=float, default=30)
+    t.add_argument("--reset-halt", action="store_true", help="clear a drawdown halt so buying can resume")
 
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if getattr(a, "verbose", False) else logging.INFO,
@@ -57,6 +69,15 @@ def main(argv=None):
         from . import report
         (out / "index.html").write_text(report.render(json.loads((out / "scan.json").read_text())))
         logging.info("wrote %s/index.html", out)
+    elif a.cmd == "trades":
+        from .ustrade import CopyTrader, USClient
+        tr = CopyTrader(USClient(), str(out / ("trades_live.json" if a.live else "trades_paper.json")), a.bankroll)
+        tr.live = a.live  # display only; this command never places orders
+        if a.reset_halt:
+            tr.state["halted"] = ""
+            tr.save()
+        tr.refresh()
+        print(tr.summary())
     elif a.cmd == "watch":
         from .watch import Watcher, notifier_from_env, pick_watchlist
         scan_file = out / "scan.json"
@@ -67,8 +88,23 @@ def main(argv=None):
         for x in wl:
             logging.info("watching %-24s score %5.1f  90d $%12s  %s", x["name"], x["score"], f"{x['pnl']:,.0f}", x["style"])
         out.mkdir(parents=True, exist_ok=True)
+        trader = None
+        if a.live and not a.autotrade:
+            raise SystemExit("--live only makes sense with --autotrade")
+        if a.autotrade:
+            from .ustrade import CopyTrader, USClient
+            if not a.bankroll:
+                raise SystemExit("--autotrade needs --bankroll (e.g. --bankroll 30)")
+            trader = CopyTrader(USClient.from_env(), str(out / ("trades_live.json" if a.live else "trades_paper.json")),
+                                a.bankroll, live=a.live, max_slip=a.max_slip, max_losses_per_day=a.max_losses,
+                                stop_file=str(out / "STOP"))
+            logging.warning("%s copy trading on Polymarket US: $%.2f per bet, $%.0f max in open bets. "
+                            "Create %s/STOP to stop buying.", trader.mode, trader.stake, a.bankroll, out)
         wt = Watcher(Client(), notifier_from_env(), wl, str(out / "watch_state.json"), min_usd=a.min_usd,
-                     sells=not a.no_sells, bankroll=a.bankroll)
+                     sells=not a.no_sells, bankroll=a.bankroll, trader=trader)
+        if trader and trader.live:
+            wt.n.send(f"LIVE copy trading started: ${trader.stake:.2f} per bet, ${a.bankroll:.0f} max",
+                      {"event": "entry"})
         if a.once:
             wt.tick()
         else:

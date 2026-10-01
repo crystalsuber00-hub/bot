@@ -130,3 +130,29 @@ polyscan watch --wallet 0xabc... --min-usd 5000 --once
 5. **Flags.** `one-big-day`, `one-big-bet`, `bot-speed`, `favorite-scalper`, `longshot-hunter`, `new-wallet`, `deep-drawdown`, `small-sample`, `cooling-off` (up over 90 days, down over 30), `dormant` (no trade in 14 days; `watch` skips these).
 
 Limits: high-frequency wallets are sampled (latest 5,000 fills, 3,000 closed positions), market categories come from slugs and titles, and the copy score ranks past results. A wallet can stop trading or change style at any time, and copying a trade later gets a worse price than they got. Not financial advice.
+
+## Copy trading on Polymarket US (paper first, then live)
+`polyscan watch --autotrade` copies the watched wallets' game-winner bets onto **Polymarket US**, the CFTC-regulated exchange for US residents. It is **paper trading** (real prices, no orders) unless you also pass `--live`.
+
+```
+pip install -e '.[trade]'
+polyscan watch --top 15 --bankroll 30 --autotrade          # paper: logs what it would buy, scores it when games settle
+polyscan trades                                             # paper results so far
+POLYMARKET_KEY_ID=... POLYMARKET_SECRET_KEY=... \
+  polyscan watch --top 15 --bankroll 30 --autotrade --live  # real orders
+polyscan trades --live
+```
+API keys come from polymarket.us/developer after identity verification. Keep them in your environment or `.env`; never in code or chat. Revoke them there if they leak.
+
+What it copies:
+- Only **BUYs of a game's winner market**. The international event slug (e.g. `nfl-kc-lv-2026-10-04`) is the same on Polymarket US, and the team is matched by name. Spreads, totals, props, esports and games not listed in the US are skipped.
+- Only when the copied team is the market's **first (long) side**. Buying the other team is a short on Polymarket US, and the API docs don't say clearly how that order is priced, so those come to you as an alert to buy by hand.
+- Exits when the same wallet sells; otherwise holds to settlement.
+
+How it trades and what stops it:
+- **IOC limit orders** (fill now or cancel), never market orders. The price plus the taker fee (0.0695 × p × (1−p) per contract, about 1.7¢ at $0.50) must stay within 3¢ of the copied wallet's price. That fee is about the size of the leaders' typical edge, so most signals are skipped.
+- **Stake** 10% of `--bankroll` per bet ($3 for $30), and never more than the bankroll in open bets.
+- **Stops buying** for the rest of the day (ET) after 3 losses (`--max-losses`), and halts completely once realized losses reach 50% of the bankroll until `polyscan trades --reset-halt`.
+- **Kill switch:** create `polyscan_out/STOP` and it buys nothing more.
+
+Limits: the live order path is tested against a fake exchange only. It has never placed a real order, because Polymarket US has no sandbox. Run paper mode for a day or two and check its picks against the app before using `--live`, then watch the first live orders. Results are not guaranteed; you can lose the whole bankroll.
