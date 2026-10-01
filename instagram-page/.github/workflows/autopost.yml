@@ -1,0 +1,53 @@
+# Publishes whatever is due in output/schedule.csv. See AUTOPOST.md.
+name: Autopost
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # GitHub may start a scheduled run several minutes late
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "run: publish what's due. dry-run: only show it. check: test the token and media links."
+        type: choice
+        options: [run, dry-run, check]
+        default: run
+
+permissions:
+  contents: write   # to commit autopost/published.csv
+
+concurrency:
+  group: autopost   # never two runs at once, so nothing is posted twice
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Publish what's due
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          MODE: ${{ inputs.mode || 'run' }}
+        run: |
+          case "$MODE" in
+            check)   python autopost/poster.py check ;;
+            dry-run) python autopost/poster.py run --dry-run ;;
+            *)       python autopost/poster.py run ;;
+          esac
+      - name: Save the log
+        if: always()
+        run: |
+          if [ -z "$(git status --porcelain autopost/published.csv)" ]; then exit 0; fi
+          git config user.name "readthistwice-autopost"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add autopost/published.csv
+          git commit -q -m "Log published posts"
+          for i in 1 2 3 4; do
+            git pull -q --rebase && git push -q && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

@@ -106,7 +106,7 @@ You have to do these steps yourself; they need your phone number and login.
 
 **Month one is already done.** All 100 posts are rendered in `posts/`, ready to
 upload, so you can skip Canva. Each file is named
-`<date>_<time>_<post_id>.png` (carousel slides end in `-1` to `-7`), so sorting
+`<date>_<time>_<post_id>.jpg` (carousel slides end in `-1` to `-7`), so sorting
 the folder by name gives the posting order. Each post's caption is in the
 `.txt` file with the same name.
 
@@ -148,7 +148,7 @@ The step-by-step version, with fixes for common import problems, is in
 Month one has 10 Reels in `reels/`, two a week (Wednesdays and Saturdays at
 17:00). Each one is a full-screen version of a strong post, with the text
 appearing line by line over a slow zoom. Each Reel's date and time are in its
-file name, its cover is the matching `-cover.png`, and its caption is in the
+file name, its cover is the matching `-cover.jpg`, and its caption is in the
 `.txt` file.
 
 Before launch there's no data on what performs, so these 10 are picked for
@@ -158,6 +158,12 @@ on, the weekly loop below replaces them with your real top posts.
 The videos are silent on purpose. Schedule them in the **Instagram app** (+ →
 Reel → Advanced settings → Schedule) so you can add a trending sound from
 Instagram's music library. Keep the sound low so the words stay the focus.
+
+### E. Fully automatic posting (optional)
+
+`AUTOPOST.md` sets up an auto-poster on GitHub Actions. It publishes each post
+on schedule through Instagram's official API, with no scheduling tool needed. It
+starts with month two by default.
 
 ## 6. The weekly loop
 

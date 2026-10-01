@@ -5,7 +5,7 @@
 //                                previews/profile-grid.png (first 12 posts as they'll sit on the profile)
 //                                previews/profile-picture.png
 //   node render.js --all DIR  -> also render every post, ready to upload, in posting order:
-//                                DIR/<date>_<time>_<post_id>[-N].png plus a .txt with its caption
+//                                DIR/<date>_<time>_<post_id>[-N].jpg plus a .txt with its caption
 //
 // Every post is checked against its text box; the script exits non-zero if any
 // post's text would overflow, so a new month's copy can't silently break a design.
@@ -186,7 +186,10 @@ const overflows = (page) => page.evaluate(() =>
 
 async function shoot(page, dir, names) {
   const els = await page.$$(".page");
-  for (let i = 0; i < els.length; i++) await els[i].screenshot({ path: path.join(dir, names[i]) });
+  // .jpg names get JPEG (the only image format Instagram's publishing API accepts).
+  for (let i = 0; i < els.length; i++) {
+    await els[i].screenshot({ path: path.join(dir, names[i]), ...(names[i].endsWith(".jpg") ? { quality: 95 } : {}) });
+  }
 }
 
 async function main() {
@@ -219,7 +222,8 @@ async function main() {
         // Date and time first, so sorting the folder by name gives the posting order.
         const s = sched[row.post_id];
         const base = allDir && s ? `${s.date}_${s.time.replace(":", "")}_${row.post_id}` : row.post_id;
-        const names = pages.map((_, i) => multi ? `${base}-${i + 1}.png` : `${base}.png`);
+        const ext = allDir ? "jpg" : "png";
+        const names = pages.map((_, i) => multi ? `${base}-${i + 1}.${ext}` : `${base}.${ext}`);
         await shoot(page, dir, names);
         if (allDir && s) fs.writeFileSync(path.join(dir, `${base}.txt`), s.caption + "\n");
         rendered[row.post_id] = path.join(dir, names[0]);
@@ -237,7 +241,7 @@ async function main() {
 
     // 4. Profile grid: the first 12 scheduled posts, newest top-left, cropped 3:4 like the profile view.
     const first12 = Object.values(sched).slice(0, 12).reverse();
-    const tiles = first12.map((r) => `<img src="data:image/png;base64,${fs.readFileSync(rendered[r.post_id]).toString("base64")}">`).join("");
+    const tiles = first12.map((r) => `<img src="data:image/${rendered[r.post_id].endsWith(".jpg") ? "jpeg" : "png"};base64,${fs.readFileSync(rendered[r.post_id]).toString("base64")}">`).join("");
     const grid = await browser.newPage({ viewport: { width: 1080, height: 1440 } });
     await grid.setContent(`<!doctype html><style>*{margin:0}body{background:#fff;width:1080px}
       .g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}

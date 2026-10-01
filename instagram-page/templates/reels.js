@@ -1,7 +1,7 @@
 // Render month-one Reels from the strongest posts.
 //
 //   node reels.js        -> ../reels/<date>_<time>_REEL-<post_id>.mp4   (1080×1920, 30 fps, silent AAC track)
-//                           ../reels/<date>_<time>_REEL-<post_id>-cover.png
+//                           ../reels/<date>_<time>_REEL-<post_id>-cover.jpg
 //                           ../reels/<date>_<time>_REEL-<post_id>.txt    (caption)
 //
 // The text builds line by line (list items one by one) over a slow zoom, then
@@ -157,7 +157,7 @@ async function main() {
       }
       await enc.end();
       await page.evaluate((ms) => window.__seek(ms), total);
-      await page.screenshot({ path: `${base}-cover.png` });
+      await page.screenshot({ path: `${base}-cover.jpg`, quality: 95 });
       fs.writeFileSync(`${base}.txt`, captions[id] + "\n");
       await page.close();
       console.log(`${path.basename(base)}.mp4  ${(total / 1000).toFixed(1)}s`);
