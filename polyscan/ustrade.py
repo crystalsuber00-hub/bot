@@ -60,12 +60,17 @@ class USClient:
         return bool(self.key_id and self._key)
 
     def public(self, path: str, **params):
-        try:
-            r = self.s.get(GATEWAY + path, params=params, timeout=self.timeout)
-            return r.json() if r.ok else None
-        except (requests.RequestException, ValueError) as e:
-            log.warning("US public %s failed: %s", path, e)
-            return None
+        for attempt in range(4):
+            try:
+                r = self.s.get(GATEWAY + path, params=params, timeout=self.timeout)
+                if r.status_code == 429 or r.status_code >= 500:
+                    raise requests.HTTPError(f"HTTP {r.status_code}")
+                return r.json() if r.ok else None
+            except (requests.RequestException, ValueError) as e:
+                if attempt == 3:
+                    log.warning("US public %s failed: %s", path, e)
+                    return None
+                time.sleep(2 ** attempt)
 
     def private(self, method: str, path: str, body: dict | None = None):
         if not self.authed:
@@ -194,12 +199,15 @@ class CopyTrader:
     def __init__(self, us: USClient, state_path: str, bankroll: float | None, live: bool = False,
                  stake: float | None = None, stake_pct: float = STAKE_PCT, max_slip: float = 0.03,
                  max_losses_per_day: int = MAX_LOSSES_PER_DAY, max_daily_loss_pct: float = DAILY_LOSS_PCT,
-                 max_drawdown_pct: float = DRAWDOWN_PCT, stop_file: str = "STOP", auto: bool = False):
+                 max_drawdown_pct: float = DRAWDOWN_PCT, stop_file: str = "STOP", auto: bool = False,
+                 lo: float = 0.15, hi: float = 0.85, paper_short: bool = False, clock=time.time):
         """bankroll=None (or auto=True) sizes everything from what's actually in the account: live mode
         reads the Polymarket US balance, paper mode uses the starting amount plus paper profit and loss."""
         if live and not us.authed:
             raise SystemExit("--live needs POLYMARKET_KEY_ID and POLYMARKET_SECRET_KEY in the environment")
         self.us, self.live, self.auto = us, live, auto or bankroll is None
+        # paper_short: in paper mode, also simulate buying the second side (what you'd do by hand in the app)
+        self.lo, self.hi, self.paper_short, self.clock = lo, hi, paper_short and not live, clock
         self.path, self.stop_file = Path(state_path), Path(stop_file)
         fresh = {"positions": {}, "closed": [], "halted": ""}
         self.state = json.loads(self.path.read_text()) if self.path.exists() else fresh
@@ -249,7 +257,7 @@ class CopyTrader:
             return f"stop file {self.stop_file} exists"
         if self.state["halted"]:
             return f"halted: {self.state['halted']}"
-        today = [c for c in self.state["closed"] if c["day"] == datetime.now(ET).date().isoformat()]
+        today = [c for c in self.state["closed"] if c["day"] == self._today()]
         losses = sum(1 for c in today if c["pnl"] < 0)
         if losses >= self.max_losses:
             return f"{losses} losses today; resuming tomorrow"
@@ -257,6 +265,9 @@ class CopyTrader:
         if day_pnl <= -self.max_day_loss:
             return f"down ${-day_pnl:.2f} today (limit ${self.max_day_loss:.2f}); resuming tomorrow"
         return ""
+
+    def _today(self) -> str:
+        return datetime.fromtimestamp(self.clock(), ET).date().isoformat()
 
     def open_cost(self) -> float:
         return sum(p["cost"] for p in self.state["positions"].values())
@@ -282,7 +293,8 @@ class CopyTrader:
         market, side, why = find_moneyline(self.us.event(a["slug"]), a["outcome"])
         if not side:
             return f"skipped, {why}"
-        if not side.get("long"):
+        long = bool(side.get("long"))
+        if not long and not self.paper_short:
             return (f"not auto-bought: {a['outcome']} is the second side of {market['slug']}. "
                     f"To copy, buy {a['outcome']} in the app at no more than {a['price'] + self.max_slip:.2f}")
         if (b := self._blocked()):
@@ -295,9 +307,10 @@ class CopyTrader:
         bbo = self.us.bbo(market["slug"]) or {}
         if bbo.get("state") not in (None, "MARKET_STATE_OPEN"):
             return f"skipped, market is {bbo.get('state')}"
-        plan = plan_entry(a["price"], _amt(bbo.get("longQuote") or bbo.get("bestAsk")) or None,
+        ask = _amt(bbo.get("longQuote") or bbo.get("bestAsk")) if long else _amt(bbo.get("shortQuote"))
+        plan = plan_entry(a["price"], ask or None,
                           float(market.get("orderPriceMinTickSize") or 0.01), float(market.get("minimumTradeQty") or 1),
-                          stake, self.max_slip)
+                          stake, self.max_slip, self.lo, self.hi)
         if not plan["go"]:
             return f"skipped, {plan['why']}"
         if self.live:
@@ -315,7 +328,7 @@ class CopyTrader:
         cost = round(qty * (px + taker_fee(px)), 2)
         self.state["positions"][a["asset"]] = {
             "us_market": market["slug"], "team": a["outcome"], "title": a["title"], "qty": qty, "px": px,
-            "cost": cost, "wallet": a.get("wallet"), "whale_px": a["price"], "t": int(time.time())}
+            "cost": cost, "wallet": a.get("wallet"), "whale_px": a["price"], "t": int(self.clock()), "long": long}
         return f"bought {qty:g} {a['outcome']} @ {px:.3f} on {market['slug']} (${cost:.2f} incl. fee)"
 
     def _on_sell(self, a: dict) -> str:
@@ -323,7 +336,11 @@ class CopyTrader:
         if not p or p.get("wallet") not in (None, a.get("wallet")):
             return ""
         bbo = self.us.bbo(p["us_market"]) or {}
-        bid = _amt(bbo.get("bestBid"))
+        if p.get("long", True):
+            bid = _amt(bbo.get("bestBid"))
+        else:  # selling the second side: worth one minus the first side's ask
+            ask = _amt(bbo.get("longQuote") or bbo.get("bestAsk"))
+            bid = 1 - ask if ask > 0 else 0.0
         if bid <= 0:
             return f"{a['outcome']}: the copied wallet sold, but there is no buyer on Polymarket US yet; holding"
         if self.live:
@@ -338,8 +355,8 @@ class CopyTrader:
                 part = round(p["cost"] * qty / p["qty"], 2)
                 pnl = round(qty * (px - taker_fee(px)) - part, 2)
                 self.state["closed"].append({**p, "qty": qty, "cost": part, "exit_px": px, "pnl": pnl,
-                                             "how": "partly sold", "day": datetime.now(ET).date().isoformat(),
-                                             "t_close": int(time.time())})
+                                             "how": "partly sold", "day": self._today(),
+                                             "t_close": int(self.clock())})
                 p["qty"], p["cost"] = round(p["qty"] - qty, 4), round(p["cost"] - part, 2)
                 return f"sold {qty:g} of {p['team']} @ {px:.3f} ({pnl:+.2f}); {p['qty']:g} still open"
         else:
@@ -359,7 +376,7 @@ class CopyTrader:
         p = self.state["positions"].pop(asset)
         pnl = round(p["qty"] * exit_px_net - p["cost"], 2)
         self.state["closed"].append({**p, "exit_px": round(exit_px_net, 4), "pnl": pnl, "how": how,
-                                     "day": datetime.now(ET).date().isoformat(), "t_close": int(time.time())})
+                                     "day": self._today(), "t_close": int(self.clock())})
         if self.realized() <= -self.start * self.max_dd and not self.state["halted"]:
             self.state["halted"] = f"lost ${-self.realized():.2f}, over {self.max_dd:.0%} of the ${self.start:.0f} start"
         return f"{p['team']} {how}: {'+' if pnl >= 0 else '−'}${abs(pnl):.2f} (total {self.realized():+.2f})"
@@ -370,6 +387,7 @@ class CopyTrader:
         for asset, p in list(self.state["positions"].items()):
             s = self.us.settlement(p["us_market"])
             if s is not None:
+                s = s if p.get("long", True) else 1 - s
                 notes.append(f"{self.mode}: " + self._close(asset, s, "won" if s >= 0.5 else "lost"))
         if notes:
             self.save()

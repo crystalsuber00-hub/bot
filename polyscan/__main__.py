@@ -62,6 +62,15 @@ def main(argv=None):
     t.add_argument("--bankroll", type=float, default=100)
     t.add_argument("--reset-halt", action="store_true", help="clear a drawdown halt so buying can resume")
 
+    b = sub.add_parser("backtest", help="replay copy trading over a past window (no live watching needed)")
+    b.add_argument("--start", required=True, help="YYYY-MM-DD (UTC); wallets are picked using data before this")
+    b.add_argument("--end", default="", help="YYYY-MM-DD (UTC), default now")
+    b.add_argument("--top", type=int, default=15)
+    b.add_argument("--bankroll", type=float, default=100)
+    b.add_argument("--min-usd", type=float, default=1000)
+    b.add_argument("--watchlist", default="", help="JSON file with a saved watchlist to reuse")
+    b.add_argument("--out", default="polyscan_out")
+
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if getattr(a, "verbose", False) else logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s")
@@ -80,6 +89,15 @@ def main(argv=None):
         from . import report
         (out / "index.html").write_text(report.render(json.loads((out / "scan.json").read_text())))
         logging.info("wrote %s/index.html", out)
+    elif a.cmd == "backtest":
+        import time as _t
+        from datetime import datetime as _dt, timezone as _tz
+        from . import backtest
+        day = lambda x: _dt.strptime(x, "%Y-%m-%d").replace(tzinfo=_tz.utc).timestamp()
+        wl = json.loads(Path(a.watchlist).read_text()) if a.watchlist else None
+        res = backtest.run(day(a.start), day(a.end) if a.end else _t.time(), top=a.top, bankroll=a.bankroll,
+                           min_usd=a.min_usd, out=a.out, watchlist=wl)
+        print(backtest.report(res))
     elif a.cmd == "trades":
         from .ustrade import CopyTrader, USClient
         tr = CopyTrader(USClient(), str(out / ("trades_live.json" if a.live else "trades_paper.json")), a.bankroll)

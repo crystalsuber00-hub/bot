@@ -158,3 +158,25 @@ How it trades and what stops it:
 - **Kill switch:** create `polyscan_out/STOP` and it buys nothing more.
 
 Limits: the live order path is tested against a fake exchange only. It has never placed a real order, because Polymarket US has no sandbox. Run paper mode for a day or two and check its picks against the app before using `--live`, then watch the first live orders. Results are not guaranteed; you can lose the whole bankroll.
+
+## Replaying past weeks instead of watching live
+`polyscan backtest` rebuilds what the copy trader would have done over a past window, so nothing has to run for weeks:
+```
+polyscan backtest --start 2026-09-03 --end 2026-10-01 --bankroll 100
+polyscan backtest --start 2026-10-01 --end 2026-10-15 --watchlist data/polyscan_watchlist_2026-10-01.json
+```
+- **Wallets** are picked as `watch --rank profit` would have on the start date, using only data from before it (90-day P&L ending that day; bots and wallets idle for 14 days left out), or loaded from a saved `--watchlist`, so the test has no hindsight.
+- **Alerts** are rebuilt from those wallets' trade history (fills added up per wallet, outcome, side and minute, $1,000+).
+- **Prices** come from Polymarket US's minute-level price history one poll (60s) after each alert. **Results** come from its official settlements. The real `CopyTrader` makes every decision on a simulated clock, including the daily stop and the 30% halt.
+- It compares four settings: as built (first side, 3¢ limit), plus the second side bought by hand, loose (10¢ limit, any price), and copy everything (no price limit).
+- Limits: fills assume a $2 order fits at the best price (price history has no depth), and a game counts as finished 4 hours after its start.
+
+### Result for Sept 3 - Oct 1, 2026 (`data/polyscan_backtest_2026-09-03_2026-10-01.json`)
+| Setting | Trades | Won | P&L on $100 | Return on staked |
+|---|---|---|---|---|
+| As built: first side only, 3¢ limit | 95 | 40 | -$21.05 | -12.7% |
+| Plus second side bought by hand | 165 | 73 | -$26.45 | -9.9% |
+| Loose: both sides, 10¢ limit, any price | 192 | 90 | -$20.70 | -7.2% |
+| Copy everything, no price limit | 194 | 91 | -$9.04 | -4.7% |
+
+Copied prices matched the wallets' own (0.456 average against their 0.461), so the losses came from the bets themselves: the copied game-winner bets won 42% of the time at prices that needed about 46% to break even, before fees. These wallets' profits came mostly from markets Polymarket US doesn't list or the copier skips (spreads, totals, props, esports, smaller leagues). 1,685 of 3,258 buy alerts were spreads, totals or props, and 642 were games not listed on Polymarket US.
