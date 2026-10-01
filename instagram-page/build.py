@@ -16,7 +16,6 @@ import datetime as dt
 from pathlib import Path
 
 HANDLE = "@readthistwice"
-NAME = "Read This Twice"
 OUT = Path(__file__).parent / "output"
 
 # --- Format A: tweet-style card (modeled on the 9.8k-like post) ------------------
@@ -239,13 +238,14 @@ def main():
             "time": times[slot], "format": fmt, "slides": len(slides),
             "on_image_text": "\n---\n".join(slides), "caption": caption(fmt, slides, cta, n),
         })
+        # Canva rows hold only the text that changes per post; the templates in
+        # templates/ draw the name, handle, numbers and closing slide themselves.
         rec = {"post_id": post_id}
         if fmt == "carousel":
-            rec.update({f"slide{i}": s for i, s in enumerate(slides, 1)})
+            rec["hook"] = slides[0]
+            rec.update({f"point{i}": s.split(". ", 1)[1] for i, s in enumerate(slides[1:6], 1)})
         else:
             rec["text"] = slides[0]
-            if fmt == "tweet":
-                rec.update(name=NAME, handle=HANDLE)
         canva[fmt].append(rec)
 
     with open(OUT / "schedule.csv", "w", newline="", encoding="utf-8") as f:

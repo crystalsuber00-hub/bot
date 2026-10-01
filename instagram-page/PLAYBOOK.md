@@ -60,8 +60,8 @@ Mindset • discipline • quiet growth
 New reminder every day ↓
 ```
 
-**Profile picture:** a plain black circle with "RT²" or "R2" in white. Use the
-same mark as the avatar on the tweet cards.
+**Profile picture:** `templates/previews/profile-picture.png`, a black circle
+with "R2" in gold. It's the same mark as the avatar on the tweet cards.
 
 **Look:** black, off-white (#F5F2EB) and one accent color (muted gold #C9A227).
 Use one serif font for one-liners (e.g. Playfair Display) and a clean sans-serif
@@ -70,13 +70,15 @@ the page from the post alone.
 
 ## 4. The five formats (the `format` column)
 
+The finished designs are in `templates/` (see `templates/TEMPLATES.md`).
+
 | Format | Share | Design (1080×1350, 4:5) | Caption pattern |
 |---|---|---|---|
-| `tweet` | 35% | White card in a fake-tweet layout showing **your own** name, handle and avatar. Never use another person's name or tweet. | "Drop a 🖤 if you needed this today." |
-| `one_liner` | 25% | Black background, one sentence in big serif type, small @handle at the bottom | "Drop a 💥 if this hit you." |
-| `carousel` | 15% | 7 slides: hook, 5 points, then "Save this…" | Hook line, then "Which one is you? Comment the number 👇" |
-| `affirmation` | 15% | Off-white, centered text, small "affirm it ↓" | "Type YES to claim it 👇" |
-| `question` | 10% | Accent-color background, big question | "Comment your answer 👇" |
+| `tweet` | 35% | Cream background, white tweet-style card showing **your own** name, handle and "R2" avatar. Never use another person's name or tweet. | "Drop a 🖤 if you needed this today." |
+| `one_liner` | 25% | Black background, gold rule, one sentence in big white serif type | "Drop a 💥 if this hit you." |
+| `carousel` | 15% | Black cover with "Swipe →", five cream slides numbered 01–05 with a progress bar, black "Save this" closing slide | Hook line, then "Which one is you? Comment the number 👇" |
+| `affirmation` | 15% | Cream, centered italic serif, "Claim it in the comments ↓" button | "Type YES to claim it 👇" |
+| `question` | 10% | Gold background, big bold question, "Answer in the comments ↓" | "Comment your answer 👇" |
 
 Every caption follows the same shape: call to action, then a follow line, then
 3 hashtags. It's short on purpose. Comments, saves and shares ("sends") are
@@ -102,16 +104,21 @@ You have to do these steps yourself; they need your phone number and login.
 
 ### B. Canva: make all 100 images in one session
 1. Get **Canva Pro**; Bulk Create needs it, and there's a free trial.
-2. Build 5 templates, one per format, at 1080×1350. Give each template a text
-   box for every column in its CSV.
-3. Open a template and go to **Apps → Bulk create → Upload data**, then upload
-   the matching `output/canva_<format>.csv`.
-4. Right-click each text box, choose **Connect data**, and pick the column.
-   - Carousels have a `slide1`…`slide7` column per row. Connect each slide's text
-     box to its column on that page, so each row becomes one 7-slide carousel.
+2. Import the 5 ready-made templates from `templates/pdf/` (Canva → **Upload** →
+   pick the PDF). Each one opens as an editable design with `{{placeholder}}`
+   text where the post's words go.
+3. In each template, go to **Apps → Bulk create → Upload data** and upload the
+   matching `output/canva_<format>.csv`.
+4. Right-click each `{{placeholder}}` text box, choose **Connect data**, and pick
+   the column with the same name.
+   - Carousels: connect `{{hook}}` on page 1 and `{{point1}}`–`{{point5}}` on
+     pages 2–6. Page 7 doesn't change, so each row becomes one 7-slide carousel.
 5. Click **Continue → Generate**, then download as PNG and rename or sort the
    files by `post_id` (e.g. RTT001). That ID links each image to its caption in
    `schedule.csv`.
+
+The step-by-step version, with fixes for common import problems, is in
+`templates/TEMPLATES.md`.
 
 ### C. Scheduling: Later, or Meta Business Suite for free
 - **Later:** the free plan allows only **12 posts a month**, so 100 a month

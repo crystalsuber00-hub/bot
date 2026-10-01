@@ -2,7 +2,9 @@
 
 Paste this into Claude once a month. Fill in the bracketed parts from Instagram
 Insights. Then copy the new lines into the lists in `build.py` and run
-`python3 build.py --start <first day of the month>`.
+`python3 build.py --start <first day of the month>`, then `node templates/render.js`.
+The render step fails and names the post if any new line is too long for its
+template.
 
 ---
 
