@@ -1,1 +1,3 @@
 __pycache__/
+# The parent repo ignores config.toml (trading bot secrets); this one holds no secrets.
+!autopost/config.toml

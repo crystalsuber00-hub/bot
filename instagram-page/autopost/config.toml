@@ -1,0 +1,26 @@
+# Auto-poster settings. See AUTOPOST.md.
+
+# Your timezone, as an IANA name. The times in schedule.csv and the Reel file
+# names are read in this zone. Examples: America/New_York, America/Chicago,
+# America/Denver, America/Los_Angeles, Europe/London.
+timezone = "America/New_York"
+
+# Posts dated before this are ignored, so month one (scheduled by hand in Meta
+# Business Suite) is never posted twice. Set it earlier to let the auto-poster
+# handle those too.
+start_date = "2026-11-08"
+
+# Where GitHub Pages serves posts/ and reels/. Instagram downloads each file from
+# here. Format: https://<github-username>.github.io/<repo-name>
+public_base_url = "https://crystalsuber00-hub.github.io/readthistwice"
+
+# Reels posted through the API can't use Instagram's music library, so they'd go
+# out silent. Leave this off and schedule Reels in the Instagram app with a
+# trending sound, or turn it on to make posting fully hands-off.
+post_reels = false
+
+# A post more than this many minutes late (runner down, token expired) is
+# skipped and logged as missed instead of going out at a random time.
+max_late_minutes = 180
+
+api_version = "v25.0"

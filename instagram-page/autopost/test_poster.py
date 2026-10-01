@@ -1,12 +1,14 @@
 """Tests for poster.py against a fake Instagram API. Run: python3 -m unittest autopost/test_poster.py"""
 import csv
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import poster
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import poster  # noqa: E402
 
 REAL = Path(__file__).resolve().parent.parent
 TZ = ZoneInfo("America/New_York")
