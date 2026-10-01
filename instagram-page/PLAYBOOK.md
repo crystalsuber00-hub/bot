@@ -143,6 +143,22 @@ The step-by-step version, with fixes for common import problems, is in
   Instagram posts natively, with the same drag-and-paste workflow. Start here
   if you don't want to pay for Later yet.
 
+### D. Reels
+
+Month one has 10 Reels in `reels/`, two a week (Wednesdays and Saturdays at
+17:00). Each one is a full-screen version of a strong post, with the text
+appearing line by line over a slow zoom. Each Reel's date and time are in its
+file name, its cover is the matching `-cover.png`, and its caption is in the
+`.txt` file.
+
+Before launch there's no data on what performs, so these 10 are picked for
+shareability: the same formats as the top posts in the dataset. From week two
+on, the weekly loop below replaces them with your real top posts.
+
+The videos are silent on purpose. Schedule them in the **Instagram app** (+ →
+Reel → Advanced settings → Schedule) so you can add a trending sound from
+Instagram's music library. Keep the sound low so the words stay the focus.
+
 ## 6. The weekly loop
 
 Volume alone won't grow the page. A short weekly review based on the data will.
@@ -153,10 +169,10 @@ Volume alone won't grow the page. A short weekly review based on the data will.
    is.
 3. Shift next month's mix toward the winners. For example, if carousels win,
    go from 15 to 30 carousels.
-4. Make the top 2 posts of each week into **Reels**: the same card, a 6–8 second
-   slow zoom, and trending audio, made in Canva or CapCut. Reels reach far more
-   non-followers than images do. (This dataset had too few videos to measure
-   that.)
+4. Make the top 2 posts of each week into **Reels**. Add their post IDs and
+   dates to `REELS` in `templates/reels.js` and run `node templates/reels.js`.
+   Reels reach far more non-followers than images do. (This dataset had too few
+   videos to measure that.)
 5. Spend 10 minutes a day replying to comments in the first hour after a post
    goes up.
 

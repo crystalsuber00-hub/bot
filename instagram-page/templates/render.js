@@ -250,4 +250,6 @@ async function main() {
   console.log("All posts fit their templates.");
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+module.exports = { fontFaces, parseCSV, esc, HANDLE, DATA };
+
+if (require.main === module) main().catch((e) => { console.error(e); process.exit(1); });
