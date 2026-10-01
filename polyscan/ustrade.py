@@ -94,6 +94,11 @@ class USClient:
         return float(d["settlement"]) if d and d.get("settlement") is not None else None
 
     # account
+    def equity(self) -> float:
+        """Account value: cash plus the current value of open positions."""
+        bal = (self.private("GET", "/v1/account/balances").get("balances") or [{}])[0]
+        return _amt(bal.get("currentBalance")) + _amt(bal.get("assetNotional"))
+
     def buying_power(self) -> float:
         bal = self.private("GET", "/v1/account/balances").get("balances") or [{}]
         return _amt(bal[0].get("buyingPower"))
@@ -186,21 +191,50 @@ def stake_for(bankroll: float, stake: float | None = None, stake_pct: float = ST
 
 
 class CopyTrader:
-    def __init__(self, us: USClient, state_path: str, bankroll: float, live: bool = False,
+    def __init__(self, us: USClient, state_path: str, bankroll: float | None, live: bool = False,
                  stake: float | None = None, stake_pct: float = STAKE_PCT, max_slip: float = 0.03,
                  max_losses_per_day: int = MAX_LOSSES_PER_DAY, max_daily_loss_pct: float = DAILY_LOSS_PCT,
-                 max_drawdown_pct: float = DRAWDOWN_PCT, stop_file: str = "STOP"):
+                 max_drawdown_pct: float = DRAWDOWN_PCT, stop_file: str = "STOP", auto: bool = False):
+        """bankroll=None (or auto=True) sizes everything from what's actually in the account: live mode
+        reads the Polymarket US balance, paper mode uses the starting amount plus paper profit and loss."""
         if live and not us.authed:
             raise SystemExit("--live needs POLYMARKET_KEY_ID and POLYMARKET_SECRET_KEY in the environment")
-        self.us, self.live, self.bankroll = us, live, bankroll
-        self.stake = stake_for(bankroll, stake, stake_pct)
-        self.max_slip, self.max_losses, self.max_dd = max_slip, max_losses_per_day, max_drawdown_pct
-        self.max_day_loss = bankroll * max_daily_loss_pct
+        self.us, self.live, self.auto = us, live, auto or bankroll is None
         self.path, self.stop_file = Path(state_path), Path(stop_file)
         fresh = {"positions": {}, "closed": [], "halted": ""}
         self.state = json.loads(self.path.read_text()) if self.path.exists() else fresh
         for k, v in fresh.items():
             self.state.setdefault(k, v)
+        if "start" not in self.state:   # the amount the drawdown halt is measured against
+            self.state["start"] = us.equity() if (live and self.auto) else (bankroll or 100.0)
+        self.start = float(self.state["start"])
+        self._fixed = bankroll if bankroll and not self.auto else None
+        self._stake, self.stake_pct = stake, stake_pct
+        stake_for(self.bankroll, stake, stake_pct)  # fail fast on an impossible bet size
+        self.max_slip, self.max_losses, self.max_dd = max_slip, max_losses_per_day, max_drawdown_pct
+        self.day_loss_pct = max_daily_loss_pct
+
+    @property
+    def bankroll(self) -> float:
+        if self._fixed:
+            return self._fixed
+        if self.live:
+            try:
+                return self.us.equity()
+            except Exception as e:  # balance call failed: size from the last known starting point
+                log.warning("couldn't read account balance (%s); sizing from $%.2f", e, self.start)
+                return self.start + self.realized()
+        return self.start + self.realized()
+
+    @property
+    def stake(self) -> float:
+        """Dollars for the next bet, recomputed from the current account size."""
+        bank = self.bankroll
+        return round(min(self._stake or bank * self.stake_pct, max(bank, 0)), 2)
+
+    @property
+    def max_day_loss(self) -> float:
+        return self.bankroll * self.day_loss_pct
 
     @property
     def mode(self) -> str:
@@ -253,14 +287,17 @@ class CopyTrader:
                     f"To copy, buy {a['outcome']} in the app at no more than {a['price'] + self.max_slip:.2f}")
         if (b := self._blocked()):
             return f"not buying, {b}"
-        if self.open_cost() + self.stake > self.bankroll + 1e-6:
-            return f"not buying, ${self.open_cost():.2f} of ${self.bankroll:.0f} already in open bets"
+        bank, stake = self.bankroll, self.stake
+        if stake < 0.5:
+            return f"not buying, account is down to ${bank:.2f}"
+        if self.open_cost() + stake > bank + 1e-6:
+            return f"not buying, ${self.open_cost():.2f} of ${bank:.0f} already in open bets"
         bbo = self.us.bbo(market["slug"]) or {}
         if bbo.get("state") not in (None, "MARKET_STATE_OPEN"):
             return f"skipped, market is {bbo.get('state')}"
         plan = plan_entry(a["price"], _amt(bbo.get("longQuote") or bbo.get("bestAsk")) or None,
                           float(market.get("orderPriceMinTickSize") or 0.01), float(market.get("minimumTradeQty") or 1),
-                          self.stake, self.max_slip)
+                          stake, self.max_slip)
         if not plan["go"]:
             return f"skipped, {plan['why']}"
         if self.live:
@@ -323,8 +360,8 @@ class CopyTrader:
         pnl = round(p["qty"] * exit_px_net - p["cost"], 2)
         self.state["closed"].append({**p, "exit_px": round(exit_px_net, 4), "pnl": pnl, "how": how,
                                      "day": datetime.now(ET).date().isoformat(), "t_close": int(time.time())})
-        if self.realized() <= -self.bankroll * self.max_dd and not self.state["halted"]:
-            self.state["halted"] = f"lost ${-self.realized():.2f}, over {self.max_dd:.0%} of ${self.bankroll:.0f}"
+        if self.realized() <= -self.start * self.max_dd and not self.state["halted"]:
+            self.state["halted"] = f"lost ${-self.realized():.2f}, over {self.max_dd:.0%} of the ${self.start:.0f} start"
         return f"{p['team']} {how}: {'+' if pnl >= 0 else '−'}${abs(pnl):.2f} (total {self.realized():+.2f})"
 
     def refresh(self) -> list[str]:
@@ -341,9 +378,10 @@ class CopyTrader:
     def summary(self) -> str:
         c = self.state["closed"]
         wins = sum(1 for x in c if x["pnl"] > 0)
-        lines = [f"{self.mode} copy trading · bankroll ${self.bankroll:.0f} · ${self.stake:.2f} per bet · "
-                 f"daily stop ${self.max_day_loss:.0f} or {self.max_losses} losses · halt at "
-                 f"${self.bankroll * self.max_dd:.0f} down",
+        bank = self.bankroll
+        lines = [f"{self.mode} copy trading · account ${bank:.2f}{' (sized from account)' if self.auto else ''} · "
+                 f"${self.stake:.2f} per bet · daily stop ${bank * self.day_loss_pct:.0f} or {self.max_losses} losses · "
+                 f"halt at ${self.start * self.max_dd:.0f} down from ${self.start:.0f}",
                  f"closed {len(c)} ({wins} won) · realized {self.realized():+.2f} · "
                  f"open {len(self.state['positions'])} (${self.open_cost():.2f})"]
         if self.state["halted"]:

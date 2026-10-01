@@ -139,7 +139,7 @@ pip install -e '.[trade]'
 polyscan watch --top 15 --bankroll 100 --autotrade         # paper: logs what it would buy, scores it when games settle
 polyscan trades                                             # paper results so far
 POLYMARKET_KEY_ID=... POLYMARKET_SECRET_KEY=... \
-  polyscan watch --top 15 --bankroll 100 --autotrade --live # real orders
+  polyscan watch --top 15 --rank profit --size-from-account --autotrade --live  # real orders, sized from your balance
 polyscan trades --live
 ```
 API keys come from polymarket.us/developer after identity verification. Keep them in your environment or `.env`; never in code or chat. Revoke them there if they leak.
@@ -148,6 +148,8 @@ What it copies:
 - Only **BUYs of a game's winner market**. The international event slug (e.g. `nfl-kc-lv-2026-10-04`) is the same on Polymarket US, and the team is matched by name. Spreads, totals, props, esports and games not listed in the US are skipped.
 - Only when the copied team is the market's **first (long) side**. Buying the other team is a short on Polymarket US, and the API docs don't say clearly how that order is priced, so those come to you as an alert to buy by hand.
 - Exits when the same wallet sells; otherwise holds to settlement.
+- `--rank profit` watches the biggest 90-day earners instead of the highest copy scores. Wallets that stopped trading and high-frequency bots are left out either way, since there's nothing a copier can follow.
+- `--size-from-account` sizes every bet and the daily stop from the account's current value: in live mode the Polymarket US balance (cash plus open positions), in paper mode `--bankroll` plus paper profit and loss. Bets grow as the account grows and shrink as it falls. The 30% halt is measured from the starting value.
 
 How it trades and what stops it:
 - **IOC limit orders** (fill now or cancel), never market orders. The price plus the taker fee (0.0695 × p × (1−p) per contract, about 1.7¢ at $0.50) must stay within 3¢ of the copied wallet's price. That fee is about the size of the leaders' typical edge, so most signals are skipped.

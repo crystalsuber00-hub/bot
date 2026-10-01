@@ -23,6 +23,8 @@ class FakeUS:
     def bbo(self, m): return {"state": "MARKET_STATE_OPEN", "longQuote": {"value": str(self.ask)}, "bestBid": {"value": str(self.bid)}}
     def settlement(self, m): return self.settle
     def buying_power(self): return 100.0
+    equity_value = 100.0
+    def equity(self): return self.equity_value
 
     def order(self, body):
         self.orders.append(body)
@@ -158,3 +160,25 @@ def test_daily_dollar_loss_stop(tmp_path):
     assert t.realized() < -10
     assert "down $" in t.on_alert(buy(asset="D3", px=0.50))
     assert not t.state["halted"]                                  # $12 lost is under the $30 halt
+
+
+def test_sizes_from_account_value(tmp_path):
+    us = FakeUS(authed=True, ask=0.50)
+    us.equity_value = 250.0
+    t = CopyTrader(us, str(tmp_path / "l.json"), None, live=True)
+    assert t.start == 250 and t.stake == 5.0                          # 2% of what's in the account
+    us.equity_value = 150.0
+    assert t.stake == 3.0 and t.max_day_loss == 15.0                  # shrinks when the account does
+    p = CopyTrader(FakeUS(ask=0.50), str(tmp_path / "p.json"), 100, auto=True)
+    p.state["closed"].append({"pnl": 20.0, "day": "2000-01-01"})
+    assert p.bankroll == 120 and p.stake == 2.4                       # paper: start plus paper profit
+
+
+def test_rank_by_profit_keeps_active_humans_only():
+    from polyscan.watch import pick_watchlist
+    mk = lambda n, pnl, score, flags: {"wallet": n, "name": n, "score": score, "style": "", "flags": flags,
+                                       "series": {"pnl": pnl}}
+    scan = {"profiles": [mk("whale", 9e6, 40, []), mk("steady", 1e6, 80, []), mk("gone", 2e7, 70, ["dormant"]),
+                         mk("bot", 5e6, 60, ["bot-speed"])]}
+    assert [w["name"] for w in pick_watchlist(scan, 5, 50, rank="profit")] == ["whale", "steady"]
+    assert [w["name"] for w in pick_watchlist(scan, 5, 50)] == ["steady"]

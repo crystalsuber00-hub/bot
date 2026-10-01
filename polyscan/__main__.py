@@ -27,7 +27,9 @@ def main(argv=None):
 
     w = sub.add_parser("watch", help="alert when the best wallets trade (signal only, no orders)")
     w.add_argument("--out", default="polyscan_out", help="folder holding scan.json")
-    w.add_argument("--top", type=int, default=15, help="watch the N highest-scoring wallets")
+    w.add_argument("--top", type=int, default=15, help="watch the N highest-ranked wallets")
+    w.add_argument("--rank", choices=["score", "profit"], default="score",
+                   help="pick wallets by copy score (default) or by biggest 90-day profit")
     w.add_argument("--min-score", type=float, default=50)
     w.add_argument("--wallet", action="append", default=[], help="watch this address too (repeatable)")
     w.add_argument("--allow-bots", action="store_true", help="include high-frequency wallets")
@@ -41,6 +43,9 @@ def main(argv=None):
     w.add_argument("--live", action="store_true",
                    help="with --autotrade: place REAL orders (needs POLYMARKET_KEY_ID / POLYMARKET_SECRET_KEY)")
     w.add_argument("--max-slip", type=float, default=0.03, help="max all-in price above the copied fill")
+    w.add_argument("--size-from-account", action="store_true",
+                   help="size bets and limits from the actual account value (live: Polymarket US balance; "
+                        "paper: --bankroll plus paper profit/loss) instead of a fixed --bankroll")
     w.add_argument("--stake", type=float, default=0, help="dollars per bet (overrides --stake-pct)")
     w.add_argument("--stake-pct", type=float, default=0.02, help="bet size as a share of --bankroll (default 2%%)")
     w.add_argument("--max-losses", type=int, default=5, help="stop buying for the day after this many losses")
@@ -87,7 +92,8 @@ def main(argv=None):
     elif a.cmd == "watch":
         from .watch import Watcher, notifier_from_env, pick_watchlist
         scan_file = out / "scan.json"
-        wl = pick_watchlist(json.loads(scan_file.read_text()), a.top, a.min_score, a.allow_bots) if scan_file.exists() else []
+        wl = pick_watchlist(json.loads(scan_file.read_text()), a.top, a.min_score, a.allow_bots, a.rank) \
+            if scan_file.exists() else []
         wl += [{"wallet": x.lower(), "name": x[:10], "score": 0, "pnl": 0, "style": "manual"} for x in a.wallet]
         if not wl:
             raise SystemExit("nothing to watch: run `polyscan scan` first or pass --wallet")
@@ -99,20 +105,21 @@ def main(argv=None):
             raise SystemExit("--live only makes sense with --autotrade")
         if a.autotrade:
             from .ustrade import CopyTrader, USClient
-            if not a.bankroll:
-                raise SystemExit("--autotrade needs --bankroll (e.g. --bankroll 30)")
+            if not a.bankroll and not a.size_from_account:
+                raise SystemExit("--autotrade needs --bankroll (e.g. --bankroll 100) or --size-from-account")
             trader = CopyTrader(USClient.from_env(), str(out / ("trades_live.json" if a.live else "trades_paper.json")),
-                                a.bankroll, live=a.live, stake=a.stake or None, stake_pct=a.stake_pct,
+                                a.bankroll or None, live=a.live, stake=a.stake or None, stake_pct=a.stake_pct,
+                                auto=a.size_from_account,
                                 max_slip=a.max_slip, max_losses_per_day=a.max_losses,
                                 max_daily_loss_pct=a.max_daily_loss, max_drawdown_pct=a.max_drawdown,
                                 stop_file=str(out / "STOP"))
-            logging.warning("%s copy trading on Polymarket US: $%.2f per bet, $%.0f max in open bets. "
-                            "Create %s/STOP to stop buying.", trader.mode, trader.stake, a.bankroll, out)
+            logging.warning("%s copy trading on Polymarket US: account $%.2f, $%.2f per bet. Create %s/STOP to stop buying.",
+                            trader.mode, trader.bankroll, trader.stake, out)
         wt = Watcher(Client(), notifier_from_env(), wl, str(out / "watch_state.json"), min_usd=a.min_usd,
-                     sells=not a.no_sells, bankroll=a.bankroll, trader=trader,
+                     sells=not a.no_sells, bankroll=trader.bankroll if trader else a.bankroll, trader=trader,
                      stake_pct=(a.stake / a.bankroll) if a.stake and a.bankroll else a.stake_pct)
         if trader and trader.live:
-            wt.n.send(f"LIVE copy trading started: ${trader.stake:.2f} per bet, ${a.bankroll:.0f} max",
+            wt.n.send(f"LIVE copy trading started: account ${trader.bankroll:.2f}, ${trader.stake:.2f} per bet",
                       {"event": "entry"})
         if a.once:
             wt.tick()

@@ -19,9 +19,12 @@ from .api import Client
 log = logging.getLogger("polyscan")
 
 
-def pick_watchlist(scan: dict, top: int, min_score: float, allow_bots: bool = False) -> list[dict]:
-    rows = sorted(scan["profiles"], key=lambda p: p["score"], reverse=True)
-    out = [p for p in rows if p["score"] >= min_score and "dormant" not in p["flags"]
+def pick_watchlist(scan: dict, top: int, min_score: float, allow_bots: bool = False, rank: str = "score") -> list[dict]:
+    """rank="score": most copyable records; rank="profit": biggest 90-day earners. Either way wallets that
+    stopped trading are left out (there is nothing to copy), and so are bots unless allow_bots."""
+    key = (lambda p: p["series"]["pnl"]) if rank == "profit" else (lambda p: p["score"])
+    rows = sorted(scan["profiles"], key=key, reverse=True)
+    out = [p for p in rows if (rank == "profit" or p["score"] >= min_score) and "dormant" not in p["flags"]
            and (allow_bots or "bot-speed" not in p["flags"])]
     return [{"wallet": p["wallet"], "name": p["name"] or p["wallet"][:10], "score": p["score"],
              "pnl": p["series"]["pnl"], "style": p["style"]} for p in out[:top]]
