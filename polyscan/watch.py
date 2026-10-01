@@ -106,8 +106,9 @@ class Watcher:
                 book = self.api.book(asset)
                 if side == "BUY":
                     plan = copy_plan(px, book, self.bankroll)
-                    advice = (f"COPY: buy {plan['shares']} shares of {a['outcome']} (~${plan['stake']:.2f}), "
-                              f"limit {plan['limit']:.2f}, now {plan['ask']:.2f}\n" if plan["go"]
+                    # the live price is from the international book; on Polymarket US check the app's own price
+                    advice = (f"COPY: ~${plan['stake']:.2f} ({plan['shares']} shares) of {a['outcome']}, "
+                              f"pay at most {plan['limit']:.2f} (intl price now {plan['ask']:.2f})\n" if plan["go"]
                               else f"SKIP: {plan['why']}\n")
                 else:
                     bid = book["bid"] if book and book.get("bid") is not None else None
