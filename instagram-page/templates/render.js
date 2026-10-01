@@ -4,7 +4,8 @@
 //                                previews/*.png    (sample posts filled from ../output/canva_*.csv)
 //                                previews/profile-grid.png (first 12 posts as they'll sit on the profile)
 //                                previews/profile-picture.png
-//   node render.js --all DIR  -> also render every post to DIR/<post_id>[-N].png
+//   node render.js --all DIR  -> also render every post, ready to upload, in posting order:
+//                                DIR/<date>_<time>_<post_id>[-N].png plus a .txt with its caption
 //
 // Every post is checked against its text box; the script exits non-zero if any
 // post's text would overflow, so a new month's copy can't silently break a design.
@@ -196,6 +197,7 @@ async function main() {
   const browser = await chromium.launch();
   const problems = [];
   const rendered = {};  // post_id -> first page png (for the grid)
+  const sched = Object.fromEntries(parseCSV(fs.readFileSync(path.join(DATA, "schedule.csv"), "utf8")).map((r) => [r.post_id, r]));
   try {
     for (const fmt of FORMATS) {
       // 1. Canva template PDF with placeholders.
@@ -214,8 +216,13 @@ async function main() {
         if (idx === 0) await shoot(page, prevDir, pages.map((_, i) => multi ? `${fmt}-${i + 1}.png` : `${fmt}.png`));
         const dir = allDir || path.join(require("os").tmpdir(), "rtt-render");
         fs.mkdirSync(dir, { recursive: true });
-        await shoot(page, dir, pages.map((_, i) => multi ? `${row.post_id}-${i + 1}.png` : `${row.post_id}.png`));
-        rendered[row.post_id] = path.join(dir, multi ? `${row.post_id}-1.png` : `${row.post_id}.png`);
+        // Date and time first, so sorting the folder by name gives the posting order.
+        const s = sched[row.post_id];
+        const base = allDir && s ? `${s.date}_${s.time.replace(":", "")}_${row.post_id}` : row.post_id;
+        const names = pages.map((_, i) => multi ? `${base}-${i + 1}.png` : `${base}.png`);
+        await shoot(page, dir, names);
+        if (allDir && s) fs.writeFileSync(path.join(dir, `${base}.txt`), s.caption + "\n");
+        rendered[row.post_id] = path.join(dir, names[0]);
         await page.close();
       }
       console.log(`${fmt}: template + ${rows.length} posts checked`);
@@ -229,8 +236,8 @@ async function main() {
     await pfp.screenshot({ path: path.join(prevDir, "profile-picture.png") });
 
     // 4. Profile grid: the first 12 scheduled posts, newest top-left, cropped 3:4 like the profile view.
-    const sched = parseCSV(fs.readFileSync(path.join(DATA, "schedule.csv"), "utf8")).slice(0, 12).reverse();
-    const tiles = sched.map((r) => `<img src="data:image/png;base64,${fs.readFileSync(rendered[r.post_id]).toString("base64")}">`).join("");
+    const first12 = Object.values(sched).slice(0, 12).reverse();
+    const tiles = first12.map((r) => `<img src="data:image/png;base64,${fs.readFileSync(rendered[r.post_id]).toString("base64")}">`).join("");
     const grid = await browser.newPage({ viewport: { width: 1080, height: 1440 } });
     await grid.setContent(`<!doctype html><style>*{margin:0}body{background:#fff;width:1080px}
       .g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}

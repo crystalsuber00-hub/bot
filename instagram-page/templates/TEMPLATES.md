@@ -42,9 +42,9 @@ Canva and fill with Bulk create.
 For the carousel, each CSV row turns all 7 pages into one carousel. Page 7
 (the save and follow slide) is the same every time.
 
-**If the import goes wrong** (shifted boxes, missing shapes), there's a quicker
-route. `node render.js --all <folder>` makes all 100 finished images straight
-from these designs, named by post ID, so you can skip Canva for this month.
+**You can skip Canva entirely.** Month one's 100 posts are already rendered
+from these designs in `../posts/`, ready to upload. To render a new month, run
+`node render.js --all ../posts`.
 
 ## Why these designs help a new account grow
 

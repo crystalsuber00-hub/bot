@@ -102,7 +102,16 @@ You have to do these steps yourself; they need your phone number and login.
 5. Add the bio and profile picture. Before scheduling anything, post the first
    3 posts by hand so the grid isn't empty.
 
-### B. Canva: make all 100 images in one session
+### B. The images
+
+**Month one is already done.** All 100 posts are rendered in `posts/`, ready to
+upload, so you can skip Canva. Each file is named
+`<date>_<time>_<post_id>.png` (carousel slides end in `-1` to `-7`), so sorting
+the folder by name gives the posting order. Each post's caption is in the
+`.txt` file with the same name.
+
+Use Canva instead only if you want to edit the designs by hand:
+
 1. Get **Canva Pro**; Bulk Create needs it, and there's a free trial.
 2. Import the 5 ready-made templates from `templates/pdf/` (Canva → **Upload** →
    pick the PDF). Each one opens as an editable design with `{{placeholder}}`
