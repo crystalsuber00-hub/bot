@@ -6,3 +6,5 @@ state.json
 .env
 history/
 logs/
+
+polyscan_out/

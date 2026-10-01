@@ -106,3 +106,27 @@ Tests: `pip install -e '.[dev]' && pytest`
 - Weekdays only; market holidays aren't checked (no chain → the day is skipped). Early-close days aren't special-cased.
 - Trade mode has never run against a real broker (only fake ones in tests). Verify on a paper account first.
 - Not financial advice; options can lose more than the credit received.
+
+---
+
+# polyscan: Polymarket top-wallet scanner
+
+A second, separate tool in this repo. It finds the most profitable Polymarket wallets over a trailing window (default 90 days), profiles each one position by position, scores how copyable their results look, and can send you an alert when the best ones trade. It reads Polymarket's public data API only: no account, no keys, no orders.
+
+```
+pip install -e .
+polyscan scan                      # ~10 min: writes polyscan_out/{index.html,wallets.csv,scan.json}
+polyscan report                    # re-render index.html from the saved scan.json
+polyscan watch --top 15            # poll the 15 best-scoring non-bot wallets every 60s and alert
+polyscan watch --wallet 0xabc... --min-usd 5000 --once
+```
+`watch` uses the same alert channels as spxbot (`NTFY_TOPIC`, `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, `DISCORD_WEBHOOK_URL`, `WEBHOOK_URL`). It sends one alert per wallet, outcome and side per poll (fills of one order are added up), skips trades under `--min-usd`, and sends a **CONSENSUS** alert when two or more watched wallets buy the same outcome within 24 hours. The first poll only records where each wallet is; it never replays history.
+
+## How a scan works
+1. **Candidate pool.** Polymarket has day, week, month and all-time leaderboards but no 90-day one, so the scan pulls the all-time top 1,000, the monthly top 500 by P&L, the monthly and weekly leaders by volume and P&L, and the top 100 of nine categories (about 2,300 wallets).
+2. **Trailing P&L.** For every wallet it reads the daily cumulative P&L series (realized plus mark-to-market, the curve on a Polymarket profile) and takes today minus 90 days ago. Drawdown, daily Sharpe, green-week rate and best-day share come from the same curve.
+3. **Profiles.** For the top 100 it reads closed positions, current positions and trades in the window. Losing tokens that were never redeemed are counted as losses; most traders never redeem losers, so skipping them makes everyone look like a 90% winner.
+4. **Copy score (0-100).** Profit percentile 20%, consistency 20%, breadth (not one lucky day, enough positions) 15%, drawdown versus profit 15%, realized ROI 15%, followability 15%. Followability penalises bot-speed trading (more than 25 different markets a day; fill counts are misleading because one big order fills against dozens of makers), buying near-certain favorites, and wallets that have not traded for 14 days. Bots and favorite-buyers are penalised because someone copying their trades minutes later gets a worse price.
+5. **Flags.** `one-big-day`, `one-big-bet`, `bot-speed`, `favorite-scalper`, `longshot-hunter`, `new-wallet`, `deep-drawdown`, `small-sample`, `cooling-off` (up over 90 days, down over 30), `dormant` (no trade in 14 days; `watch` skips these).
+
+Limits: high-frequency wallets are sampled (latest 5,000 fills, 3,000 closed positions), market categories come from slugs and titles, and the copy score ranks past results. A wallet can stop trading or change style at any time, and copying a trade later gets a worse price than they got. Not financial advice.
