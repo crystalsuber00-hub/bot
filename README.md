@@ -136,10 +136,10 @@ Limits: high-frequency wallets are sampled (latest 5,000 fills, 3,000 closed pos
 
 ```
 pip install -e '.[trade]'
-polyscan watch --top 15 --bankroll 30 --autotrade          # paper: logs what it would buy, scores it when games settle
+polyscan watch --top 15 --bankroll 100 --autotrade         # paper: logs what it would buy, scores it when games settle
 polyscan trades                                             # paper results so far
 POLYMARKET_KEY_ID=... POLYMARKET_SECRET_KEY=... \
-  polyscan watch --top 15 --bankroll 30 --autotrade --live  # real orders
+  polyscan watch --top 15 --bankroll 100 --autotrade --live # real orders
 polyscan trades --live
 ```
 API keys come from polymarket.us/developer after identity verification. Keep them in your environment or `.env`; never in code or chat. Revoke them there if they leak.
@@ -151,8 +151,8 @@ What it copies:
 
 How it trades and what stops it:
 - **IOC limit orders** (fill now or cancel), never market orders. The price plus the taker fee (0.0695 × p × (1−p) per contract, about 1.7¢ at $0.50) must stay within 3¢ of the copied wallet's price. That fee is about the size of the leaders' typical edge, so most signals are skipped.
-- **Stake** 10% of `--bankroll` per bet ($3 for $30), and never more than the bankroll in open bets.
-- **Stops buying** for the rest of the day (ET) after 3 losses (`--max-losses`), and halts completely once realized losses reach 50% of the bankroll until `polyscan trades --reset-halt`.
+- **Bet size** 2% of `--bankroll` ($2 on $100; `--stake-pct`, or a fixed `--stake 2`), raised to the exchange minimum when needed, and never more than the bankroll in open bets. The defaults are sized for a $100 account: over 30-100 bets a week, normal luck swings about $10-20, which $2 bets can absorb.
+- **Stops buying** for the rest of the day (ET) once down 10% of the bankroll that day (`--max-daily-loss`, $10 on $100) or after 5 losses (`--max-losses`), and halts completely once realized losses reach 30% (`--max-drawdown`, $30 on $100) until `polyscan trades --reset-halt`.
 - **Kill switch:** create `polyscan_out/STOP` and it buys nothing more.
 
 Limits: the live order path is tested against a fake exchange only. It has never placed a real order, because Polymarket US has no sandbox. Run paper mode for a day or two and check its picks against the app before using `--live`, then watch the first live orders. Results are not guaranteed; you can lose the whole bankroll.

@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from polyscan.ustrade import CopyTrader, USClient, find_moneyline, plan_entry, taker_fee
+from polyscan.ustrade import CopyTrader, USClient, find_moneyline, plan_entry, stake_for, taker_fee
 
 
 def event(slug="nfl-kc-lv-2026-10-04", sides=(("Chiefs", "Kansas City Chiefs", True), ("Raiders", "Las Vegas Raiders", False))):
@@ -65,7 +65,7 @@ def test_plan_entry_keeps_price_plus_fee_under_ceiling():
 
 def test_paper_buy_sell_and_settle(tmp_path):
     us = FakeUS()
-    t = CopyTrader(us, str(tmp_path / "p.json"), 30)
+    t = CopyTrader(us, str(tmp_path / "p.json"), 30, stake=3)
     note = t.on_alert(buy())
     assert note.startswith("PAPER: bought") and us.orders == []      # paper never sends orders
     assert "already holding" in t.on_alert(buy())
@@ -81,7 +81,8 @@ def test_paper_buy_sell_and_settle(tmp_path):
 
 def test_guards_bankroll_daily_losses_drawdown_and_stop_file(tmp_path):
     us = FakeUS(ask=0.50)
-    t = CopyTrader(us, str(tmp_path / "p.json"), 30, stop_file=str(tmp_path / "STOP"))
+    t = CopyTrader(us, str(tmp_path / "p.json"), 30, stake=3, max_losses_per_day=3, max_daily_loss_pct=1.0,
+                    max_drawdown_pct=0.5, stop_file=str(tmp_path / "STOP"))
     for i in range(10):
         t.on_alert(buy(asset=f"B{i}", px=0.50))
     assert len(t.state["positions"]) == 10 and t.open_cost() <= 30
@@ -103,7 +104,7 @@ def test_live_requires_keys(tmp_path):
 
 def test_live_order_shape_and_unfilled_order(tmp_path):
     us = FakeUS(authed=True)
-    t = CopyTrader(us, str(tmp_path / "l.json"), 30, live=True)
+    t = CopyTrader(us, str(tmp_path / "l.json"), 30, live=True, stake=3)
     note = t.on_alert(buy())
     o = us.orders[0]
     assert note.startswith("LIVE: bought")
@@ -138,3 +139,22 @@ def test_signature_verifies_with_public_key(monkeypatch):
     msg = f"{h['X-PM-Timestamp']}GET/v1/account/balances".encode()
     sk.public_key().verify(base64.b64decode(h["X-PM-Signature"]), msg)   # raises if wrong
     assert h["X-PM-Access-Key"] == "kid" and sent["url"] == "https://api.polymarket.us/v1/account/balances"
+
+
+def test_defaults_suit_a_100_dollar_account(tmp_path):
+    t = CopyTrader(FakeUS(), str(tmp_path / "p.json"), 100)
+    assert t.stake == 2.0 and t.max_day_loss == 10.0 and t.max_losses == 5 and t.max_dd == 0.30
+    assert stake_for(100, stake=5) == 5 and stake_for(100, stake_pct=0.01) == 1
+    with pytest.raises(SystemExit):
+        stake_for(100, stake=150)
+
+
+def test_daily_dollar_loss_stop(tmp_path):
+    us = FakeUS(ask=0.50)
+    t = CopyTrader(us, str(tmp_path / "p.json"), 100, stake=6)   # $6 bets: two losses pass the $10 daily stop
+    t.on_alert(buy(asset="D1", px=0.50)); t.on_alert(buy(asset="D2", px=0.50))
+    us.settle = 0.0
+    t.refresh()
+    assert t.realized() < -10
+    assert "down $" in t.on_alert(buy(asset="D3", px=0.50))
+    assert not t.state["halted"]                                  # $12 lost is under the $30 halt

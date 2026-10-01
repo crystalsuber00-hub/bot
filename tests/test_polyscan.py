@@ -189,10 +189,11 @@ def test_watcher_aggregates_fills_and_detects_consensus(tmp_path):
 
 def test_copy_plan_for_small_account():
     book = lambda ask: {"ask": ask, "bid": ask - 0.01, "min_size": 5}
-    p = copy_plan(0.55, book(0.56), 30)
+    p = copy_plan(0.55, book(0.56), 30, stake_pct=0.10)
     assert p["go"] and p["stake"] == 3.0 and p["limit"] == 0.58 and p["shares"] == 5
     assert not copy_plan(0.55, book(0.60), 30)["go"]          # price already ran away
     assert not copy_plan(0.92, book(0.92), 30)["go"]          # near-certain favorite
     assert not copy_plan(0.08, book(0.08), 30)["go"]          # longshot
     assert not copy_plan(0.55, None, 30)["go"]
-    assert copy_plan(0.80, book(0.80), 30)["stake"] == 4.0    # 5-share exchange minimum beats 10%
+    assert copy_plan(0.80, book(0.80), 30, stake_pct=0.10)["stake"] == 4.0
+    assert copy_plan(0.55, book(0.56), 100)["stake"] == 2.8    # 2% of $100 is under the 5-share minimum (5 x 0.56)    # 5-share exchange minimum beats 10%

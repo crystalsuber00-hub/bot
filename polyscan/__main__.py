@@ -41,14 +41,20 @@ def main(argv=None):
     w.add_argument("--live", action="store_true",
                    help="with --autotrade: place REAL orders (needs POLYMARKET_KEY_ID / POLYMARKET_SECRET_KEY)")
     w.add_argument("--max-slip", type=float, default=0.03, help="max all-in price above the copied fill")
-    w.add_argument("--max-losses", type=int, default=3, help="stop buying for the day after this many losses")
+    w.add_argument("--stake", type=float, default=0, help="dollars per bet (overrides --stake-pct)")
+    w.add_argument("--stake-pct", type=float, default=0.02, help="bet size as a share of --bankroll (default 2%%)")
+    w.add_argument("--max-losses", type=int, default=5, help="stop buying for the day after this many losses")
+    w.add_argument("--max-daily-loss", type=float, default=0.10,
+                   help="stop buying for the day once down this share of --bankroll today (default 10%%)")
+    w.add_argument("--max-drawdown", type=float, default=0.30,
+                   help="halt all buying once total losses reach this share of --bankroll (default 30%%)")
     w.add_argument("--once", action="store_true")
     w.add_argument("-v", "--verbose", action="store_true")
 
     t = sub.add_parser("trades", help="show copy-trading results (paper and live)")
     t.add_argument("--out", default="polyscan_out")
     t.add_argument("--live", action="store_true", help="show the live account's log instead of paper")
-    t.add_argument("--bankroll", type=float, default=30)
+    t.add_argument("--bankroll", type=float, default=100)
     t.add_argument("--reset-halt", action="store_true", help="clear a drawdown halt so buying can resume")
 
     a = ap.parse_args(argv)
@@ -96,12 +102,15 @@ def main(argv=None):
             if not a.bankroll:
                 raise SystemExit("--autotrade needs --bankroll (e.g. --bankroll 30)")
             trader = CopyTrader(USClient.from_env(), str(out / ("trades_live.json" if a.live else "trades_paper.json")),
-                                a.bankroll, live=a.live, max_slip=a.max_slip, max_losses_per_day=a.max_losses,
+                                a.bankroll, live=a.live, stake=a.stake or None, stake_pct=a.stake_pct,
+                                max_slip=a.max_slip, max_losses_per_day=a.max_losses,
+                                max_daily_loss_pct=a.max_daily_loss, max_drawdown_pct=a.max_drawdown,
                                 stop_file=str(out / "STOP"))
             logging.warning("%s copy trading on Polymarket US: $%.2f per bet, $%.0f max in open bets. "
                             "Create %s/STOP to stop buying.", trader.mode, trader.stake, a.bankroll, out)
         wt = Watcher(Client(), notifier_from_env(), wl, str(out / "watch_state.json"), min_usd=a.min_usd,
-                     sells=not a.no_sells, bankroll=a.bankroll, trader=trader)
+                     sells=not a.no_sells, bankroll=a.bankroll, trader=trader,
+                     stake_pct=(a.stake / a.bankroll) if a.stake and a.bankroll else a.stake_pct)
         if trader and trader.live:
             wt.n.send(f"LIVE copy trading started: ${trader.stake:.2f} per bet, ${a.bankroll:.0f} max",
                       {"event": "entry"})

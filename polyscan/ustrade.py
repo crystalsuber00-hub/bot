@@ -169,15 +169,33 @@ def plan_entry(their_px: float, ask: float | None, tick: float, min_qty: float, 
 
 # -- the trader -------------------------------------------------------------------------
 
+# Defaults sized for a ~$100 account: $2 bets, so normal week-to-week luck (about +/-$10-20 over
+# 30-100 bets) can't wipe it out, a bad day stops at $10, and the whole experiment stops at $30.
+STAKE_PCT = 0.02
+DAILY_LOSS_PCT = 0.10
+MAX_LOSSES_PER_DAY = 5
+DRAWDOWN_PCT = 0.30
+
+
+def stake_for(bankroll: float, stake: float | None = None, stake_pct: float = STAKE_PCT) -> float:
+    """Dollars per bet: an explicit amount, or a percentage of the bankroll."""
+    amt = stake if stake else bankroll * stake_pct
+    if not 0 < amt <= bankroll:
+        raise SystemExit(f"bet size ${amt:.2f} must be more than $0 and no more than the ${bankroll:.0f} bankroll")
+    return round(amt, 2)
+
+
 class CopyTrader:
     def __init__(self, us: USClient, state_path: str, bankroll: float, live: bool = False,
-                 stake_pct: float = 0.10, max_slip: float = 0.03, max_losses_per_day: int = 3,
-                 max_drawdown_pct: float = 0.5, stop_file: str = "STOP"):
+                 stake: float | None = None, stake_pct: float = STAKE_PCT, max_slip: float = 0.03,
+                 max_losses_per_day: int = MAX_LOSSES_PER_DAY, max_daily_loss_pct: float = DAILY_LOSS_PCT,
+                 max_drawdown_pct: float = DRAWDOWN_PCT, stop_file: str = "STOP"):
         if live and not us.authed:
             raise SystemExit("--live needs POLYMARKET_KEY_ID and POLYMARKET_SECRET_KEY in the environment")
         self.us, self.live, self.bankroll = us, live, bankroll
-        self.stake = max(1.0, bankroll * stake_pct)
+        self.stake = stake_for(bankroll, stake, stake_pct)
         self.max_slip, self.max_losses, self.max_dd = max_slip, max_losses_per_day, max_drawdown_pct
+        self.max_day_loss = bankroll * max_daily_loss_pct
         self.path, self.stop_file = Path(state_path), Path(stop_file)
         fresh = {"positions": {}, "closed": [], "halted": ""}
         self.state = json.loads(self.path.read_text()) if self.path.exists() else fresh
@@ -197,10 +215,13 @@ class CopyTrader:
             return f"stop file {self.stop_file} exists"
         if self.state["halted"]:
             return f"halted: {self.state['halted']}"
-        today = datetime.now(ET).date().isoformat()
-        losses = sum(1 for c in self.state["closed"] if c["pnl"] < 0 and c["day"] == today)
+        today = [c for c in self.state["closed"] if c["day"] == datetime.now(ET).date().isoformat()]
+        losses = sum(1 for c in today if c["pnl"] < 0)
         if losses >= self.max_losses:
             return f"{losses} losses today; resuming tomorrow"
+        day_pnl = sum(c["pnl"] for c in today)
+        if day_pnl <= -self.max_day_loss:
+            return f"down ${-day_pnl:.2f} today (limit ${self.max_day_loss:.2f}); resuming tomorrow"
         return ""
 
     def open_cost(self) -> float:
@@ -320,7 +341,9 @@ class CopyTrader:
     def summary(self) -> str:
         c = self.state["closed"]
         wins = sum(1 for x in c if x["pnl"] > 0)
-        lines = [f"{self.mode} copy trading · bankroll ${self.bankroll:.0f} · ${self.stake:.2f} per bet",
+        lines = [f"{self.mode} copy trading · bankroll ${self.bankroll:.0f} · ${self.stake:.2f} per bet · "
+                 f"daily stop ${self.max_day_loss:.0f} or {self.max_losses} losses · halt at "
+                 f"${self.bankroll * self.max_dd:.0f} down",
                  f"closed {len(c)} ({wins} won) · realized {self.realized():+.2f} · "
                  f"open {len(self.state['positions'])} (${self.open_cost():.2f})"]
         if self.state["halted"]:

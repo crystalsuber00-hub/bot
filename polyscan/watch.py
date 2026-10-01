@@ -27,7 +27,7 @@ def pick_watchlist(scan: dict, top: int, min_score: float, allow_bots: bool = Fa
              "pnl": p["series"]["pnl"], "style": p["style"]} for p in out[:top]]
 
 
-def copy_plan(their_px: float, book: dict | None, bankroll: float, stake_pct: float = 0.10,
+def copy_plan(their_px: float, book: dict | None, bankroll: float, stake_pct: float = 0.02,
               max_slip: float = 0.03, lo: float = 0.15, hi: float = 0.85) -> dict:
     """What a small account should do about a whale's buy, given the price you can get right now.
 
@@ -61,10 +61,10 @@ def notifier_from_env() -> Notifier:
 class Watcher:
     def __init__(self, api: Client, notifier: Notifier, watchlist: list[dict], state_path: str,
                  min_usd: float = 1000, consensus_hours: float = 24, sells: bool = True, bankroll: float = 0,
-                 trader=None):
+                 trader=None, stake_pct: float = 0.02):
         self.api, self.n, self.watch = api, notifier, watchlist
         self.min_usd, self.consensus_s, self.sells, self.bankroll = min_usd, consensus_hours * 3600, sells, bankroll
-        self.path, self.trader = Path(state_path), trader
+        self.path, self.trader, self.stake_pct = Path(state_path), trader, stake_pct
         self.state = json.loads(self.path.read_text()) if self.path.exists() else {"seen": {}, "buys": []}
 
     def save(self):
@@ -113,7 +113,7 @@ class Watcher:
             if self.bankroll:
                 book = self.api.book(asset)
                 if side == "BUY":
-                    plan = copy_plan(px, book, self.bankroll)
+                    plan = copy_plan(px, book, self.bankroll, self.stake_pct)
                     # the live price is from the international book; on Polymarket US check the app's own price
                     advice = (f"COPY: ~${plan['stake']:.2f} ({plan['shares']} shares) of {a['outcome']}, "
                               f"pay at most {plan['limit']:.2f} (intl price now {plan['ask']:.2f})\n" if plan["go"]
