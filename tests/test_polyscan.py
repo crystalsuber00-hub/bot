@@ -5,7 +5,7 @@ import pytest
 from polyscan import metrics as m
 from polyscan import report
 from polyscan.__main__ import write_csv
-from polyscan.watch import Watcher, pick_watchlist
+from polyscan.watch import Watcher, copy_plan, pick_watchlist
 
 DAY = 86400
 NOW = 1_790_000_000
@@ -185,3 +185,14 @@ def test_watcher_aggregates_fills_and_detects_consensus(tmp_path):
     assert w.tick() == []                        # consensus is not repeated
     assert len(n.sent) == 3
     assert json.loads((tmp_path / "st.json").read_text())["seen"]["a"] == now - 8
+
+
+def test_copy_plan_for_small_account():
+    book = lambda ask: {"ask": ask, "bid": ask - 0.01, "min_size": 5}
+    p = copy_plan(0.55, book(0.56), 30)
+    assert p["go"] and p["stake"] == 3.0 and p["limit"] == 0.58 and p["shares"] == 5
+    assert not copy_plan(0.55, book(0.60), 30)["go"]          # price already ran away
+    assert not copy_plan(0.92, book(0.92), 30)["go"]          # near-certain favorite
+    assert not copy_plan(0.08, book(0.08), 30)["go"]          # longshot
+    assert not copy_plan(0.55, None, 30)["go"]
+    assert copy_plan(0.80, book(0.80), 30)["stake"] == 4.0    # 5-share exchange minimum beats 10%

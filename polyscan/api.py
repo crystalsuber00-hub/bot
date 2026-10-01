@@ -103,6 +103,16 @@ class Client:
             end = oldest - 1  # hit the offset ceiling: continue from the oldest row seen
         return out[:cap]
 
+    def book(self, token_id: str) -> dict | None:
+        """Live order book for one outcome token: best bid/ask and the exchange's minimum order size."""
+        b = self.get("https://clob.polymarket.com/book", token_id=token_id)
+        if not b:
+            return None
+        bids = [float(x["price"]) for x in b.get("bids", [])]
+        asks = [float(x["price"]) for x in b.get("asks", [])]
+        return {"bid": max(bids) if bids else None, "ask": min(asks) if asks else None,
+                "min_size": float(b.get("min_order_size") or 5)}
+
     def recent_activity(self, wallet: str, limit: int = 50) -> list[dict]:
         return self.get(f"{DATA}/activity", user=wallet, type="TRADE", limit=limit, sortBy="TIMESTAMP",
                         sortDirection="DESC") or []

@@ -33,6 +33,8 @@ def main(argv=None):
     w.add_argument("--allow-bots", action="store_true", help="include high-frequency wallets")
     w.add_argument("--min-usd", type=float, default=1000, help="ignore trades smaller than this")
     w.add_argument("--no-sells", action="store_true")
+    w.add_argument("--bankroll", type=float, default=0,
+                   help="your account size in $: adds a live-price COPY/SKIP plan and stake to each alert")
     w.add_argument("--every", type=int, default=60, help="seconds between polls")
     w.add_argument("--once", action="store_true")
     w.add_argument("-v", "--verbose", action="store_true")
@@ -66,7 +68,7 @@ def main(argv=None):
             logging.info("watching %-24s score %5.1f  90d $%12s  %s", x["name"], x["score"], f"{x['pnl']:,.0f}", x["style"])
         out.mkdir(parents=True, exist_ok=True)
         wt = Watcher(Client(), notifier_from_env(), wl, str(out / "watch_state.json"), min_usd=a.min_usd,
-                     sells=not a.no_sells)
+                     sells=not a.no_sells, bankroll=a.bankroll)
         if a.once:
             wt.tick()
         else:

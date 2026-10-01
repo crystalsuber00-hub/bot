@@ -27,6 +27,28 @@ def pick_watchlist(scan: dict, top: int, min_score: float, allow_bots: bool = Fa
              "pnl": p["series"]["pnl"], "style": p["style"]} for p in out[:top]]
 
 
+def copy_plan(their_px: float, book: dict | None, bankroll: float, stake_pct: float = 0.10,
+              max_slip: float = 0.03, lo: float = 0.15, hi: float = 0.85) -> dict:
+    """What a small account should do about a whale's buy, given the price you can get right now.
+
+    The leaders' typical edge is only a few cents per share, so paying more than `max_slip` above
+    their fill gives most of it away. Near-certain favorites and longshots are skipped: the first
+    risk a lot to win a little, the second lose most of the time and drain a small account.
+    """
+    if not book or book.get("ask") is None:
+        return {"go": False, "why": "no live price"}
+    ask, min_cost = book["ask"], book["ask"] * book.get("min_size", 5)
+    limit = round(min(their_px + max_slip, hi), 2)
+    stake = max(bankroll * stake_pct, min_cost)
+    if ask > limit:
+        return {"go": False, "why": f"price moved to {ask:.2f}, over your {limit:.2f} limit", "ask": ask}
+    if not lo <= ask <= hi:
+        return {"go": False, "why": f"{ask:.2f} is outside the {lo:.2f}-{hi:.2f} range", "ask": ask}
+    if stake > bankroll * 0.2:
+        return {"go": False, "why": f"exchange minimum is ${min_cost:.2f}, too big a share of ${bankroll:.0f}", "ask": ask}
+    return {"go": True, "ask": ask, "limit": limit, "stake": round(stake, 2), "shares": int(stake / limit)}
+
+
 def notifier_from_env() -> Notifier:
     env = os.environ.get
     return Notifier(Notify(
@@ -38,9 +60,9 @@ def notifier_from_env() -> Notifier:
 
 class Watcher:
     def __init__(self, api: Client, notifier: Notifier, watchlist: list[dict], state_path: str,
-                 min_usd: float = 1000, consensus_hours: float = 24, sells: bool = True):
+                 min_usd: float = 1000, consensus_hours: float = 24, sells: bool = True, bankroll: float = 0):
         self.api, self.n, self.watch = api, notifier, watchlist
-        self.min_usd, self.consensus_s, self.sells = min_usd, consensus_hours * 3600, sells
+        self.min_usd, self.consensus_s, self.sells, self.bankroll = min_usd, consensus_hours * 3600, sells, bankroll
         self.path = Path(state_path)
         self.state = json.loads(self.path.read_text()) if self.path.exists() else {"seen": {}, "buys": []}
 
@@ -79,12 +101,23 @@ class Watcher:
                 continue
             px = a["usd"] / a["shares"] if a["shares"] else 0
             verb = "BOUGHT" if side == "BUY" else "SOLD"
-            text = (f"{w['name']} {verb} ${a['usd']:,.0f} of {a['outcome']} @ {px:.2f}\n"
+            plan, advice = None, ""
+            if self.bankroll:
+                book = self.api.book(asset)
+                if side == "BUY":
+                    plan = copy_plan(px, book, self.bankroll)
+                    advice = (f"COPY: buy {plan['shares']} shares of {a['outcome']} (~${plan['stake']:.2f}), "
+                              f"limit {plan['limit']:.2f}, now {plan['ask']:.2f}\n" if plan["go"]
+                              else f"SKIP: {plan['why']}\n")
+                else:
+                    bid = book["bid"] if book and book.get("bid") is not None else None
+                    advice = f"If you copied this, sell your {a['outcome']} now" + (f" (best bid {bid:.2f})" if bid else "") + "\n"
+            text = (f"{w['name']} {verb} ${a['usd']:,.0f} of {a['outcome']} @ {px:.2f}\n{advice}"
                     f"{a['title']}\n90d P&L ${w['pnl']:,.0f} · score {w['score']:.0f} · {w['style']}\n"
                     f"https://polymarket.com/event/{a['slug']}")
             out.append({"event": "entry" if side == "BUY" else "exit", "text": text, "wallet": w["wallet"],
                         "side": side, "asset": asset, "usd": a["usd"], "price": px, "title": a["title"],
-                        "outcome": a["outcome"], "slug": a["slug"], "t": a["t"]})
+                        "outcome": a["outcome"], "slug": a["slug"], "t": a["t"], "plan": plan})
             if side == "BUY":
                 self.state["buys"].append({"wallet": w["wallet"], "name": w["name"], "asset": asset, "t": a["t"],
                                            "usd": a["usd"], "title": a["title"], "outcome": a["outcome"],
