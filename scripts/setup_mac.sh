@@ -27,6 +27,15 @@ echo "[ok] bot installed in .venv"
 [ -f .env ] || { cp .env.example .env; echo "[ok] created .env"; }
 
 missing=""
+# Check .env line by line, so a typo is named instead of stopping the script silently.
+bad=$(grep -nvE '^[[:space:]]*(#.*)?$|^[A-Za-z_][A-Za-z0-9_]*=[^[:space:]"'"'"'#]*$' .env || true)
+if [ -n "$bad" ]; then
+  echo
+  echo "[!!] .env has lines the Mac can't read (format must be NAME=value: no spaces, no quotes):"
+  echo "$bad" | sed 's/=.*/=.../'   # don't print the values (keys/secrets)
+  echo "Fix them with:  open -e .env   (save with Cmd+S), then run this script again."
+  exit 1
+fi
 . ./.env
 [ -n "${NTFY_TOPIC:-}" ] && [ "$NTFY_TOPIC" != "your-hard-to-guess-topic" ] || missing="$missing NTFY_TOPIC"
 [ -n "${SCHWAB_APP_KEY:-}" ] || missing="$missing SCHWAB_APP_KEY"
