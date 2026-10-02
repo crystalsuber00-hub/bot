@@ -13,9 +13,10 @@ trade = ["cryptography>=41"]
 [project.scripts]
 spxbot = "spxbot.__main__:main"
 polyscan = "polyscan.__main__:main"
+memebot = "memebot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot", "polyscan"]
+packages = ["spxbot", "polyscan", "memebot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
