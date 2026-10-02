@@ -1,4 +1,4 @@
-"""Build month-1 content for the @readthistwice Instagram page.
+"""Build month-1 content for the @quietlyleveling Instagram page.
 
 Writes to output/:
   schedule.csv         every post in posting order: date, time, format, on-image text, caption
@@ -15,7 +15,7 @@ import csv
 import datetime as dt
 from pathlib import Path
 
-HANDLE = "@readthistwice"
+HANDLE = "@quietlyleveling"
 OUT = Path(__file__).parent / "output"
 
 # --- Format A: tweet-style card (modeled on the 9.8k-like post) ------------------
@@ -28,7 +28,7 @@ TWEET = [
     "Discipline is choosing what you want most over what you want now. Every day. Even the boring ones.",
     "I stopped explaining myself and somehow everyone understood me better.",
     "Your comfort zone isn't comfortable. It's just familiar.",
-    "Normalize leaving the party, the job, the group chat, the second it costs you your peace.",
+    "Normalize going quiet for a few months and coming back different.",
     "Growth is realizing the thing you begged for would've ruined you.",
     "You can be grateful for where you are and still refuse to stay there.",
     "Stop waiting to feel ready. Ready is a feeling that shows up after you start.",
@@ -42,19 +42,19 @@ TWEET = [
     "Protect your mornings like they're the only part of the day you fully own. Because they are.",
     "Outgrowing people isn't cruel. Staying small so they stay comfortable is.",
     "You keep asking for a sign. The exhaustion was the sign.",
-    "Respect people who tell you the truth when lying would've been easier.",
-    "Self-respect is when you'd rather be alone than be half-loved.",
+    "I don't post my goals anymore. I post the results.",
+    "Leveling up is lonely at first. Then it's peaceful. Then it's obvious.",
     "Your future self is watching you right now through memories. Give them something good.",
     "The habit you keep skipping is the door you keep saying is locked.",
     "Not answering is an answer. Learn to hear it.",
     "Calm is a superpower. The person who can't be provoked controls the room.",
-    "Some doors closed because you were never meant to walk back through them.",
+    "Move in silence long enough and people start asking what changed.",
     "Stop shrinking to fit places you've outgrown.",
     "Rest is not a reward for finishing. It's part of how you finish.",
     "You don't have to prove anything to people who already decided who you are.",
     "Small wins every day beat big plans every January.",
-    "The people who are meant for you won't make you audition.",
-    "You're allowed to be a masterpiece and a work in progress at the same time.",
+    "Nobody needs to know you're working on yourself. They'll see it.",
+    "Quiet progress still counts. Especially on the days nobody sees.",
 ]
 
 # --- Format B: bold one-liner "truth bomb" (modeled on the 26.7k-like post) -------
@@ -64,12 +64,12 @@ ONE_LINER = [
     "Silence is a full sentence.",
     "Peace over people. Every time.",
     "Busy is not the same as productive.",
-    "You can't heal in the same place that hurt you.",
+    "Less announcing. More becoming.",
     "Motivation leaves. Habits stay.",
     "Nobody is coming. Get up.",
     "Your circle is a forecast of your future.",
     "Stop romanticizing your potential. Start using it.",
-    "Delayed is not denied.",
+    "Quiet is a strategy.",
     "If it costs your peace, it's too expensive.",
     "Overthinking is just fear with a calendar.",
     "Do it scared. Do it tired. Do it anyway.",
@@ -77,11 +77,11 @@ ONE_LINER = [
     "The bar was never too high. You were looking down.",
     "Effort nobody sees still counts.",
     "Your phone is stealing your best hours.",
-    "Some people only love the version of you that serves them.",
+    "Your next level is boring on purpose.",
     "Start before the plan is perfect.",
     "Distance shows you who was real.",
     "Average is a decision you make daily.",
-    "Heal quietly. Let the results talk.",
+    "Level up quietly. Let the results talk.",
     "Your peace is not up for negotiation.",
     "Don't let one bad day write the whole story.",
 ]
@@ -93,16 +93,16 @@ AFFIRMATION = [
     "My calm is my power.",
     "I am becoming someone my younger self would be proud of.",
     "I release what I can't control.",
-    "Good things are finding their way to me this month.",
+    "I am leveling up, even when nobody sees it.",
     "I keep the promises I make to myself.",
     "I am done apologizing for growing.",
     "My discipline is louder than my doubts.",
     "I deserve rest without guilt.",
-    "I am safe to be fully myself.",
-    "Money, peace, and opportunity come to me with ease.",
+    "I move in silence and I move with purpose.",
+    "I don't need an audience to grow.",
     "I choose progress over perfection.",
     "I trust the timing of my life.",
-    "I am the main character of my own healing.",
+    "I let my results do the talking.",
 ]
 
 # --- Format D: carousel, hook + 5 points + closing slide -------------------------
@@ -130,11 +130,12 @@ CAROUSEL = [
     ("A 5-minute morning reset",
      ["Water before phone.", "Open a window.", "Name 3 things you're grateful for.",
       "Pick ONE must-do task.", "Move for 2 minutes."]),
-    ("Free things that change everything",
-     ["Sleep.", "Walking.", "Saying no.", "Drinking water.", "Silence."]),
-    ("What healing actually looks like",
-     ["Not reacting.", "Letting people misunderstand you.", "Being okay alone.",
-      "Going to bed early on a Friday.", "Not checking their page."]),
+    ("How to level up without telling anyone",
+     ["Stop posting your plans.", "Track progress in your notes app.", "Let people think you're boring.",
+      "Spend one Friday a month building.", "Show results, not intentions."]),
+    ("What leveling up actually looks like",
+     ["Not reacting.", "Going to bed early on a Friday.", "Saying no without a speech.",
+      "Choosing the gym over the group chat.", "Being okay with nobody noticing yet."]),
     ("Rules for protecting your peace",
      ["Not every message needs a reply.", "Not every opinion needs your input.",
       "Leave early if it feels off.", "Mute freely.", "Rest before you break."]),
@@ -155,7 +156,7 @@ CAROUSEL = [
      ["Not needing the last word.", "Listening more than talking.",
       "Celebrating others easily.", "Being fine with \"no.\"", "Walking away without a scene."]),
 ]
-CAROUSEL_CLOSER = f"Save this so you can read it twice.\nFollow {HANDLE}"
+CAROUSEL_CLOSER = f"Save this for your next level.\nFollow {HANDLE}"
 
 # --- Format E: question card (comment bait) --------------------------------------
 QUESTION = [
@@ -166,7 +167,7 @@ QUESTION = [
     "Peace or being right? You only get one.",
     "What's the best advice you ignored?",
     "Rate your discipline this week, 1 to 10.",
-    "What are you healing from right now? One word.",
+    "What are you quietly working on right now? One word.",
     "Who are you becoming? Describe it in 3 words.",
     "What would you do if you knew nobody would judge you?",
 ]
@@ -177,7 +178,7 @@ CTAS = {
     "tweet": ["Drop a 🖤 if you needed this today.", "Send this to someone who needs it.",
               "Save this for the days you forget.", "Drop a 🖤 to affirm this."],
     "one_liner": ["Drop a 💥 if this hit you.", "Truth. Send this to your group chat.",
-                  "Read it twice. Drop a 💥 if it hit.", "Save this one."],
+                  "Quietly agree? Drop a 💥", "Save this one."],
     "affirmation": ["Type YES to claim it 👇", "Type YES if this is for you 👇",
                     "Comment \"mine\" to claim it 👇"],
     "carousel": ["Which one is you? Comment the number 👇", "Save this and come back to it.",
@@ -185,11 +186,11 @@ CTAS = {
     "question": ["Comment your answer 👇", "Answer below. No wrong answers 👇"],
 }
 HASHTAGS = [  # Instagram allows max 5; 3 relevant tags is enough.
-    "#mindset #selfimprovement #motivation",
-    "#personalgrowth #discipline #mindsetshift",
-    "#healingjourney #selfgrowth #innerpeace",
-    "#motivation #quietconfidence #levelup",
-    "#selfrespect #growthmindset #dailyreminder",
+    "#quietlyleveling #levelup #selfimprovement",
+    "#discipline #mindset #personalgrowth",
+    "#levelingup #selfgrowth #motivation",
+    "#quietconfidence #growthmindset #dailyreminder",
+    "#quietlyleveling #discipline #mindsetshift",
 ]
 TIMES = ["07:30", "12:00", "19:30"]
 
@@ -213,7 +214,7 @@ def posts():
 
 
 def caption(fmt, slides, cta, n):
-    lines = [cta, "", f"Follow {HANDLE} for a reminder you'll want to read twice.", "",
+    lines = [cta, "", f"Follow {HANDLE} to level up quietly, one reminder a day.", "",
              HASHTAGS[n % len(HASHTAGS)]]
     if fmt == "carousel":
         lines = [slides[0], ""] + lines
@@ -231,7 +232,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     rows, canva = [], {k: [] for k in CTAS}
     for n, (fmt, slides, cta) in enumerate(posts()):
-        post_id = f"RTT{n + 1:03d}"
+        post_id = f"QL{n + 1:03d}"
         day, slot = divmod(n, len(times))
         rows.append({
             "post_id": post_id, "date": (start + dt.timedelta(days=day)).isoformat(),

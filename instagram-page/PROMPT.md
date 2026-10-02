@@ -8,11 +8,13 @@ template.
 
 ---
 
-I run a faceless Instagram page called **Read This Twice (@readthistwice)**:
+I run a faceless Instagram page called **Quietly Leveling (@quietlyleveling)**:
 mindset, discipline, quiet growth, self-respect. The audience is people aged
 20–35 who are trying to level up quietly. The voice is calm, direct and a little
 blunt. It's never preachy, has no hustle-bro clichés and uses no religious
-language.
+language. Every post should feel like private progress: discipline, outgrowing
+old habits, calm confidence, results instead of announcements. Skip
+manifestation, dating and relationship content.
 
 Write next month's posts in these formats:
 - **[35] tweet cards:** one or two sentences, 8–25 words, that read like a

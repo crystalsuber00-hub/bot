@@ -1,6 +1,7 @@
-# Read This Twice — Instagram playbook
+# Quietly Leveling — Instagram playbook
 
-A faceless motivation and mindset page. Month 1 (100 posts) is in
+A faceless page about leveling up without announcing it: discipline, calm
+confidence and progress you let other people notice. Month 1 (100 posts) is in
 `output/schedule.csv`. Run `python3 build.py` to rebuild the files after you
 edit the text, or `python3 build.py --start 2026-10-12 --per-day 2` to change
 the start date or how many posts go out each day.
@@ -43,25 +44,29 @@ March 2024, and 932 of them have like counts.
 
 ## 3. The page
 
-**Name:** Read This Twice, **@readthistwice**
+**Name:** Quietly Leveling, **@quietlyleveling**
 
-- The name makes people curious, because it promises a line worth rereading.
-- It works as a call to action on every post ("save this so you can read it
-  twice"), and saves help reach.
-
-Backup names if that handle is taken: @thefadein, @quietlyleveling,
-@unfinished.you, @notes.to.future.me. You'll need to check which handles are
-free yourself; Instagram doesn't let me look them up without logging in.
+- **The name is a promise people want for themselves.** It describes getting
+  better without the noise, and people follow accounts that sound like who
+  they're becoming.
+- **It points the content in one direction.** Every post is about private
+  progress: discipline, outgrowing old habits, calm confidence, results over
+  announcements. The general motivation posts still fit, because quiet
+  self-improvement is the angle on them.
+- **It gives you a branded hashtag,** `#quietlyleveling`, which goes in two of
+  the five hashtag sets. People who use it are telling you what resonated.
+- **It works as a call to action:** "Save this for your next level" closes
+  every carousel, and saves help reach.
 
 **Bio:**
 ```
-Words you'll want to read twice.
-Mindset • discipline • quiet growth
+Leveling up without the announcement.
+Discipline • calm confidence • quiet growth
 New reminder every day ↓
 ```
 
 **Profile picture:** `templates/previews/profile-picture.png`, a black circle
-with "R2" in gold. It's the same mark as the avatar on the tweet cards.
+with "QL" in gold. It's the same mark as the avatar on the tweet cards.
 
 **Look:** black, off-white (#F5F2EB) and one accent color (muted gold #C9A227).
 Use one serif font for one-liners (e.g. Playfair Display) and a clean sans-serif
@@ -74,7 +79,7 @@ The finished designs are in `templates/` (see `templates/TEMPLATES.md`).
 
 | Format | Share | Design (1080×1350, 4:5) | Caption pattern |
 |---|---|---|---|
-| `tweet` | 35% | Cream background, white tweet-style card showing **your own** name, handle and "R2" avatar. Never use another person's name or tweet. | "Drop a 🖤 if you needed this today." |
+| `tweet` | 35% | Cream background, white tweet-style card showing **your own** name, handle and "QL" avatar. Never use another person's name or tweet. | "Drop a 🖤 if you needed this today." |
 | `one_liner` | 25% | Black background, gold rule, one sentence in big white serif type | "Drop a 💥 if this hit you." |
 | `carousel` | 15% | Black cover with "Swipe →", five cream slides numbered 01–05 with a progress bar, black "Save this" closing slide | Hook line, then "Which one is you? Comment the number 👇" |
 | `affirmation` | 15% | Cream, centered italic serif, "Claim it in the comments ↓" button | "Type YES to claim it 👇" |
@@ -117,7 +122,7 @@ Use Canva instead only if you want to edit the designs by hand:
    - Carousels: connect `{{hook}}` on page 1 and `{{point1}}`–`{{point5}}` on
      pages 2–6. Page 7 doesn't change, so each row becomes one 7-slide carousel.
 5. Click **Continue → Generate**, then download as PNG and rename or sort the
-   files by `post_id` (e.g. RTT001). That ID links each image to its caption in
+   files by `post_id` (e.g. QL001). That ID links each image to its caption in
    `schedule.csv`.
 
 The step-by-step version, with fixes for common import problems, is in

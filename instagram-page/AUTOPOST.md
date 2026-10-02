@@ -8,7 +8,7 @@ through Instagram's official publishing API. It then records the post in
 How it fits together:
 
 - **This folder becomes its own public GitHub repo,** for example
-  `readthistwice`. Instagram downloads each image from a public web address, so
+  `quietlyleveling`. Instagram downloads each image from a public web address, so
   the media has to be public. Everything in it goes public on Instagram anyway.
   Keep it separate from your trading bot repo.
 - **GitHub Pages serves `posts/` and `reels/`.** This is the `pages.yml`
@@ -28,11 +28,11 @@ Instagram app.
 ## One-time setup (about an hour)
 
 ### 1. The repo and media hosting
-1. Create a **public** repo named `readthistwice` and push the contents of this
+1. Create a **public** repo named `quietlyleveling` and push the contents of this
    folder to its `main` branch. (I can do this step for you.)
 2. In the repo, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
 3. Go to **Actions → Publish media → Run workflow**. When it finishes, the run
-   page shows the site address, like `https://<your-username>.github.io/readthistwice`.
+   page shows the site address, like `https://<your-username>.github.io/quietlyleveling`.
 4. Open `autopost/config.toml` and edit three settings:
    - Set `public_base_url` to that address.
    - Set `timezone` to yours.
@@ -41,14 +41,14 @@ Instagram app.
    Commit the change.
 
 ### 2. The Instagram access token
-1. Make sure @readthistwice is a **Creator** or **Business** account.
+1. Make sure @quietlyleveling is a **Creator** or **Business** account.
 2. Go to [developers.facebook.com](https://developers.facebook.com), then
    **My Apps → Create app**. When asked for a use case, pick the one for
    managing messaging and content on Instagram. Pick **Business** if it asks
    for an app type.
 3. In the app, open the Instagram product's **API setup with Instagram login**
    page, then go to **Generate access tokens → Add account**. Log in as
-   @readthistwice and copy the token it shows.
+   @quietlyleveling and copy the token it shows.
    - If the dashboard asks you to add the account as an **Instagram tester**
      first, do that under **App roles → Roles**. Then accept the invite in
      Instagram under **Settings → Website permissions → Apps and websites →
@@ -62,7 +62,7 @@ Instagram app.
 ### 3. Automatic token renewal
 1. On GitHub, go to **Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token**.
-   - Repository access: only `readthistwice`.
+   - Repository access: only `quietlyleveling`.
    - Permissions: **Secrets → Read and write**.
    - Expiration: the longest it allows. Put a reminder in your calendar a week
      before that date.

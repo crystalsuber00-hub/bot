@@ -12,7 +12,7 @@ start_date = "2026-10-05"
 
 # Where GitHub Pages serves posts/ and reels/. Instagram downloads each file from
 # here. Format: https://<github-username>.github.io/<repo-name>
-public_base_url = "https://crystalsuber00-hub.github.io/readthistwice"
+public_base_url = "https://crystalsuber00-hub.github.io/quietlyleveling"
 
 # Reels posted through the API can't use Instagram's music library, so they'd go
 # out silent. Leave this off and schedule Reels in the Instagram app with a

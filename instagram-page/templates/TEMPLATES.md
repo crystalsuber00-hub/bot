@@ -37,7 +37,7 @@ Canva and fill with Bulk create.
    with the same name.
 7. Click **Continue**, review the preview, then click **Generate**.
 8. Download as **PNG** with all pages. Rename the files by the `post_id` column
-   (RTT001…) so each one matches its caption in `schedule.csv`.
+   (QL001…) so each one matches its caption in `schedule.csv`.
 
 For the carousel, each CSV row turns all 7 pages into one carousel. Page 7
 (the save and follow slide) is the same every time.
@@ -77,13 +77,13 @@ Colors: ink `#111111`, paper `#F5F2EB`, gold `#C9A227`, dark gold `#8C6D10`.
 
 | Format | Background | Main text box | Main text style | Fixed parts |
 |---|---|---|---|---|
-| tweet | paper | inside a white card at x 72–1008, y 335–1015, radius 44 | Inter Regular 60, line height 1.34, `#0F1419` | Avatar: 108 circle in ink with "R2" in Inter ExtraBold 42 gold. Name: Inter Bold 40. Handle: Inter Regular 34, `#536471` |
+| tweet | paper | inside a white card at x 72–1008, y 335–1015, radius 44 | Inter Regular 60, line height 1.34, `#0F1419` | Avatar: 108 circle in ink with "QL" in Inter ExtraBold 42 gold. Name: Inter Bold 40. Handle: Inter Regular 34, `#536471` |
 | one_liner | ink | x 96–984, y 390, max 640 tall | Playfair Display Bold 100, line height 1.12, paper | Gold rule 96×6 at y 330. Handle: Inter SemiBold 30, gold, bottom 72 |
 | affirmation | paper | x 110–970, y 380, centered | Playfair Display SemiBold Italic 84, line height 1.2, ink | "TODAY'S AFFIRMATION" label: Inter SemiBold 28, dark gold. Ink pill at y 960 reading "Claim it in the comments ↓" in Inter SemiBold 36 |
 | question | gold | x 96–984, y 370 | Inter ExtraBold 92, line height 1.08, ink | "YOUR TURN" label: Inter Bold 30. 4 px ink rule at y 1000, then "Answer in the comments ↓" in Inter SemiBold 38 |
 | carousel cover | ink | x 96–984, y 390 | Playfair Display Bold 104, line height 1.08, paper | Gold rule. "Swipe →" in Inter SemiBold 34, gold, bottom right |
 | carousel points | paper | x 96–984, y 560 | Inter Bold 80, line height 1.12, ink | "01"–"05" in Inter ExtraBold 220, gold, at y 250. Progress bar of five 44×8 bars, bottom right |
-| carousel close | ink | fixed text | Playfair Display Bold 92, paper | Gold bookmark icon at y 300. "Follow @readthistwice for daily reminders." in Inter Medium 40, gold |
+| carousel close | ink | fixed text | Playfair Display Bold 92, paper | Gold bookmark icon at y 300. "Follow @quietlyleveling for daily reminders." in Inter Medium 40, gold |
 
 ## Changing the designs
 

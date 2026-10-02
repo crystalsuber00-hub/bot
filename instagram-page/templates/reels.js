@@ -19,9 +19,9 @@ const W = 1080, H = 1920, FPS = 30;
 // Picked before launch for shareability (the formats behind the dataset's top
 // posts). Each Reel goes out after its image version. Wednesdays and Saturdays.
 const REELS = [
-  ["RTT002", "2026-10-07"], ["RTT005", "2026-10-10"], ["RTT004", "2026-10-14"], ["RTT013", "2026-10-17"],
-  ["RTT034", "2026-10-21"], ["RTT051", "2026-10-24"], ["RTT057", "2026-10-28"], ["RTT060", "2026-10-31"],
-  ["RTT061", "2026-11-04"], ["RTT070", "2026-11-07"],
+  ["QL002", "2026-10-07"], ["QL004", "2026-10-10"], ["QL005", "2026-10-14"], ["QL013", "2026-10-17"],
+  ["QL040", "2026-10-21"], ["QL051", "2026-10-24"], ["QL057", "2026-10-28"], ["QL067", "2026-10-31"],
+  ["QL058", "2026-11-04"], ["QL061", "2026-11-07"],
 ];
 const TIME = "17:00";
 
@@ -78,13 +78,13 @@ const BUILD = {
   one_liner: (r) => `<div class="stage one"><div class="block"><div class="rule"></div>
       <div class="txt">${esc(r.text)}</div></div>${handle}</div>`,
   tweet: (r) => `<div class="stage tweet"><div class="block">
-      <div class="who"><div class="av">R2</div><div><div class="nm">Read This Twice</div><div class="hd">${HANDLE}</div></div></div>
+      <div class="who"><div class="av">QL</div><div><div class="nm">Quietly Leveling</div><div class="hd">${HANDLE}</div></div></div>
       <div class="txt">${esc(r.text)}</div></div></div>`,
   affirmation: (r) => `<div class="stage aff"><div class="block"><div class="lab">TODAY'S AFFIRMATION</div>
       <div class="txt">${esc(r.text)}</div><div class="step"><span class="pill">Claim it in the comments ↓</span></div></div>${handle}</div>`,
   carousel: (r) => `<div class="stage cv"><div class="block"><div class="rule"></div><div class="txt hook">${esc(r.hook)}</div>
       <ol>${[1, 2, 3, 4, 5].map((n) => `<li class="step"><span class="n">0${n}</span><span class="p">${esc(r["point" + n])}</span></li>`).join("")}</ol>
-      <div class="step save">Save this. Read it twice.</div></div></div>`,
+      <div class="step save">Save this for your next level.</div></div></div>`,
 };
 
 // Runs in the page: split text into lines, attach paused animations, return the timeline length.

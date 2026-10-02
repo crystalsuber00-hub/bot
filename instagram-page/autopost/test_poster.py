@@ -12,7 +12,7 @@ import poster  # noqa: E402
 
 REAL = Path(__file__).resolve().parent.parent
 TZ = ZoneInfo("America/New_York")
-CFG = {"timezone": "America/New_York", "start_date": "2026-10-01", "public_base_url": "https://me.github.io/rtt",
+CFG = {"timezone": "America/New_York", "start_date": "2026-10-01", "public_base_url": "https://me.github.io/ql",
        "post_reels": False, "max_late_minutes": 180, "api_version": "v25.0"}
 
 
@@ -25,7 +25,7 @@ class FakeInstagram:
     def __call__(self, method, path, params):
         self.calls.append((method, path, dict(params)))
         if path == "me":
-            return {"user_id": "1789", "username": "readthistwice"}
+            return {"user_id": "1789", "username": "quietlyleveling"}
         if path.endswith("/media") and method == "GET":
             return {"data": self._recent}
         if path.endswith("/media") or path.endswith("/media_publish"):
@@ -74,34 +74,34 @@ class PosterTest(unittest.TestCase):
         self.assertTrue(all((self.root / r.cover).exists() for r in reels))
 
     def test_start_date_skips_earlier_posts(self):
-        self.assertEqual(poster.build_queue({**CFG, "start_date": "2026-11-07"}, self.root)[0].key, "RTT100")
+        self.assertEqual(poster.build_queue({**CFG, "start_date": "2026-11-07"}, self.root)[0].key, "QL100")
 
     def test_publishes_single_image_once(self):
         fake = FakeInstagram()
         self.assertTrue(self.run_at(datetime(2026, 10, 5, 7, 35, tzinfo=TZ), fake))
         (create,) = fake.creates()
-        self.assertTrue(create["image_url"].startswith("https://me.github.io/rtt/posts/2026-10-05_0730_RTT001.jpg"))
-        self.assertIn("Follow @readthistwice", create["caption"])
+        self.assertTrue(create["image_url"].startswith("https://me.github.io/ql/posts/2026-10-05_0730_QL001.jpg"))
+        self.assertIn("Follow @quietlyleveling", create["caption"])
         self.assertTrue(create["alt_text"].startswith("Nobody talks about"))
-        self.assertEqual([r["key"] for r in self.log()], ["RTT001"])
+        self.assertEqual([r["key"] for r in self.log()], ["QL001"])
         self.assertEqual(self.log()[0]["permalink"], "https://www.instagram.com/p/c2/")
         # Next run in the same slot: nothing new is due.
         fake2 = FakeInstagram()
         self.assertFalse(self.run_at(datetime(2026, 10, 5, 7, 50, tzinfo=TZ), fake2))
         self.assertEqual(fake2.creates(), [])
-        self.assertIn("Next: RTT002", self.out[-1])
+        self.assertIn("Next: QL002", self.out[-1])
 
     def test_late_posts_are_missed_not_burst(self):
         fake = FakeInstagram()
         self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake)
-        self.assertEqual([(r["key"], r["status"]) for r in self.log()], [("RTT001", "missed"), ("RTT002", "published")])
+        self.assertEqual([(r["key"], r["status"]) for r in self.log()], [("QL001", "missed"), ("QL002", "published")])
         self.assertEqual(len(fake.creates()), 1)
 
     def test_one_post_per_run_when_two_are_due(self):
         fake = FakeInstagram()
         self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake, cfg={**CFG, "max_late_minutes": 600})
-        self.assertEqual([r["key"] for r in self.log()], ["RTT001"])
-        self.assertIn("Next run: RTT002", self.out[-1])
+        self.assertEqual([r["key"] for r in self.log()], ["QL001"])
+        self.assertIn("Next run: QL002", self.out[-1])
 
     def test_carousel_builds_children_then_parent(self):
         fake = FakeInstagram()
@@ -109,7 +109,7 @@ class PosterTest(unittest.TestCase):
         creates = fake.creates()
         self.assertEqual(len(creates), 8)
         self.assertTrue(all(c["is_carousel_item"] == "true" for c in creates[:7]))
-        self.assertTrue(creates[6]["image_url"].endswith("RTT004-7.jpg"))
+        self.assertTrue(creates[6]["image_url"].endswith("QL004-7.jpg"))
         self.assertEqual(creates[7]["media_type"], "CAROUSEL")
         self.assertEqual(creates[7]["children"], "c1,c2,c3,c4,c5,c6,c7")
 
@@ -119,9 +119,9 @@ class PosterTest(unittest.TestCase):
                     cfg={**CFG, "start_date": "2026-10-07", "post_reels": True, "max_late_minutes": 5})
         reel = fake.creates()[-1]
         self.assertEqual(reel["media_type"], "REELS")
-        self.assertTrue(reel["video_url"].endswith("reels/2026-10-07_1700_REEL-RTT002.mp4"))
-        self.assertTrue(reel["cover_url"].endswith("reels/2026-10-07_1700_REEL-RTT002-cover.jpg"))
-        self.assertEqual(self.log()[-1]["key"], "REEL-RTT002")
+        self.assertTrue(reel["video_url"].endswith("reels/2026-10-07_1700_REEL-QL002.mp4"))
+        self.assertTrue(reel["cover_url"].endswith("reels/2026-10-07_1700_REEL-QL002-cover.jpg"))
+        self.assertEqual(self.log()[-1]["key"], "REEL-QL002")
 
     def test_recovers_post_that_was_published_but_not_logged(self):
         now = datetime(2026, 10, 5, 7, 50, tzinfo=TZ)
@@ -142,7 +142,7 @@ class PosterTest(unittest.TestCase):
         self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake, dry=True)
         self.assertEqual(fake.calls, [])
         self.assertEqual(self.log(), [])
-        self.assertTrue(any(line.startswith("WOULD PUBLISH RTT002") for line in self.out))
+        self.assertTrue(any(line.startswith("WOULD PUBLISH QL002") for line in self.out))
 
     def test_shipped_log_has_header_only(self):
         with open(REAL / "autopost" / "published.csv", newline="") as f:

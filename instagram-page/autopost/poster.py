@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish scheduled Read This Twice posts to Instagram.
+"""Publish scheduled Quietly Leveling posts to Instagram.
 
 Uses the Instagram API with Instagram Login (graph.instagram.com). Instagram
 downloads each image or video from a public URL, so the media in posts/ and
@@ -37,7 +37,7 @@ GRAPH = "https://graph.instagram.com"
 
 @dataclass
 class Item:
-    key: str            # RTT001, or REEL-RTT002 for a Reel
+    key: str            # QL001, or REEL-QL002 for a Reel
     kind: str           # image | carousel | reel
     due: datetime       # timezone-aware
     files: list         # repo-relative paths, in slide order

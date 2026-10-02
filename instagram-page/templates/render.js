@@ -1,4 +1,4 @@
-// Render the five Read This Twice post templates.
+// Render the five Quietly Leveling post templates.
 //
 //   node render.js            -> pdf/<format>.pdf  (Canva-importable templates with {{placeholders}})
 //                                previews/*.png    (sample posts filled from ../output/canva_*.csv)
@@ -16,7 +16,7 @@ const { chromium } = require("playwright");
 const HERE = __dirname;
 const DATA = path.join(HERE, "..", "output");
 const W = 1080, H = 1350;
-const HANDLE = "@readthistwice";
+const HANDLE = "@quietlyleveling";
 
 // Brand fonts (both are in Canva's font library, so imported templates keep them).
 // Downloaded once from Google Fonts into fonts/ and embedded, so renders never fall back silently.
@@ -120,7 +120,7 @@ const BOOKMARK = `<svg width="96" height="120" viewBox="0 0 96 120" fill="none" 
 // Each builder takes one CSV row and returns its pages.
 const BUILD = {
   tweet: (r) => [`<div class="page tweet"><div class="card">
-      <div class="who"><div class="av">R2</div><div><div class="nm">Read This Twice</div><div class="hd">${HANDLE}</div></div></div>
+      <div class="who"><div class="av">QL</div><div><div class="nm">Quietly Leveling</div><div class="hd">${HANDLE}</div></div></div>
       <div class="fit">${esc(r.text)}</div></div></div>`],
   one_liner: (r) => [`<div class="page one"><div class="rule"></div>
       <div class="abs fit">${esc(r.text)}</div>${handle()}</div>`],
@@ -133,7 +133,7 @@ const BUILD = {
     ...[1, 2, 3, 4, 5].map((n) => `<div class="page pt"><div class="abs num">0${n}</div>
       <div class="abs fit">${esc(r["point" + n])}</div>${handle()}
       <div class="prog">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div></div>`),
-    `<div class="page cl">${BOOKMARK}<div class="abs ct">Save this so you can read it twice.</div>
+    `<div class="page cl">${BOOKMARK}<div class="abs ct">Save this for your next level.</div>
       <div class="abs cf">Follow ${HANDLE} for daily reminders.</div>${handle()}</div>`,
   ],
 };
@@ -217,7 +217,7 @@ async function main() {
         if (bad.length) problems.push(`${row.post_id} (${fmt}) overflows on page ${bad.map((b) => b + 1).join(", ")}`);
         const multi = pages.length > 1;
         if (idx === 0) await shoot(page, prevDir, pages.map((_, i) => multi ? `${fmt}-${i + 1}.png` : `${fmt}.png`));
-        const dir = allDir || path.join(require("os").tmpdir(), "rtt-render");
+        const dir = allDir || path.join(require("os").tmpdir(), "ql-render");
         fs.mkdirSync(dir, { recursive: true });
         // Date and time first, so sorting the folder by name gives the posting order.
         const s = sched[row.post_id];
@@ -235,7 +235,7 @@ async function main() {
     // 3. Profile picture: the tweet-card avatar at 1080×1080 (Instagram crops it to a circle).
     const pfp = await browser.newPage({ viewport: { width: 1080, height: 1080 } });
     await pfp.setContent(`<!doctype html><style>${FACES}*{margin:0}body{width:1080px;height:1080px;background:#111111;
-      display:flex;align-items:center;justify-content:center;font:800 400px Inter,sans-serif;letter-spacing:-.02em;color:#C9A227}</style>R2`);
+      display:flex;align-items:center;justify-content:center;font:800 330px Inter,sans-serif;letter-spacing:-.02em;color:#C9A227}</style>QL`);
     await pfp.evaluate(() => document.fonts.ready);
     await pfp.screenshot({ path: path.join(prevDir, "profile-picture.png") });
 
