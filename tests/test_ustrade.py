@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from polyscan.ustrade import CopyTrader, USClient, find_moneyline, plan_entry, stake_for, taker_fee
+from polyscan.ustrade import CopyTrader, USClient, find_moneyline, find_us_event, plan_entry, stake_for, taker_fee
 
 
 def event(slug="nfl-kc-lv-2026-10-04", sides=(("Chiefs", "Kansas City Chiefs", True), ("Raiders", "Las Vegas Raiders", False))):
@@ -182,3 +182,12 @@ def test_rank_by_profit_keeps_active_humans_only():
                          mk("bot", 5e6, 60, ["bot-speed"])]}
     assert [w["name"] for w in pick_watchlist(scan, 5, 50, rank="profit")] == ["whale", "steady"]
     assert [w["name"] for w in pick_watchlist(scan, 5, 50)] == ["steady"]
+
+
+def test_night_game_listed_a_day_earlier_in_the_us(tmp_path):
+    us = FakeUS(ev=event("nfl-pit-cle-2026-10-01"))     # US: ET date
+    assert find_us_event(us, "nfl-pit-cle-2026-10-02")["slug"] == "nfl-pit-cle-2026-10-01"   # intl: UTC date
+    assert find_us_event(us, "nfl-pit-cle-2026-10-05") is None
+    t = CopyTrader(us, str(tmp_path / "p.json"), 100)
+    note = t.on_alert(buy("Chiefs", slug="nfl-pit-cle-2026-10-02"))
+    assert "bought" in note and "aec-nfl-pit-cle-2026-10-01" in note

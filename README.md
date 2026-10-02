@@ -174,17 +174,21 @@ polyscan backtest --start 2026-10-01 --end 2026-10-15 --watchlist data/polyscan_
 ### Result for Sept 3 - Oct 1, 2026 (`data/polyscan_backtest_2026-09-03_2026-10-01.json`)
 | Setting | Trades | Won | P&L on $100 | Return on staked |
 |---|---|---|---|---|
-| As built: first side only, 3¢ limit | 95 | 40 | -$21.05 | -12.7% |
-| Plus second side bought by hand | 165 | 73 | -$26.45 | -9.9% |
-| Loose: both sides, 10¢ limit, any price | 192 | 90 | -$20.70 | -7.2% |
-| Copy everything, no price limit | 194 | 91 | -$9.04 | -4.7% |
+| As built: first side only, 3¢ limit | 97 | 39 | -$24.80 | -14.9% |
+| Plus second side bought by hand | 175 | 78 | -$22.31 | -7.7% |
+| Loose: both sides, 10¢ limit, any price | 203 | 95 | -$18.59 | -6.1% |
+| Copy everything, no price limit | 205 | 96 | -$8.60 | -4.2% |
 
-Copied prices matched the wallets' own (0.456 average against their 0.461), so the losses came from the bets themselves: the copied game-winner bets won 42% of the time at prices that needed about 46% to break even, before fees. These wallets' profits came mostly from markets Polymarket US doesn't list or the copier skips (spreads, totals, props, esports, smaller leagues). 1,685 of 3,258 buy alerts were spreads, totals or props, and 642 were games not listed on Polymarket US.
+Copied prices matched the wallets' own, so the losses came from the bets themselves: the copied game-winner bets won about 40% of the time at prices that needed about 46% to break even, before fees. These wallets' profits came mostly from markets Polymarket US doesn't list or the copier skips (spreads, totals, props, esports, smaller leagues). 1,685 of 3,258 buy alerts were spreads, totals or props, and 565 were games not listed on Polymarket US.
+
+Night games: the international site dates event slugs by UTC and Polymarket US by Eastern date, so a game starting after 8pm ET (e.g. `nfl-pit-cle-2026-10-02` vs `nfl-pit-cle-2026-10-01`) is matched by also trying the day before and after. The tables above include that fix.
 
 ### Copying only the top 2 wallets (same window)
 | Wallets | Picked | Trades (as built) | Won | P&L on $100 |
 |---|---|---|---|---|
-| vito3corleone, BreakTheBank | top 2 by profit on Sept 3 (fair test) | 9 | 6 | +$11.30 |
-| ndb1, gmpm2 | top 2 by profit on Oct 1 (picked with hindsight) | 21 | 10 | +$0.56 |
+| vito3corleone, BreakTheBank | top 2 by profit on Sept 3 (fair test) | 12 | 7 | +$8.34 |
+| ndb1, gmpm2 | top 2 by profit on Oct 1 (picked with hindsight) | 23 | 11 | +$2.35 |
+| BreakTheBank alone | picked after seeing the row above (hindsight) | 12 | 7 | +$8.34 |
+| BreakTheBank alone, plus second side bought by hand | same | 21 | 13 | +$20.53 |
 
-All of the fair test's profit came from BreakTheBank; vito3corleone stopped trading. Nine trades is far too few to tell skill from luck: one or two games decide the result. Files: `data/polyscan_backtest_top2_*.json`.
+All of the fair test's profit came from BreakTheBank; vito3corleone stopped trading. 12-21 trades is far too few to tell skill from luck: one or two games decide the result. BreakTheBank is also very volatile (weekly results from -$2.5M to +$3.4M; worst drawdown $5.2M against $1.1M of 90-day profit). Files: `data/polyscan_backtest_top2_*.json`, `data/polyscan_backtest_breakthebank_*.json`.

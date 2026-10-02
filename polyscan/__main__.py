@@ -112,7 +112,11 @@ def main(argv=None):
         scan_file = out / "scan.json"
         wl = pick_watchlist(json.loads(scan_file.read_text()), a.top, a.min_score, a.allow_bots, a.rank) \
             if scan_file.exists() else []
-        wl += [{"wallet": x.lower(), "name": x[:10], "score": 0, "pnl": 0, "style": "manual"} for x in a.wallet]
+        known = {p["wallet"]: p for p in json.loads(scan_file.read_text())["profiles"]} if scan_file.exists() else {}
+        for x in (x.lower() for x in a.wallet):  # a hand-picked wallet shows its scan stats when it has them
+            p = known.get(x)
+            wl.append({"wallet": x, "name": p["name"], "score": p["score"], "pnl": p["series"]["pnl"], "style": p["style"]}
+                      if p else {"wallet": x, "name": x[:10], "score": 0, "pnl": 0, "style": "manual"})
         if not wl:
             raise SystemExit("nothing to watch: run `polyscan scan` first or pass --wallet")
         for x in wl:

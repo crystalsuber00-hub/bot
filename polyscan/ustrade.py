@@ -20,8 +20,9 @@ import json
 import logging
 import math
 import os
+import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -122,6 +123,24 @@ def _amt(a) -> float:
 
 
 # -- matching -------------------------------------------------------------------------
+
+def find_us_event(us, slug: str) -> dict | None:
+    """The same game on Polymarket US. The international site dates event slugs by UTC and Polymarket US by
+    US Eastern date, so a game starting after 8pm ET (nfl-pit-cle-2026-10-02 at 00:15 UTC) is listed a day
+    earlier in the US (nfl-pit-cle-2026-10-01). Try the slug as is, then the day before, then the day after."""
+    ev = us.event(slug)
+    if ev:
+        return ev
+    mt = re.search(r"\d{4}-\d{2}-\d{2}", slug)
+    if not mt:
+        return None
+    day = datetime.strptime(mt.group(), "%Y-%m-%d")
+    for shift in (-1, 1):
+        alt = slug[:mt.start()] + (day + timedelta(days=shift)).strftime("%Y-%m-%d") + slug[mt.end():]
+        if (ev := us.event(alt)):
+            return ev
+    return None
+
 
 def find_moneyline(event: dict | None, outcome: str) -> tuple[dict | None, dict | None, str]:
     """(market, side, reason) for the game-winner market on Polymarket US and the side named `outcome`."""
@@ -290,7 +309,7 @@ class CopyTrader:
             return "skipped, only game-winner bets are copied (this is a spread, total or prop)"
         if a["asset"] in self.state["positions"]:
             return "already holding this one"
-        market, side, why = find_moneyline(self.us.event(a["slug"]), a["outcome"])
+        market, side, why = find_moneyline(find_us_event(self.us, a["slug"]), a["outcome"])
         if not side:
             return f"skipped, {why}"
         long = bool(side.get("long"))
