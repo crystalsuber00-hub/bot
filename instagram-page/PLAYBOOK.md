@@ -88,19 +88,13 @@ what get a post shown to non-followers.
 
 You have to do these steps yourself; they need your phone number and login.
 
-### A. Facebook Page and Instagram account (about 20 minutes)
-1. On Facebook, go to **Menu → Pages → Create new Page**. Name it "Read This
-   Twice" and pick the category *Personal blog* or *Digital creator*.
-2. Download the Instagram app and sign up with a **new email address** (not
+### A. Instagram account (about 10 minutes)
+No Facebook Page is needed.
+1. Download the Instagram app and sign up with a **new email address** (not
    your personal one), then claim the handle.
-3. In Instagram, go to **Settings → Account type and tools → Switch to
-   professional account → Creator**. Creator or Business is required for
-   auto-posting.
-4. Go to **Settings → Accounts Center → Add accounts** and add your Facebook
-   account. Then link the Instagram account to the Facebook Page from the Page's
-   settings (**Linked accounts → Instagram**).
-5. Add the bio and profile picture. Before scheduling anything, post the first
-   3 posts by hand so the grid isn't empty.
+2. Go to **Settings → Account type and tools → Switch to professional account
+   → Creator**. Auto-posting and scheduling need a Creator or Business account.
+3. Add the bio and profile picture.
 
 ### B. The images
 
@@ -129,7 +123,7 @@ Use Canva instead only if you want to edit the designs by hand:
 The step-by-step version, with fixes for common import problems, is in
 `templates/TEMPLATES.md`.
 
-### C. Scheduling: Later, or Meta Business Suite for free
+### C. Scheduling by hand (only if you skip the auto-poster)
 - **Later:** the free plan allows only **12 posts a month**, so 100 a month
   needs a paid plan. Later has **no spreadsheet import**, so for each post:
   1. **Connect** Instagram (it logs in through Facebook).
@@ -159,11 +153,12 @@ The videos are silent on purpose. Schedule them in the **Instagram app** (+ →
 Reel → Advanced settings → Schedule) so you can add a trending sound from
 Instagram's music library. Keep the sound low so the words stay the focus.
 
-### E. Fully automatic posting (optional)
+### E. Automatic posting
 
 `AUTOPOST.md` sets up an auto-poster on GitHub Actions. It publishes each post
-on schedule through Instagram's official API, with no scheduling tool needed. It
-starts with month two by default.
+on schedule through Instagram's official API, so no scheduling tool or
+Facebook Page is needed. It starts with the first post on Monday, October 5,
+so set it up before then.
 
 ## 6. The weekly loop
 

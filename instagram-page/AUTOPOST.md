@@ -19,9 +19,11 @@ How it fits together:
 - **`refresh-token.yml` renews your Instagram token every Monday.** Tokens
   expire after 60 days, so you never have to handle that by hand.
 
-By default it starts with month two (`start_date = "2026-11-08"`), because
-month one is scheduled in Meta Business Suite. Reels are off by default (see
-`config.toml`): posting through the API can't add trending audio.
+It covers everything from the first post on Monday, October 5 (`start_date`
+in `config.toml`). **No Facebook Page is needed.** It logs in with your
+Instagram account directly. Reels are off by default (see `config.toml`):
+posting through the API can't add trending audio, so schedule those in the
+Instagram app.
 
 ## One-time setup (about an hour)
 

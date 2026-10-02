@@ -5,10 +5,10 @@
 # America/Denver, America/Los_Angeles, Europe/London.
 timezone = "America/New_York"
 
-# Posts dated before this are ignored, so month one (scheduled by hand in Meta
-# Business Suite) is never posted twice. Set it earlier to let the auto-poster
-# handle those too.
-start_date = "2026-11-08"
+# Posts dated before this are ignored. Month one starts Monday, Oct 5. A post
+# whose time passes before setup is finished is logged as missed (see
+# max_late_minutes), so finish setup first or move this date later.
+start_date = "2026-10-05"
 
 # Where GitHub Pages serves posts/ and reels/. Instagram downloads each file from
 # here. Format: https://<github-username>.github.io/<repo-name>
