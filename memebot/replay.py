@@ -26,7 +26,7 @@ DAY = 86400
 # -- wallet scoring ---------------------------------------------------------------------------
 
 def realized_pnl(swaps: list[dict], start: float, end: float) -> dict:
-    """Realized SOL profit per token from sells in [start, end], average-cost basis from all earlier buys."""
+    """Realized dollar profit per token from sells in [start, end], average-cost basis from all earlier buys."""
     pos = defaultdict(lambda: [0.0, 0.0])  # tokens, cost in SOL
     per = defaultdict(float)
     for s in sorted(swaps, key=lambda s: s["t"]):
@@ -35,20 +35,20 @@ def realized_pnl(swaps: list[dict], start: float, end: float) -> dict:
         p = pos[s["mint"]]
         if s["side"] == "buy":
             p[0] += s["tokens"]
-            p[1] += s["sol"]
+            p[1] += s["usd"]
         elif p[0] > 0:
             frac = min(1.0, s["tokens"] / p[0])
             cost = p[1] * frac
             if s["t"] >= start:
-                per[s["mint"]] += s["sol"] - cost
+                per[s["mint"]] += s["usd"] - cost
             p[0] -= p[0] * frac
             p[1] -= cost
     wins = sum(1 for v in per.values() if v > 0)
-    return {"sol": sum(per.values()), "tokens": len(per), "wins": wins,
+    return {"usd": sum(per.values()), "tokens": len(per), "wins": wins,
             "win_rate": wins / len(per) if per else 0.0, "per_token": dict(per)}
 
 
-def candidates(data: Data, max_pools: int = 40) -> list[str]:
+def candidates(data: Data, max_pools: int = 25) -> list[str]:
     """Wallets active in currently boosted tokens, most-seen first; one-pool spammers left out."""
     seen, pools = Counter(), 0
     for mint in data.boosted_mints():
@@ -63,34 +63,42 @@ def candidates(data: Data, max_pools: int = 40) -> list[str]:
             if n <= 20:  # dozens of trades in one pool in a day: a bot or a market maker
                 seen[w] += 1
     log.info("%d candidate wallets from %d pools", len(seen), pools)
-    return [w for w, _ in seen.most_common()]
+    # a wallet in many of the hottest coins at once is almost always a sniper bot: prefer 2-6 coins
+    return [w for w, n in seen.most_common() if 2 <= n <= 6] + [w for w, n in seen.items() if n == 1]
 
 
-def wallet_history(data: Data, wallet: str, since: float, max_tx: int) -> list[dict] | None:
+def wallet_history(data: Data, wallet: str, since: float, max_tx: int, sol_usd: float = 150.0) -> list[dict] | None:
     sigs = data.signatures(wallet, since, max_tx)
     if sigs is None:
         return None
-    swaps = [parse_swap(tx, wallet) for tx in data.transactions([s["signature"] for s in sigs])]
+    swaps = [parse_swap(tx, wallet, sol_usd) for tx in data.transactions([s["signature"] for s in sigs])]
     return [s for s in swaps if s]
 
 
 def select(data: Data, t0: float, end: float, select_days: float, top: int, n_candidates: int,
-           max_tx_per_day: float) -> tuple[list[dict], dict]:
+           max_tx_per_day: float, max_scan: int = 400) -> tuple[list[dict], dict]:
+    """Examine wallets until `n_candidates` non-bots have full histories; bots cost one cheap lookup."""
     since = t0 - select_days * DAY
     max_tx = int(max_tx_per_day * (end - since) / DAY)
-    scored, histories = [], {}
-    for i, w in enumerate(candidates(data)[:n_candidates], 1):
-        h = wallet_history(data, w, since, max_tx)
+    scored, histories, bots = [], {}, 0
+    sol_usd = data.sol_usd()
+    for w in candidates(data)[:max_scan]:
+        if len(histories) >= n_candidates:
+            break
+        h = wallet_history(data, w, since, max_tx, sol_usd)
         if h is None:
-            log.info("[%d/%d] %s… too busy (bot) or unreadable", i, n_candidates, w[:6])
+            bots += 1
             continue
         histories[w] = h
+        i = len(histories)
         r = realized_pnl(h, since, t0)
-        log.info("[%d/%d] %s… %d swaps, before-window profit %+.3f SOL on %d tokens", i, n_candidates, w[:6],
-                 len(h), r["sol"], r["tokens"])
-        if r["tokens"] >= 5 and r["sol"] > 0:
-            scored.append({"wallet": w, "sol": r["sol"], "tokens": r["tokens"], "win_rate": r["win_rate"]})
-    scored.sort(key=lambda x: -x["sol"])
+        log.info("[%d/%d] %s… %d swaps, before-window profit $%+.2f on %d coins", i, n_candidates, w[:6],
+                 len(h), r["usd"], r["tokens"])
+        if r["tokens"] >= 4 and r["usd"] > 0:
+            scored.append({"wallet": w, "usd": r["usd"], "tokens": r["tokens"], "win_rate": r["win_rate"]})
+    log.info("examined %d wallets, skipped %d bots; %d were profitable on 4+ coins before the window",
+             len(histories), bots, len(scored))
+    scored.sort(key=lambda x: -x["usd"])
     return scored[:top], histories
 
 
@@ -214,14 +222,14 @@ VARIANTS = {
 }
 
 
-def run(test_days: float = 3, select_days: float = 4, top: int = 8, n_candidates: int = 25,
+def run(test_days: float = 1.5, select_days: float = 2, top: int = 8, n_candidates: int = 25,
         bankroll: float = 100, max_tx_per_day: float = 80, out: str = "memebot_out") -> dict:
     data, outp = Data(), Path(out)
     outp.mkdir(parents=True, exist_ok=True)
     end = time.time()
     t0 = end - test_days * DAY
     picks, hist = select(data, t0, end, select_days, top, n_candidates, max_tx_per_day)
-    log.info("picked %d wallets: %s", len(picks), ", ".join(f"{p['wallet'][:6]}… {p['sol']:+.2f} SOL" for p in picks))
+    log.info("picked %d wallets: %s", len(picks), ", ".join(f"{p['wallet'][:6]}… ${p['usd']:+.0f}" for p in picks))
     signals = [{**s, "wallet": p["wallet"]} for p in picks for s in hist[p["wallet"]] if t0 <= s["t"] <= end]
     log.info("%d buys and sells to copy in the test window", len(signals))
     cache_path = outp / "prices.json"

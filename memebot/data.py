@@ -30,7 +30,7 @@ class Limiter:
 
 
 class Data:
-    def __init__(self, rpc: str = RPC, rpc_rate: float = 3.0, gecko_rate: float = 0.45):
+    def __init__(self, rpc: str = RPC, rpc_rate: float = 2.0, gecko_rate: float = 0.45):
         self.s = requests.Session()
         self.rpc_url = rpc
         self.rpc_lim, self.gecko_lim, self.dex_lim = Limiter(rpc_rate), Limiter(gecko_rate), Limiter(4)
@@ -58,7 +58,11 @@ class Data:
                 d = r.json() if r.ok else None
                 if d and "result" in d:
                     return d["result"]
-                raise requests.HTTPError(f"HTTP {r.status_code} {str(d)[:120] if d else ''}")
+                err = (d or {}).get("error") or {}
+                if d and err.get("code") not in (429, -32429):  # a real error (bad request, pruned data): don't retry
+                    log.debug("RPC %s error: %s", method, err)
+                    return None
+                raise requests.HTTPError(f"HTTP {r.status_code} {str(err)[:120]}")
             except (requests.RequestException, ValueError) as e:
                 if attempt == 5:
                     log.warning("RPC %s failed: %s", method, e)
@@ -87,12 +91,16 @@ class Data:
     def transactions(self, sigs: list[str]) -> list[dict]:
         out = []
         for sig in sigs:
-            tx = self.rpc("getTransaction", [sig, {"maxSupportedTransactionVersion": 0, "encoding": "jsonParsed"}])
+            tx = self.rpc("getTransaction", [sig, {"maxSupportedTransactionVersion": 1, "encoding": "jsonParsed"}])
             if tx:
                 out.append(tx)
         return out
 
     # -- markets
+    def sol_usd(self) -> float:
+        d = self._get("https://lite-api.jup.ag/price/v3", self.dex_lim, ids=WSOL) or {}
+        return float((d.get(WSOL) or {}).get("usdPrice") or 150.0)
+
     def boosted_mints(self) -> list[str]:
         mints = []
         for path in ("/token-boosts/top/v1", "/token-boosts/latest/v1", "/token-profiles/latest/v1"):
@@ -125,8 +133,9 @@ class Data:
 
 # -- parsing -------------------------------------------------------------------------------
 
-def parse_swap(tx: dict, wallet: str) -> dict | None:
-    """A SOL <-> token swap by `wallet` in this transaction, or None.
+def parse_swap(tx: dict, wallet: str, sol_usd: float = 150.0) -> dict | None:
+    """A token swap by `wallet` paid in SOL or in USDC/USDT, or None. `usd` is the dollar amount paid or
+    received (SOL legs valued at `sol_usd`); `sol` is the same in SOL.
 
     SOL spent/received is the wallet's native balance change plus any wrapped-SOL change, so it includes
     the network fee and any token-account rent (refunded when the account is closed on exit).
@@ -149,17 +158,17 @@ def parse_swap(tx: dict, wallet: str) -> dict | None:
             if b.get("owner") == wallet:
                 tok[b["mint"]] += sign * float(b["uiTokenAmount"].get("uiAmount") or 0)
     sol += tok.pop(WSOL, 0.0)
-    if any(abs(tok.get(s, 0)) > 1e-9 for s in STABLES):
-        return None
+    stable = sum(tok.pop(m, 0.0) for m in STABLES)
     moved = {m: v for m, v in tok.items() if abs(v) > 1e-12}
     if len(moved) != 1:
         return None
     mint, amt = next(iter(moved.items()))
-    if amt > 0 and sol < 0:
-        side, sol_amt = "buy", -sol
-    elif amt < 0 and sol > 0:
-        side, sol_amt = "sell", sol
+    quote = stable if abs(stable) > 1e-3 else sol * sol_usd   # paid in dollars, else in SOL
+    if amt > 0 and quote < 0:
+        side, usd = "buy", -quote
+    elif amt < 0 and quote > 0:
+        side, usd = "sell", quote
     else:
         return None
-    return {"t": tx.get("blockTime"), "mint": mint, "side": side, "tokens": abs(amt), "sol": sol_amt,
+    return {"t": tx.get("blockTime"), "mint": mint, "side": side, "tokens": abs(amt), "usd": usd, "sol": usd / sol_usd,
             "sig": ((tx.get("transaction") or {}).get("signatures") or [""])[0]}

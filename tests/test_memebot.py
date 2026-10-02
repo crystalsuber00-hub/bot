@@ -1,15 +1,19 @@
 import pytest
 
-from memebot.data import WSOL, parse_swap
+from memebot.data import STABLES, WSOL, parse_swap
 from memebot.replay import realized_pnl, simulate
 
 W = "Wallet1111"
 MINT = "Meme1111pump"
 
 
-def tx(sol_delta, tok_pre, tok_post, t=1000, err=None, wsol=None):
+def tx(sol_delta, tok_pre, tok_post, t=1000, err=None, wsol=None, usdc=None):
     pre = [{"owner": W, "mint": MINT, "uiTokenAmount": {"uiAmount": tok_pre}}] if tok_pre is not None else []
     post = [{"owner": W, "mint": MINT, "uiTokenAmount": {"uiAmount": tok_post}}]
+    if usdc:
+        u = sorted(STABLES)[0]
+        pre.append({"owner": W, "mint": u, "uiTokenAmount": {"uiAmount": usdc[0]}})
+        post.append({"owner": W, "mint": u, "uiTokenAmount": {"uiAmount": usdc[1]}})
     if wsol:
         pre.append({"owner": W, "mint": WSOL, "uiTokenAmount": {"uiAmount": wsol[0]}})
         post.append({"owner": W, "mint": WSOL, "uiTokenAmount": {"uiAmount": wsol[1]}})
@@ -19,8 +23,10 @@ def tx(sol_delta, tok_pre, tok_post, t=1000, err=None, wsol=None):
 
 
 def test_parse_buy_sell_and_wrapped_sol():
-    b = parse_swap(tx(-0.5, None, 1000), W)
-    assert b["side"] == "buy" and b["tokens"] == 1000 and b["sol"] == pytest.approx(0.5)
+    b = parse_swap(tx(-0.5, None, 1000), W, sol_usd=120)
+    assert b["side"] == "buy" and b["tokens"] == 1000 and b["sol"] == pytest.approx(0.5) and b["usd"] == pytest.approx(60)
+    u = parse_swap(tx(-0.0004, None, 1000, usdc=(20.0, 6.0)), W)   # paid $14 in USDC; SOL change is just the fee
+    assert u["side"] == "buy" and u["usd"] == pytest.approx(14.0)
     s = parse_swap(tx(0.8, 1000, 0), W)
     assert s["side"] == "sell" and s["sol"] == pytest.approx(0.8)
     w = parse_swap(tx(0, None, 500, wsol=(1.0, 0.7)), W)          # paid with wrapped SOL
@@ -30,12 +36,12 @@ def test_parse_buy_sell_and_wrapped_sol():
 
 
 def test_realized_pnl_uses_cost_from_before_the_window():
-    swaps = [{"t": 10, "mint": "A", "side": "buy", "tokens": 100, "sol": 1.0},
-             {"t": 50, "mint": "A", "side": "sell", "tokens": 50, "sol": 1.0},     # +0.5 inside window
-             {"t": 60, "mint": "B", "side": "buy", "tokens": 10, "sol": 1.0},
-             {"t": 70, "mint": "B", "side": "sell", "tokens": 10, "sol": 0.2}]     # -0.8
+    swaps = [{"t": 10, "mint": "A", "side": "buy", "tokens": 100, "usd": 1.0},
+             {"t": 50, "mint": "A", "side": "sell", "tokens": 50, "usd": 1.0},     # +0.5 inside window
+             {"t": 60, "mint": "B", "side": "buy", "tokens": 10, "usd": 1.0},
+             {"t": 70, "mint": "B", "side": "sell", "tokens": 10, "usd": 0.2}]     # -0.8
     r = realized_pnl(swaps, 40, 100)
-    assert r["sol"] == pytest.approx(-0.3) and r["tokens"] == 2 and r["wins"] == 1
+    assert r["usd"] == pytest.approx(-0.3) and r["tokens"] == 2 and r["wins"] == 1
 
 
 class FakePrices:
