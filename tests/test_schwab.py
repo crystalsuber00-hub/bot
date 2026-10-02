@@ -118,3 +118,15 @@ def test_schwab_is_for_spy03_only():
     with pytest.raises(ValueError):
         cfg.validate()
     Config(broker="schwab", model="spy03").validate()
+
+
+def test_dotenv_is_loaded_without_overriding_the_shell(tmp_path, monkeypatch):
+    import os
+    from spxbot.__main__ import load_dotenv
+    (tmp_path / ".env").write_text("# c\nSCHWAB_APP_KEY=AbC123 \nSCHWAB_APP_SECRET = 'xyz'\nNTFY_TOPIC=\nKEEP=fromfile\n")
+    monkeypatch.delenv("SCHWAB_APP_KEY", raising=False)
+    monkeypatch.delenv("SCHWAB_APP_SECRET", raising=False)
+    monkeypatch.setenv("KEEP", "fromshell")
+    load_dotenv(str(tmp_path / ".env"))
+    assert os.environ["SCHWAB_APP_KEY"] == "AbC123" and os.environ["SCHWAB_APP_SECRET"] == "xyz"
+    assert os.environ["KEEP"] == "fromshell"

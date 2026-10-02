@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import socket
 
 from .config import load_config
@@ -9,6 +10,20 @@ from .engine import Engine
 from .notify import Notifier
 from .state import State
 from .tradier import TradierClient
+
+
+def load_dotenv(path: str = ".env") -> None:
+    """Read NAME=value lines from .env into the environment (values already set in the shell win)."""
+    if not os.path.exists(path):
+        return
+    for line in open(path, encoding="utf-8-sig"):
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        name, value = name.strip(), value.split(" #", 1)[0].strip().strip('"').strip("'")
+        if name.isidentifier() and value and name not in os.environ:
+            os.environ[name] = value
 
 
 def single_instance(port: int):
@@ -48,6 +63,7 @@ def _main() -> None:
     ap.add_argument("--schwab-login", action="store_true",
                     help="log in to Schwab (needed once, then every 7 days), then exit")
     args = ap.parse_args()
+    load_dotenv()  # so keys work without "set -a && . ./.env" in every new Terminal window
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     cfg = load_config(args.config)
@@ -78,7 +94,8 @@ def _main() -> None:
         from .schwab import SchwabClient, auth_url
         _schwab.CONFIG_HINT = args.config or "<config>"
         if not (cfg.schwab.app_key and cfg.schwab.app_secret):
-            ap.error("set SCHWAB_APP_KEY and SCHWAB_APP_SECRET (from your app on developer.schwab.com)")
+            ap.error("SCHWAB_APP_KEY and SCHWAB_APP_SECRET are missing. Put them in the .env file in this folder "
+                     "(open -e .env), or run this from the bot folder (cd ~/bot)")
         client = SchwabClient(cfg.schwab)
         if args.schwab_login:
             print("1. Open this link, log in with your Schwab brokerage login, and allow access:\n\n   "
