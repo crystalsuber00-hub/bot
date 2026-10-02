@@ -180,3 +180,11 @@ polyscan backtest --start 2026-10-01 --end 2026-10-15 --watchlist data/polyscan_
 | Copy everything, no price limit | 194 | 91 | -$9.04 | -4.7% |
 
 Copied prices matched the wallets' own (0.456 average against their 0.461), so the losses came from the bets themselves: the copied game-winner bets won 42% of the time at prices that needed about 46% to break even, before fees. These wallets' profits came mostly from markets Polymarket US doesn't list or the copier skips (spreads, totals, props, esports, smaller leagues). 1,685 of 3,258 buy alerts were spreads, totals or props, and 642 were games not listed on Polymarket US.
+
+### Copying only the top 2 wallets (same window)
+| Wallets | Picked | Trades (as built) | Won | P&L on $100 |
+|---|---|---|---|---|
+| vito3corleone, BreakTheBank | top 2 by profit on Sept 3 (fair test) | 9 | 6 | +$11.30 |
+| ndb1, gmpm2 | top 2 by profit on Oct 1 (picked with hindsight) | 21 | 10 | +$0.56 |
+
+All of the fair test's profit came from BreakTheBank; vito3corleone stopped trading. Nine trades is far too few to tell skill from luck: one or two games decide the result. Files: `data/polyscan_backtest_top2_*.json`.
