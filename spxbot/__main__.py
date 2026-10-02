@@ -60,8 +60,8 @@ def _main() -> None:
                     help="clear a freeze/halt after you've fixed the position at your broker, then exit")
     ap.add_argument("--chart", nargs="?", const="latest", metavar="DATE",
                     help="write an HTML chart of a day's spread (YYYY-MM-DD, default latest) and exit")
-    ap.add_argument("--schwab-login", action="store_true",
-                    help="log in to Schwab (needed once, then every 7 days), then exit")
+    ap.add_argument("--schwab-login", nargs="?", const="", default=None, metavar="ADDRESS",
+                    help="log in to Schwab (once, then every 7 days). Optionally pass the 127.0.0.1 address in quotes")
     args = ap.parse_args()
     load_dotenv()  # so keys work without "set -a && . ./.env" in every new Terminal window
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -97,14 +97,25 @@ def _main() -> None:
             ap.error("SCHWAB_APP_KEY and SCHWAB_APP_SECRET are missing. Put them in the .env file in this folder "
                      "(open -e .env), or run this from the bot folder (cd ~/bot)")
         client = SchwabClient(cfg.schwab)
-        if args.schwab_login:
-            print("1. Open this link, log in with your Schwab brokerage login, and allow access:\n\n   "
-                  + auth_url(cfg.schwab) + "\n\n2. The browser then shows an error page on "
-                  f"{cfg.schwab.callback_url} - that's expected. Copy the WHOLE address bar and paste it here.")
-            client.login(input("\nPasted address: "))
+        if args.schwab_login is not None:
+            address = args.schwab_login
+            if not address:
+                import webbrowser
+                link = auth_url(cfg.schwab)
+                print("Opening the Schwab login page in your browser (if it doesn't open, copy this link):\n\n   "
+                      + link + "\n\n1. Log in with your normal Schwab login and click Allow.\n"
+                      f"2. The browser lands on a 'can't be reached' page at {cfg.schwab.callback_url} - that's expected.\n"
+                      "3. Copy that page's WHOLE address (Cmd+A, Cmd+C), come back to THIS window,\n"
+                      "   paste it below (Cmd+V) and press Return. Be quick: the code expires in about 30 seconds.\n")
+                try:
+                    webbrowser.open(link)
+                except Exception:
+                    pass
+                address = input(">>> PASTE THE ADDRESS HERE AND PRESS RETURN: ")
+            client.login(address)
             print(f"Logged in. Token saved to {cfg.schwab.token_file}; valid for 7 days.")
             return
-    elif args.schwab_login:
+    elif args.schwab_login is not None:
         ap.error("--schwab-login needs broker = \"schwab\" in the config")
     elif cfg.broker == "ibkr":
         from .ibkr import IBKRClient
@@ -124,7 +135,7 @@ def _main() -> None:
         engine = StocksEngine(cfg, client, Notifier(cfg.notify), StocksState(cfg.stocks.state_file))
         if cfg.broker == "schwab":
             left = client.refresh_days_left()
-            relogin = f"spxbot -c {args.config} --schwab-login"
+            relogin = f".venv/bin/python -m spxbot -c {args.config} --schwab-login"
             if args.check:
                 if left <= 0:
                     raise SystemExit(f"[!!] Not logged in to Schwab (or the 7-day login expired). Run:  {relogin}")

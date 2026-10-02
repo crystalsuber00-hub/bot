@@ -81,10 +81,10 @@ class SchwabClient:
 
     def _access(self) -> str:
         if not self.tok.get("refresh_token"):
-            raise SchwabLoginNeeded(f"not logged in to Schwab: run  spxbot -c {CONFIG_HINT} --schwab-login")
+            raise SchwabLoginNeeded(f"not logged in to Schwab: run  .venv/bin/python -m spxbot -c {CONFIG_HINT} --schwab-login")
         if time.time() >= self.tok.get("access_expires", 0):
             if self.refresh_days_left() <= 0:
-                raise SchwabLoginNeeded(f"Schwab login expired (7-day limit): run  spxbot -c {CONFIG_HINT} --schwab-login")
+                raise SchwabLoginNeeded(f"Schwab login expired (7-day limit): run  .venv/bin/python -m spxbot -c {CONFIG_HINT} --schwab-login")
             self._store(self._token_request({"grant_type": "refresh_token",
                                              "refresh_token": self.tok["refresh_token"]}), new_login=False)
         return self.tok["access_token"]
