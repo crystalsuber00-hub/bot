@@ -26,6 +26,47 @@ def load_dotenv(path: str = ".env") -> None:
             os.environ[name] = value
 
 
+def _clipboard() -> str | None:
+    """Mac clipboard text, or None where there's no pbpaste."""
+    import shutil
+    import subprocess
+    if not shutil.which("pbpaste"):
+        return None
+    try:
+        return subprocess.run(["pbpaste"], capture_output=True, text=True, timeout=2).stdout.strip()
+    except Exception:
+        return None
+
+
+def wait_for_address(callback: str, clipboard=_clipboard, timeout: float = 600) -> str:
+    """Take the 127.0.0.1 address the moment it's copied (Mac), or whatever is pasted + Return."""
+    import select
+    import sys
+    import time
+    start_clip = clipboard()
+    watching = start_clip is not None
+    print(">>> Just COPY the address in the browser (Cmd+A, Cmd+C) - it's picked up automatically."
+          if watching else "", ">>> Or paste it here and press Return: ", sep="\n" if watching else "", end="", flush=True)
+    end = time.time() + timeout
+    while time.time() < end:
+        if watching:
+            clip = clipboard()
+            if clip and clip != start_clip and "code=" in clip and clip.startswith(callback.rstrip("/")):
+                print("\n[ok] got the address from the clipboard")
+                return clip
+        try:
+            ready = select.select([sys.stdin], [], [], 0.3)[0] if watching else [sys.stdin]
+        except (OSError, ValueError):  # stdin not selectable: plain input
+            ready = [sys.stdin]
+        if ready:
+            line = sys.stdin.readline().strip()
+            if line:
+                return line
+            if not watching:
+                break
+    raise SystemExit("No address received. Run the login command again.")
+
+
 def single_instance(port: int):
     """Hold a localhost port for the life of the process; returns None if another bot already holds it."""
     sock = socket.socket()
@@ -111,7 +152,7 @@ def _main() -> None:
                     webbrowser.open(link)
                 except Exception:
                     pass
-                address = input(">>> PASTE THE ADDRESS HERE AND PRESS RETURN: ")
+                address = wait_for_address(cfg.schwab.callback_url)
             client.login(address)
             print(f"Logged in. Token saved to {cfg.schwab.token_file}; valid for 7 days.")
             return

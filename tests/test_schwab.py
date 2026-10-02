@@ -130,3 +130,22 @@ def test_dotenv_is_loaded_without_overriding_the_shell(tmp_path, monkeypatch):
     load_dotenv(str(tmp_path / ".env"))
     assert os.environ["SCHWAB_APP_KEY"] == "AbC123" and os.environ["SCHWAB_APP_SECRET"] == "xyz"
     assert os.environ["KEEP"] == "fromshell"
+
+
+def test_login_address_is_taken_from_the_clipboard_as_soon_as_it_is_copied(monkeypatch):
+    import io
+    import sys
+    from spxbot.__main__ import wait_for_address
+    clips = iter(["old stuff", "old stuff", "old stuff", "https://127.0.0.1/?code=C0.x%40&session=y"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(""))
+    monkeypatch.setattr("select.select", lambda r, w, x, t: ([], [], []))  # nothing typed
+    got = wait_for_address("https://127.0.0.1", clipboard=lambda: next(clips), timeout=5)
+    assert got.startswith("https://127.0.0.1/?code=")
+
+
+def test_login_address_can_still_be_pasted_without_a_clipboard(monkeypatch):
+    import io
+    import sys
+    from spxbot.__main__ import wait_for_address
+    monkeypatch.setattr(sys, "stdin", io.StringIO("https://127.0.0.1/?code=abc\n"))
+    assert wait_for_address("https://127.0.0.1", clipboard=lambda: None, timeout=5) == "https://127.0.0.1/?code=abc"
