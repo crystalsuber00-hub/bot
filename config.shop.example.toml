@@ -1,0 +1,92 @@
+# Copy to config.shop.toml. Secrets (API keys, passwords) go in environment variables / .env, not here.
+db_path = "data/shop.db"
+port = 8000
+
+[store]
+name = "The Fluff Kit"
+tagline = "Grooming gear that makes shedding season easy"
+base_url = "https://www.thefluffkit.com"        # or env BASE_URL
+contact_email = "support@thefluffkit.com"
+business_address = "Your legal business address"  # required in marketing emails
+ship_to_countries = ["US"]
+shipping_days = "7-15 business days"
+return_days = 30
+demo = false
+
+[research]
+# What the store sells. The bot searches these on the supplier daily and lists the best-scoring products.
+# Niche: at-home dog & cat grooming. Light, unbreakable, no sizing returns, and great on video (before/after shedding).
+keywords = ["dog deshedding brush", "pet grooming glove", "cat grooming brush", "pet hair remover roller",
+            "dog paw cleaner", "dog nail grinder", "pet grooming kit"]
+min_cost = 3.0              # supplier price + shipping, USD
+max_cost = 35.0
+max_shipping_days = 20
+new_per_run = 5
+max_products = 60
+# blocked_words = [...]     # defaults block brands, replicas, medical, flea/tick (EPA-regulated), liquids; extend rather than shrink
+
+[pricing]
+markup_tiers = [[10, 3.0], [20, 2.5], [30, 2.1], [1000000000, 1.8]]
+min_profit = 6.0
+min_price = 14.99
+
+[fulfillment]
+auto_order = true           # false: you place each order yourself from /admin
+auto_pay = true             # pay CJ from your CJ wallet balance (keep it topped up)
+auto_refund_cancelled = true
+max_auto_order_cost = 150.0
+sandbox = true              # CJ sandbox: no real orders. Set false when you go live.
+
+[supplier]
+name = "cj"                 # "cj" or "demo"
+
+[payments]
+automatic_tax = false       # turn on after enabling Stripe Tax in your dashboard
+recover_abandoned = true
+
+[email]
+smtp_port = 587
+from_address = "hello@thefluffkit.com"
+
+[marketing]
+welcome_code = "WELCOME10"  # create this promotion code in Stripe: Products > Coupons > 10% off, once, first-time customers
+welcome_percent = 10
+newsletter = true
+newsletter_weekday = 3      # Thursday
+newsletter_hour_utc = 15
+followup_days = 5
+winback_days = 60
+guides = true               # weekly buying guide (needs ANTHROPIC_API_KEY)
+report_weekday = 0          # Monday report to notify.owner_email: numbers + this week's AI video prompts
+video_mode = "ai"           # faceless: prompts for Kling/Higgsfield image-to-video ("film" = shot lists to film yourself)
+videos_per_week = 3
+
+[social]
+# Each channel switches on once its ids/tokens are set (tokens go in .env). See shopbot/README.md "Social accounts".
+pinterest_board_id = ""
+pinterest_per_day = 5
+facebook_page_id = ""
+facebook_per_day = 1
+instagram_user_id = ""
+instagram_per_day = 1
+hashtags = ["doggrooming", "deshedding", "dogsofinstagram", "catsofinstagram", "petcare", "groomingtips"]
+
+[tracking]
+# Add before running ads, so Google/Meta can see which ads lead to sales.
+ga4_id = ""                 # G-XXXXXXXXXX
+google_ads_id = ""          # AW-XXXXXXXXX
+google_ads_purchase_label = ""
+meta_pixel_id = ""
+
+[copywriting]
+enabled = true              # uses Claude if ANTHROPIC_API_KEY is set
+model = "claude-opus-5-5"
+
+[notify]
+owner_email = "you@example.com"   # weekly report + urgent alerts; set NTFY_TOPIC in .env for phone push
+
+[schedule]
+research_hours = 24
+sync_hours = 6
+fulfill_minutes = 5
+tracking_minutes = 60

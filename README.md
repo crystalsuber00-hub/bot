@@ -1,5 +1,7 @@
 # spxbot
 
+> This repo also contains **shopbot**, an automated dropshipping store (product research, website, checkout, fulfilment, marketing). See [shopbot/README.md](shopbot/README.md).
+
 Signal bot for a SPX credit-spread routine:
 
 | Your rule | Implementation |
