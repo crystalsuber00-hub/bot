@@ -108,9 +108,38 @@ CREATE TABLE IF NOT EXISTS jobs (
     name TEXT PRIMARY KEY,
     last_run REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS social_posts (
+    id INTEGER PRIMARY KEY,
+    channel TEXT NOT NULL,
+    product_id INTEGER NOT NULL,
+    status TEXT NOT NULL,            -- posted | error
+    external_id TEXT NOT NULL DEFAULT '',
+    error TEXT NOT NULL DEFAULT '',
+    posted_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS guides (
+    id INTEGER PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    keyword TEXT NOT NULL,
+    title TEXT NOT NULL,
+    meta_description TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL,              -- JSON: [{"heading": ..., "paragraphs": [...], "product_ids": [...]}]
+    created_at REAL NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_social_channel ON social_posts(channel, posted_at);
 CREATE INDEX IF NOT EXISTS idx_variants_product ON variants(product_id);
 """
+
+MIGRATIONS = [
+    ("orders", "source", "TEXT NOT NULL DEFAULT ''"),          # first-touch marketing channel, e.g. pinterest/social
+    ("subscribers", "confirmed_at", "REAL"),
+    ("products", "social_copy", "TEXT NOT NULL DEFAULT ''"),  # cached captions per channel (JSON)
+]
 
 
 class DB:
@@ -120,6 +149,9 @@ class DB:
         with self.conn() as c:
             c.execute("PRAGMA journal_mode=WAL")
             c.executescript(SCHEMA)
+            for table, column, decl in MIGRATIONS:   # columns added after the first release
+                if column not in {r[1] for r in c.execute(f"PRAGMA table_info({table})")}:
+                    c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
     @contextmanager
     def conn(self):
@@ -161,6 +193,13 @@ class DB:
             return True
         except sqlite3.IntegrityError:
             return False
+
+    def get_setting(self, key: str, default: str = "") -> str:
+        row = self.one("SELECT value FROM settings WHERE key = ?", (key,))
+        return row["value"] if row else default
+
+    def set_setting(self, key: str, value: str) -> None:
+        self.x("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value))
 
     def unmark_email(self, kind: str, ref: str) -> None:
         self.x("DELETE FROM emails WHERE kind = ? AND ref = ?", (kind, ref))

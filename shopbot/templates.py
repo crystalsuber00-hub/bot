@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from html import escape
 from urllib.parse import quote
 
@@ -58,15 +59,17 @@ footer .cols{display:flex;gap:40px;flex-wrap:wrap;justify-content:space-between}
 
 
 def layout(cfg, title: str, body: str, *, cart_count: int = 0, description: str = "", collections: dict | None = None,
-           head_extra: str = "", demo: bool = False, canonical: str = "") -> str:
-    s = cfg.store
+           head_extra: str = "", demo: bool = False, canonical: str = "", guides: bool = False) -> str:
+    s, m = cfg.store, cfg.marketing
     nav = "".join(f'<a href="/c/{esc(slug)}">{esc(kw.title())}</a>' for slug, kw in list((collections or {}).items())[:5])
+    nav += '<a href="/guides">Guides</a>' if guides else ""
+    offer = f"Get {m.welcome_percent}% off your first order" if m.welcome_code else "New arrivals by email"
     full_title = f"{title} | {s.name}" if title else f"{s.name} — {s.tagline}"
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(full_title)}</title><meta name="description" content="{esc(description or s.tagline)}">
 {f'<link rel="canonical" href="{esc(canonical)}">' if canonical else ''}
 <meta property="og:title" content="{esc(full_title)}"><meta property="og:site_name" content="{esc(s.name)}">
-<style>{CSS}</style>{head_extra}</head><body>
+<style>{CSS}</style>{tracking_head(cfg)}{head_extra}</head><body>
 {'<div class="banner demo">Demo store: no real payments or shipments.</div>' if demo else ''}
 <div class="banner">Free tracked shipping on every order · {s.return_days}-day returns</div>
 <header><div class="wrap"><a class="logo" href="/">{esc(s.name)}</a><nav><a href="/">Shop</a>{nav}<a href="/track">Track order</a></nav>
@@ -74,7 +77,7 @@ def layout(cfg, title: str, body: str, *, cart_count: int = 0, description: str 
 <main class="wrap">{body}</main>
 <footer><div class="wrap cols"><div><b>{esc(s.name)}</b><br>{esc(s.business_address)}<br><a href="mailto:{esc(s.contact_email)}">{esc(s.contact_email)}</a>
 <p><a href="/pages/shipping">Shipping</a><a href="/pages/returns">Returns</a><a href="/pages/privacy">Privacy</a><a href="/pages/terms">Terms</a><a href="/pages/contact">Contact</a></p></div>
-<form method="post" action="/subscribe"><label for="nl">New arrivals by email</label><input id="nl" type="email" name="email" required placeholder="you@example.com">
+<form method="post" action="/subscribe"><label for="nl">{esc(offer)}</label><input id="nl" type="email" name="email" required placeholder="you@example.com">
 <button class="btn" style="padding:10px 16px">Subscribe</button></form></div></footer></body></html>"""
 
 
@@ -91,8 +94,16 @@ def grid(products: list[dict]) -> str:
 
 
 def home(cfg, products: list[dict]) -> str:
+    m = cfg.marketing
+    offer = (f"Join the list and get {m.welcome_percent}% off your first order." if m.welcome_code
+             else "Be the first to hear about new arrivals.")
+    signup = (f'<div class="box" style="display:flex;gap:16px;flex-wrap:wrap;align-items:end;justify-content:space-between">'
+              f'<div><b>{esc(offer)}</b><br><span class="muted">No spam. Unsubscribe any time.</span></div>'
+              f'<form method="post" action="/subscribe" style="display:flex;gap:8px;flex-wrap:wrap">'
+              f'<input type="email" name="email" required placeholder="you@example.com" aria-label="Email">'
+              f'<button class="btn" style="padding:10px 16px">Sign up</button></form></div>')
     return (f'<section class="hero"><h1>{esc(cfg.store.tagline)}</h1><p>Free tracked shipping · {cfg.store.return_days}-day returns · '
-            f'Secure checkout</p></section>' + grid(products))
+            f'Secure checkout</p></section>' + grid(products) + (signup if m.newsletter else ""))
 
 
 def collection(keyword: str, products: list[dict]) -> str:
@@ -200,7 +211,8 @@ def policy(cfg, name: str) -> tuple[str, str] | None:
                                          f"send instructions; refunds go back to the original payment method within 5–10 days of approval.</p>"),
         "privacy": ("Privacy policy", "<p>We collect the details needed to fulfil your order (name, email, phone, shipping address) and "
                                       "share them only with our payment processor (Stripe), our fulfilment partner and the shipping carrier. "
-                                      "We never see or store your card number. If you opt in, we email you new products; every email has an "
+                                      "We never see or store your card number. We use cookies to keep your cart and, where enabled, Google Analytics and "
+                                      "Meta/Google ad measurement to understand which ads work. If you opt in, we email you new products; every email has an "
                                       f"unsubscribe link. To access or delete your data, email <a href='mailto:{esc(s.contact_email)}'>{esc(s.contact_email)}</a>.</p>"),
         "terms": ("Terms of service", f"<p>By ordering from {esc(s.name)} you agree to pay the price shown at checkout. Products ship from "
                                       "our fulfilment partners and may arrive in separate packages. We may cancel and fully refund any order "
@@ -232,12 +244,84 @@ def admin_page(cfg, stats: dict, orders: list[dict], products: list[dict], event
         f"<td>{act('hide' if p['active'] else 'show', str(p['id']), 'Hide' if p['active'] else 'Show')}</td></tr>" for p in products)
     event_rows = "".join(f"<tr><td class='muted' style='white-space:nowrap'>{esc(e['when'])}</td><td>{esc(e['kind'])}</td><td>{esc(e['message'])}</td></tr>" for e in events)
     buttons = " ".join(act(a, "", l) for a, l in [("research", "Find products now"), ("sync", "Sync prices/stock"),
-                                                  ("fulfill", "Process orders"), ("track", "Update tracking")])
+                                                  ("fulfill", "Process orders"), ("track", "Update tracking"),
+                                                  ("social", "Post to social now"), ("report", "Email me the weekly report")])
+    source_rows = "".join(f"<tr><td>{esc(r['source'])}</td><td>{r['orders']}</td><td>{money(r['revenue'] or 0)}</td></tr>"
+                          for r in k.get("by_source", [])) or "<tr><td colspan=3 class='muted'>No orders yet</td></tr>"
     return f"""<div style="padding:24px 0 56px"><h1>Dashboard</h1>{f'<div class="flash">{esc(flash)}</div>' if flash else ''}
 <div class="kpis"><div>Revenue<b>{money(k['revenue'])}</b></div><div>Est. profit<b>{money(k['profit'])}</b></div><div>Orders<b>{k['orders']}</b></div>
 <div>Live products<b>{k['products']}</b></div><div>Subscribers<b>{k['subscribers']}</b></div></div>
 <p class="muted">{status}</p><p>{buttons}</p>
+<h2>Sales by channel</h2><div class="tablewrap"><table><tr><th>Channel</th><th>Orders</th><th>Revenue</th></tr>{source_rows}</table></div>
 <p class="muted">Google Merchant Center feed: <code>{esc(cfg.store.base_url)}/feeds/google.xml</code> · Sitemap: <code>{esc(cfg.store.base_url)}/sitemap.xml</code></p>
 <h2>Orders</h2><div class="tablewrap"><table><tr><th>Order</th><th>Status</th><th>Customer</th><th>Paid</th><th>Supplier / tracking</th><th></th></tr>{order_rows}</table></div>
 <h2>Products</h2><div class="tablewrap"><table><tr><th>Product</th><th>From</th><th>Score</th><th>State</th><th></th></tr>{product_rows}</table></div>
 <h2>Activity</h2><div class="tablewrap"><table>{event_rows}</table></div></div>"""
+
+
+# --- analytics / ad pixels -----------------------------------------------------------
+
+def _tag_id(v: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_-]", "", v or "")
+
+
+def tracking_head(cfg) -> str:
+    t = cfg.tracking
+    ga, ads, pixel = _tag_id(t.ga4_id), _tag_id(t.google_ads_id), _tag_id(t.meta_pixel_id)
+    out = ""
+    if ga or ads:
+        first = ga or ads
+        configs = "".join(f"gtag('config','{i}');" for i in (ga, ads) if i)
+        out += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={first}"></script><script>window.dataLayer=window.dataLayer||[];'
+                f"function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());{configs}</script>")
+    if pixel:
+        out += ("<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};"
+                "if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;"
+                "s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');"
+                f"fbq('init','{pixel}');fbq('track','PageView');</script>")
+    return out
+
+
+def _events(cfg, ga_event: str, ga_params: dict, fb_event: str, fb_params: dict, ads_conversion: dict | None = None) -> str:
+    t = cfg.tracking
+    js = ""
+    if t.ga4_id or t.google_ads_id:
+        js += f"gtag('event',{json.dumps(ga_event)},{json.dumps(ga_params)});"
+        if ads_conversion and t.google_ads_id and t.google_ads_purchase_label:
+            send_to = f"{_tag_id(t.google_ads_id)}/{_tag_id(t.google_ads_purchase_label)}"
+            js += f"gtag('event','conversion',{json.dumps(dict(ads_conversion, send_to=send_to))});"
+    if t.meta_pixel_id:
+        js += f"fbq('track',{json.dumps(fb_event)},{json.dumps(fb_params)});"
+    js = js.replace("<", "\\u003c")
+    return f"<script>{js}</script>" if js else ""
+
+
+def view_event(cfg, p: dict, price: float) -> str:
+    cur = cfg.store.currency.upper()
+    return _events(cfg, "view_item", {"currency": cur, "value": price, "items": [{"item_id": str(p["id"]), "item_name": p["title"]}]},
+                   "ViewContent", {"currency": cur, "value": price, "content_ids": [str(p["id"])], "content_type": "product_group"})
+
+
+def purchase_event(cfg, order: dict) -> str:
+    cur, value = cfg.store.currency.upper(), order["amount_paid"] or order["subtotal"]
+    return _events(cfg, "purchase", {"transaction_id": order["public_id"], "currency": cur, "value": value},
+                   "Purchase", {"currency": cur, "value": value},
+                   {"value": value, "currency": cur, "transaction_id": order["public_id"]})
+
+
+# --- buying guides --------------------------------------------------------------------
+
+def guide_list(guides: list[dict]) -> str:
+    items = "".join(f'<li style="margin:10px 0"><a href="/guides/{esc(g["slug"])}"><b>{esc(g["title"])}</b></a><br>'
+                    f'<span class="muted">{esc(g["meta_description"])}</span></li>' for g in guides)
+    return message("Buying guides", f"<ul style='padding-left:18px'>{items}</ul>" if guides else "<p>Guides are coming soon.</p>")
+
+
+def guide_page(g: dict, sections: list[dict], products: dict) -> str:
+    body = ""
+    for sec in sections:
+        body += f"<h2>{esc(sec['heading'])}</h2>" + "".join(f"<p>{esc(par)}</p>" for par in sec["paragraphs"])
+        picks = [products[i] for i in sec.get("product_ids", []) if i in products]
+        if picks:
+            body += '<div class="grid" style="padding:8px 0 16px">' + "".join(product_card(p) for p in picks) + "</div>"
+    return f'<article class="prose"><h1>{esc(g["title"])}</h1>{body}</article>'

@@ -12,7 +12,7 @@ import re
 import secrets
 import threading
 from http.cookies import SimpleCookie
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs, quote, urlparse
 
 from . import templates as T
 from .payments import PaymentError, verify_signature
@@ -75,6 +75,31 @@ def read_cart(req: Request) -> dict:
     return {str(k): int(v) for k, v in data.items() if str(k).isdigit() and isinstance(v, int) and 0 < v <= 10}
 
 
+SOCIAL_HOSTS = {"facebook": "facebook", "fb": "facebook", "instagram": "instagram", "pinterest": "pinterest", "pin": "pinterest",
+                "tiktok": "tiktok", "youtube": "youtube", "reddit": "reddit", "t": "twitter", "x": "twitter", "twitter": "twitter"}
+SEARCH_HOSTS = {"google", "bing", "duckduckgo", "yahoo", "ecosia", "brave"}
+NO_TRACK = ("/webhooks/", "/admin", "/feeds/", "/healthz", "/sitemap.xml", "/robots.txt", "/unsubscribe")
+
+
+def traffic_source(req: Request, own_host: str) -> str:
+    """'source/medium' for this visit: UTM tags first, then the referring site; '' for a direct visit."""
+    q = req.query
+    if q.get("utm_source"):
+        src = f"{q['utm_source']}/{q.get('utm_medium') or 'referral'}"
+    else:
+        host = (urlparse(req.env.get("HTTP_REFERER", "")).hostname or "").lower().removeprefix("www.")
+        if not host or host == own_host.removeprefix("www."):
+            return ""
+        names = set(host.split(".")[:-1])          # "lm.facebook.com" -> {"lm", "facebook"}
+        if names & SEARCH_HOSTS:
+            src = f"{sorted(names & SEARCH_HOSTS)[0]}/organic"
+        elif names & SOCIAL_HOSTS.keys():
+            src = f"{SOCIAL_HOSTS[sorted(names & SOCIAL_HOSTS.keys())[0]]}/social"
+        else:
+            src = f"{host}/referral"
+    return re.sub(r"[^a-z0-9._/-]", "", src.lower())[:60]
+
+
 def cart_cookie(cart: dict) -> str:
     return base64.urlsafe_b64encode(json.dumps(cart).encode()).decode().rstrip("=")
 
@@ -93,6 +118,7 @@ class App:
             ("GET", r"/unsubscribe", self.unsubscribe), ("POST", r"/unsubscribe", self.unsubscribe),
             ("GET", r"/pages/([a-z]+)", self.policy), ("GET", r"/sitemap.xml", self.sitemap), ("GET", r"/robots.txt", self.robots),
             ("GET", r"/feeds/google.xml", self.feed), ("POST", r"/webhooks/stripe", self.stripe_webhook),
+            ("GET", r"/guides", self.guide_list), ("GET", r"/guides/([a-z0-9-]+)", self.guide),
             ("GET", r"/admin", self.admin), ("POST", r"/admin/action", self.admin_action), ("GET", r"/healthz", self.health),
         ]
 
@@ -105,6 +131,11 @@ class App:
             log.exception("error on %s %s", req.method, req.path)
             resp = Response(self.page(req, "Something went wrong", T.message("Something went wrong", "<p>Please try again in a moment.</p>")),
                             "500 Internal Server Error")
+        if req.method == "GET" and not req.path.startswith(NO_TRACK):
+            # remember the last non-direct channel for 30 days so the order can be credited to it
+            src = traffic_source(req, urlparse(self.cfg.store.base_url).hostname or "")
+            if src or "src" not in req.cookies:
+                resp.cookie("src", src or "direct")
         start_response(resp.status, resp.headers)
         return [resp.body]
 
@@ -118,8 +149,9 @@ class App:
         return self.not_found(req)
 
     def page(self, req: Request, title: str, body: str, **kw) -> str:
+        has_guides = bool(self.shop.db.one("SELECT 1 FROM guides LIMIT 1"))
         return T.layout(self.cfg, title, body, cart_count=sum(read_cart(req).values()), collections=self.shop.collections(),
-                        demo=self.shop.demo_checkout, **kw)
+                        demo=self.shop.demo_checkout, guides=has_guides, **kw)
 
     def not_found(self, req: Request) -> Response:
         return Response(self.page(req, "Not found", T.message("Page not found", '<p><a href="/">Back to the shop</a></p>')), "404 Not Found")
@@ -145,7 +177,8 @@ class App:
         sel = int(req.query["v"]) if req.query.get("v", "").isdigit() else None
         body = T.product_page(self.cfg, p, variants, images, product_bullets(p), sel)
         return Response(self.page(req, p["title"], body, description=p["seo_description"],
-                                  head_extra=T.product_jsonld(self.cfg, p, variants) + f'<meta property="og:image" content="{T.esc(p["image"])}">',
+                                  head_extra=T.product_jsonld(self.cfg, p, variants) + f'<meta property="og:image" content="{T.esc(p["image"])}">'
+                                  + T.view_event(self.cfg, p, variants[0]["price"]),
                                   canonical=f"{self.cfg.store.base_url}/p/{slug}"))
 
     def cart(self, req, error: str = ""):
@@ -178,7 +211,8 @@ class App:
         if not lines:
             return redirect("/cart")
         try:
-            return redirect(self.shop.start_checkout(lines))
+            src = re.sub(r"[^a-z0-9._/-]", "", req.cookies.get("src", ""))[:60]
+            return redirect(self.shop.start_checkout(lines, src))
         except PaymentError as e:
             log.error("checkout failed: %s", e)
             return self.cart(req, "Checkout is temporarily unavailable. Please try again shortly.")
@@ -190,7 +224,7 @@ class App:
         body = T.message("Thank you!", f"<p>Your order number is <b>{T.esc(order['public_id'])}</b>. A confirmation email is on its way, "
                                        "and we'll email your tracking number as soon as your order ships.</p>"
                                        '<p><a class="btn" href="/">Keep shopping</a></p>')
-        return Response(self.page(req, "Thank you", body)).cookie("cart", "", 0)
+        return Response(self.page(req, "Thank you", body, head_extra=T.purchase_event(self.cfg, order))).cookie("cart", "", 0)
 
     def demo_pay(self, req):
         if not self.shop.demo_checkout:
@@ -237,6 +271,19 @@ class App:
         if req.method == "POST":
             return Response("ok", ctype="text/plain")
         return Response(self.page(req, "Unsubscribed", T.message("You're unsubscribed", "<p>You won't get marketing emails from us anymore.</p>")))
+
+    def guide_list(self, req):
+        guides = self.shop.db.q("SELECT * FROM guides ORDER BY created_at DESC")
+        return Response(self.page(req, "Buying guides", T.guide_list(guides), description=f"Buying guides from {self.cfg.store.name}",
+                                  canonical=f"{self.cfg.store.base_url}/guides"))
+
+    def guide(self, req, slug):
+        g = self.shop.db.one("SELECT * FROM guides WHERE slug = ?", (slug,))
+        if not g:
+            return self.not_found(req)
+        products = {p["id"]: p for p in self.shop.products()}
+        return Response(self.page(req, g["title"], T.guide_page(g, json.loads(g["body"]), products), description=g["meta_description"],
+                                  canonical=f"{self.cfg.store.base_url}/guides/{slug}"))
 
     def policy(self, req, name):
         page = T.policy(self.cfg, name)
@@ -319,7 +366,8 @@ class App:
             shop.db.x("UPDATE products SET active = ?, inactive_reason = ? WHERE id = ?",
                       (int(action == "show"), "" if action == "show" else "manual", int(ident)))
             msg = "Product updated."
-        elif action in ("research", "sync", "fulfill", "track"):
-            threading.Thread(target=getattr(shop, action), daemon=True, name=f"admin-{action}").start()
+        elif action in ("research", "sync", "fulfill", "track", "social", "report"):
+            target = (lambda: shop.report(force=True)) if action == "report" else getattr(shop, action)
+            threading.Thread(target=target, daemon=True, name=f"admin-{action}").start()
             msg = f"Started '{action}' in the background; refresh in a minute."
         return redirect(f"/admin?msg={quote(msg)}")

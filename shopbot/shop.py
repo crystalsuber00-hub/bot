@@ -17,6 +17,7 @@ from .db import DB, jdump
 from .mailer import Mailer, Notifier
 from .payments import PaymentError, Stripe, session_details
 from .research import run_research, slugify, sync_products
+from .social import SocialPoster
 from .suppliers import SupplierError, make_supplier
 
 log = logging.getLogger("shopbot")
@@ -84,20 +85,20 @@ class Shop:
                 lines.append(row)
         return lines
 
-    def create_order(self, lines: list[dict]) -> dict:
+    def create_order(self, lines: list[dict], source: str = "") -> dict:
         public_id = secrets.token_hex(4).upper()
         subtotal = round(sum(l["price"] * l["qty"] for l in lines), 2)
-        oid = self.db.x("INSERT INTO orders (public_id, status, subtotal, created_at) VALUES (?, 'pending_payment', ?, ?)",
-                        (public_id, subtotal, time.time()))
+        oid = self.db.x("INSERT INTO orders (public_id, status, subtotal, source, created_at) VALUES (?, 'pending_payment', ?, ?, ?)",
+                        (public_id, subtotal, source[:80], time.time()))
         for l in lines:
             self.db.x("INSERT INTO order_items (order_id, product_id, variant_id, supplier_vid, title, qty, price, cost, ship_cost) "
                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (oid, l["product_id"], l["variant_id"], l["supplier_vid"], l["title"], l["qty"], l["price"], l["cost"], l["ship_cost"]))
         return self.db.one("SELECT * FROM orders WHERE id = ?", (oid,))
 
-    def start_checkout(self, lines: list[dict]) -> str:
-        """Create the order and return the URL to send the shopper to."""
-        order = self.create_order(lines)
+    def start_checkout(self, lines: list[dict], source: str = "") -> str:
+        """Create the order and return the URL to send the shopper to. source = the marketing channel that brought them."""
+        order = self.create_order(lines, source)
         if self.stripe:
             session = self.stripe.create_checkout(self.cfg, order, lines)
             self.db.x("UPDATE orders SET stripe_session_id = ? WHERE id = ?", (session["id"], order["id"]))
@@ -296,7 +297,14 @@ class Shop:
             self.mailer.send(sub["email"], *emails.confirm_subscription(self.cfg, url))
 
     def confirm(self, token: str) -> bool:
-        return self.db.claim("UPDATE subscribers SET confirmed = 1, unsubscribed_at = NULL WHERE token = ?", (token,))
+        if not self.db.claim("UPDATE subscribers SET confirmed = 1, confirmed_at = ?, unsubscribed_at = NULL "
+                             "WHERE token = ? AND confirmed = 0", (time.time(), token)):
+            return bool(self.db.one("SELECT 1 FROM subscribers WHERE token = ? AND confirmed = 1", (token,)))
+        sub = self.db.one("SELECT * FROM subscribers WHERE token = ?", (token,))
+        if self.db.mark_email("welcome1", sub["email"], sub["email"]):
+            unsub = f"{self.cfg.store.base_url}/unsubscribe?token={token}"
+            self.mailer.send(sub["email"], *emails.welcome(self.cfg, self.products(limit=4), unsub), unsubscribe_url=unsub)
+        return True
 
     def unsubscribe(self, token: str) -> bool:
         return self.db.claim("UPDATE subscribers SET unsubscribed_at = ? WHERE token = ? AND unsubscribed_at IS NULL",
@@ -341,6 +349,66 @@ class Shop:
                 sent += 1
         return sent
 
+    def email_flows(self) -> int:
+        """Welcome email #2 (best sellers) a few days after signup, and a win-back invite after a quiet spell."""
+        m, now, sent = self.cfg.marketing, time.time(), 0
+        for sub in self.db.q("SELECT * FROM subscribers WHERE confirmed = 1 AND unsubscribed_at IS NULL AND source = 'website' "
+                             "AND confirmed_at IS NOT NULL AND confirmed_at <= ?", (now - m.welcome_second_email_days * 86400,)):
+            if self.db.mark_email("welcome2", sub["email"], sub["email"]):
+                unsub = f"{self.cfg.store.base_url}/unsubscribe?token={sub['token']}"
+                self.mailer.send(sub["email"], *emails.welcome_best(self.cfg, self.best_sellers(4), unsub), unsubscribe_url=unsub)
+                sent += 1
+        if m.winback_days > 0:
+            for o in self.db.q("SELECT * FROM orders WHERE status = 'delivered' AND marketing_consent = 1 AND delivered_at <= ? "
+                               "AND delivered_at > ?", (now - m.winback_days * 86400, now - (m.winback_days + 30) * 86400)):
+                # skip customers who have bought again since
+                again = self.db.one("SELECT 1 FROM orders WHERE lower(email) = lower(?) AND paid_at > ?", (o["email"], o["paid_at"]))
+                if again or not self._subscribed(o["email"]) or not self.db.mark_email("winback", o["email"].lower(), o["email"]):
+                    continue
+                unsub = self.unsub_url(o["email"])
+                bought = {i["product_id"] for i in self.items(o["id"])}
+                recs = [p for p in self.products(order="ORDER BY p.created_at DESC", limit=10) if p["id"] not in bought][:4]
+                self.mailer.send(o["email"], *emails.winback(self.cfg, o, recs, unsub), unsubscribe_url=unsub)
+                sent += 1
+        if sent:
+            self.db.log("marketing", f"Sent {sent} welcome/win-back emails")
+        return sent
+
+    def best_sellers(self, limit: int = 4, since: float = 0) -> list[dict]:
+        """Live products ranked by units sold (then research score)."""
+        return self.products(
+            "", (),
+            f"ORDER BY (SELECT COALESCE(SUM(oi.qty), 0) FROM order_items oi JOIN orders o ON o.id = oi.order_id "
+            f"WHERE oi.product_id = p.id AND o.paid_at IS NOT NULL AND o.paid_at >= {float(since)}) DESC, p.score DESC", limit)
+
+    def social(self) -> int:
+        return SocialPoster(self.cfg, self.db, self.copy).run(self.products())
+
+    def guides(self, force: bool = False) -> int:
+        """One new buying guide a week, rotating through collections. Needs Claude; skipped otherwise."""
+        if not self.cfg.marketing.guides or self.copy.client is None:
+            return 0
+        last = self.db.one("SELECT MAX(created_at) AS t FROM guides")["t"]
+        if not force and last and time.time() - last < 7 * 86400:
+            return 0
+        counts = {r["keyword"]: r["n"] for r in self.db.q("SELECT keyword, COUNT(*) AS n FROM guides GROUP BY keyword")}
+        for kw in sorted(self.collections().values(), key=lambda k: counts.get(k, 0)):
+            products = self.products("AND p.keyword = ?", (kw,), limit=12)
+            if len(products) < 3:
+                continue
+            g = self.copy.guide(kw, products)
+            if not g:
+                return 0
+            slug, n = slugify(g["title"]), 2
+            base = slug
+            while self.db.one("SELECT 1 FROM guides WHERE slug = ?", (slug,)):
+                slug, n = f"{base}-{n}", n + 1
+            self.db.x("INSERT INTO guides (slug, keyword, title, meta_description, body, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                      (slug, kw, g["title"], g["meta_description"][:160], jdump(g["sections"]), time.time()))
+            self.db.log("marketing", f"Published guide '{g['title']}'")
+            return 1
+        return 0
+
     def newsletter(self, force: bool = False) -> int:
         """Weekly new-arrivals email to confirmed subscribers (skipped when nothing new was listed)."""
         m = self.cfg.marketing
@@ -372,7 +440,7 @@ class Shop:
                 items.append(f"""<item>
 <g:id>{v['id']}</g:id><g:item_group_id>{p['id']}</g:item_group_id>
 <title>{xml_escape(title[:150])}</title><description>{xml_escape(desc[:5000])}</description>
-<link>{base}/p/{xml_escape(p['slug'])}?v={v['id']}</link><g:image_link>{xml_escape(v['image'] or p['image'])}</g:image_link>
+<link>{base}/p/{xml_escape(p['slug'])}?v={v['id']}&amp;utm_source=google&amp;utm_medium=shopping</link><g:image_link>{xml_escape(v['image'] or p['image'])}</g:image_link>
 <g:availability>in_stock</g:availability><g:price>{v['price']:.2f} {s.currency.upper()}</g:price>
 <g:condition>new</g:condition><g:identifier_exists>no</g:identifier_exists>
 <g:product_type>{xml_escape(p['category'] or p['keyword'])}</g:product_type>
@@ -386,6 +454,8 @@ class Shop:
         base = self.cfg.store.base_url
         urls = [f"{base}/"] + [f"{base}/c/{k}" for k in self.collections()] + [f"{base}/p/{p['slug']}" for p in self.products()]
         urls += [f"{base}/pages/{p}" for p in ("shipping", "returns", "contact")]
+        guides = self.db.q("SELECT slug FROM guides")
+        urls += [f"{base}/guides"] * bool(guides) + [f"{base}/guides/{g['slug']}" for g in guides]
         body = "".join(f"<url><loc>{xml_escape(u)}</loc></url>" for u in urls)
         return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>'
 
@@ -394,19 +464,46 @@ class Shop:
         return {slugify(r["keyword"]): r["keyword"] for r in self.db.q("SELECT DISTINCT keyword FROM products WHERE active = 1")}
 
     # --- reporting ----------------------------------------------------------
-    def stats(self) -> dict:
-        live = "('paid','ordering','ordered','shipped','delivered','needs_review')"
+    LIVE = "('paid','ordering','ordered','shipped','delivered','needs_review')"
+
+    def stats(self, since: float = 0, until: float = 1e12) -> dict:
+        p = self.cfg.pricing
+        window = "AND COALESCE(paid_at, created_at) >= ? AND COALESCE(paid_at, created_at) < ?"
         row = self.db.one(f"""SELECT COUNT(*) AS orders, COALESCE(SUM(amount_paid), 0) AS revenue,
             COALESCE(SUM(CASE WHEN supplier_cost > 0 THEN supplier_cost ELSE
                 (SELECT SUM((cost + ship_cost) * qty) FROM order_items WHERE order_id = orders.id) END), 0) AS cogs,
             COALESCE(SUM(amount_paid * ? + ?), 0) AS fees
-            FROM orders WHERE status IN {live}""", (self.cfg.pricing.card_fee_pct, self.cfg.pricing.card_fee_fixed))
+            FROM orders WHERE status IN {self.LIVE} {window}""", (p.card_fee_pct, p.card_fee_fixed, since, until))
         fees = row["fees"]
+        by_source = self.db.q(f"""SELECT CASE source WHEN '' THEN 'unknown' ELSE source END AS source, COUNT(*) AS orders,
+            ROUND(SUM(amount_paid), 2) AS revenue FROM orders WHERE status IN {self.LIVE} {window}
+            GROUP BY 1 ORDER BY revenue DESC""", (since, until))
         by_status = {r["status"]: r["n"] for r in self.db.q("SELECT status, COUNT(*) AS n FROM orders GROUP BY status")}
         return {
             "orders": row["orders"], "revenue": round(row["revenue"], 2),
             "profit": round(row["revenue"] - row["cogs"] - fees, 2),
-            "by_status": by_status,
+            "by_status": by_status, "by_source": by_source,
             "products": self.db.one("SELECT COUNT(*) AS n FROM products WHERE active = 1")["n"],
             "subscribers": self.db.one("SELECT COUNT(*) AS n FROM subscribers WHERE confirmed = 1 AND unsubscribed_at IS NULL")["n"],
         }
+
+    def report(self, force: bool = False) -> bool:
+        """Weekly email to the owner: last 7 days vs the week before, what's selling, where buyers came from,
+        what the bot posted, and this week's short-video ideas."""
+        now = dt.datetime.now(dt.timezone.utc)
+        week = now.strftime("%G-W%V")
+        to = self.cfg.notify.owner_email
+        if not force and (now.weekday() != self.cfg.marketing.report_weekday or now.hour < 13):
+            return False
+        if not to or not self.db.mark_email("report", week, to):
+            return False
+        t = time.time()
+        cur, prev = self.stats(t - 7 * 86400, t), self.stats(t - 14 * 86400, t - 7 * 86400)
+        top = self.best_sellers(3, since=t - 30 * 86400)
+        posts = self.db.q("SELECT channel, SUM(status = 'posted') AS ok, SUM(status = 'error') AS failed FROM social_posts "
+                          "WHERE posted_at >= ? GROUP BY channel", (t - 7 * 86400,))
+        new_subs = self.db.one("SELECT COUNT(*) AS n FROM subscribers WHERE created_at >= ? AND confirmed = 1", (t - 7 * 86400,))["n"]
+        ideas = self.copy.video_ideas(top) if top else []
+        self.mailer.send(to, *emails.owner_report(self.cfg, week, cur, prev, top, posts, new_subs, ideas))
+        self.db.log("report", f"Weekly report {week} sent")
+        return True

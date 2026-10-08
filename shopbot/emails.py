@@ -65,11 +65,11 @@ def cancelled(cfg, order: dict, refunded: bool):
     return subject, text, html
 
 
-def _product_cards(cfg, products: list[dict]) -> tuple[str, str]:
-    base = cfg.store.base_url
-    text = "\n".join(f"- {p['title']} (${p['price']:.2f}): {base}/p/{p['slug']}" for p in products)
+def _product_cards(cfg, products: list[dict], campaign: str = "email") -> tuple[str, str]:
+    base, tag = cfg.store.base_url, f"?utm_source=email&utm_medium=email&utm_campaign={campaign}"
+    text = "\n".join(f"- {p['title']} (${p['price']:.2f}): {base}/p/{p['slug']}{tag}" for p in products)
     cards = "".join(
-        f'<td width="50%" valign="top" style="padding:6px"><a href="{base}/p/{escape(p["slug"])}" style="color:#1c1c1a;text-decoration:none">'
+        f'<td width="50%" valign="top" style="padding:6px"><a href="{base}/p/{escape(p["slug"])}{tag}" style="color:#1c1c1a;text-decoration:none">'
         f'<img src="{escape(p["image"])}" width="100%" style="border-radius:8px" alt=""><br>{escape(p["title"])}<br><b>${p["price"]:.2f}</b></a></td>'
         + ("</tr><tr>" if i % 2 else "") for i, p in enumerate(products))
     return text, f'<table width="100%"><tr>{cards}</tr></table>'
@@ -80,7 +80,7 @@ def _unsub(url: str) -> tuple[str, str]:
 
 
 def followup(cfg, order: dict, products: list[dict], unsub_url: str):
-    t_cards, h_cards = _product_cards(cfg, products)
+    t_cards, h_cards = _product_cards(cfg, products, "followup")
     t_un, h_un = _unsub(unsub_url)
     subject = "How's your order?"
     text = (f"Hi {order['name'] or 'there'},\n\nYour order {order['public_id']} should have arrived. If anything isn't right, "
@@ -108,9 +108,78 @@ def confirm_subscription(cfg, confirm_url: str):
 
 
 def newsletter(cfg, products: list[dict], unsub_url: str):
-    t_cards, h_cards = _product_cards(cfg, products)
+    t_cards, h_cards = _product_cards(cfg, products, "newsletter")
     t_un, h_un = _unsub(unsub_url)
     subject = f"New this week at {cfg.store.name}"
     text = f"New arrivals, all with free tracked shipping:\n\n{t_cards}{t_un}\n{cfg.store.business_address}"
     html = _wrap(cfg, f"<h2 style='margin-top:0'>New this week</h2><p>All with free tracked shipping.</p>{h_cards}", h_un)
     return subject, text, html
+
+
+def _offer(cfg) -> tuple[str, str]:
+    m = cfg.marketing
+    if not m.welcome_code:
+        return "", ""
+    return (f"\nAs a thank-you, here's {m.welcome_percent}% off your first order: use code {m.welcome_code} at checkout.\n",
+            f'<p style="font-size:18px">Here\'s <b>{m.welcome_percent}% off</b> your first order. Use code '
+            f'<b style="letter-spacing:.05em">{escape(m.welcome_code)}</b> at checkout.</p>')
+
+
+def welcome(cfg, products: list[dict], unsub_url: str):
+    t_off, h_off = _offer(cfg)
+    t_cards, h_cards = _product_cards(cfg, products, "welcome1")
+    t_un, h_un = _unsub(unsub_url)
+    subject = f"Welcome to {cfg.store.name}" + (f": {cfg.marketing.welcome_percent}% off inside" if cfg.marketing.welcome_code else "")
+    text = (f"Thanks for joining {cfg.store.name}! You'll hear about new arrivals first.\n{t_off}\nA few favourites:\n"
+            f"{t_cards}\n\nEvery order ships free with tracking, with {cfg.store.return_days}-day returns.{t_un}\n{cfg.store.business_address}")
+    html = _wrap(cfg, f"<h2 style='margin-top:0'>Welcome!</h2><p>Thanks for joining. You'll hear about new arrivals first.</p>"
+                      f"{h_off}{h_cards}<p>Free tracked shipping on every order · {cfg.store.return_days}-day returns.</p>", h_un)
+    return subject, text, html
+
+
+def welcome_best(cfg, products: list[dict], unsub_url: str):
+    t_off, h_off = _offer(cfg)
+    t_cards, h_cards = _product_cards(cfg, products, "welcome2")
+    t_un, h_un = _unsub(unsub_url)
+    subject = "What other pet parents are buying"
+    text = f"Our most popular picks right now:\n\n{t_cards}\n{t_off}{t_un}\n{cfg.store.business_address}"
+    html = _wrap(cfg, f"<h2 style='margin-top:0'>Most popular right now</h2>{h_cards}{h_off}", h_un)
+    return subject, text, html
+
+
+def winback(cfg, order: dict, products: list[dict], unsub_url: str):
+    t_cards, h_cards = _product_cards(cfg, products, "winback")
+    t_un, h_un = _unsub(unsub_url)
+    subject = f"New at {cfg.store.name} since your last order"
+    text = (f"Hi {order['name'] or 'there'},\n\nIt's been a while! Here's what's new since your last order:\n\n{t_cards}"
+            f"{t_un}\n{cfg.store.business_address}")
+    html = _wrap(cfg, f"<h2 style='margin-top:0'>New since your last order</h2>{h_cards}", h_un)
+    return subject, text, html
+
+
+def _change(cur: float, prev: float) -> str:
+    if not prev:
+        return ""
+    pct = (cur - prev) / prev * 100
+    return f" ({'+' if pct >= 0 else ''}{pct:.0f}% vs last week)"
+
+
+def owner_report(cfg, week: str, cur: dict, prev: dict, top: list[dict], posts: list[dict], new_subs: int, ideas: list[dict]):
+    lines = [f"Week {week}", "",
+             f"Revenue: ${cur['revenue']:.2f}{_change(cur['revenue'], prev['revenue'])}",
+             f"Orders: {cur['orders']}{_change(cur['orders'], prev['orders'])}",
+             f"Est. profit: ${cur['profit']:.2f}", f"New subscribers: {new_subs}",
+             f"Orders needing you: {cur['by_status'].get('needs_review', 0)}", "", "Where buyers came from:"]
+    lines += [f"  {s['source']}: {s['orders']} orders, ${s['revenue'] or 0:.2f}" for s in cur["by_source"]] or ["  no orders yet"]
+    lines += ["", "Best sellers (30 days):"] + ([f"  {p['title']} (${p['price']:.2f})" for p in top] or ["  none yet"])
+    lines += ["", "Auto-posts this week:"] + ([f"  {p['channel']}: {p['ok']} posted, {p['failed']} failed" for p in posts]
+                                              or ["  none (connect Pinterest/Facebook/Instagram in the config)"])
+    if ideas:
+        lines += ["", "Videos to film this week (TikTok / Reels / Shorts):"]
+        for i, idea in enumerate(ideas, 1):
+            lines += [f"{i}. {idea['product']} [{idea['format']}]", f"   Hook: {idea['hook']}"]
+            lines += [f"   - {shot}" for shot in idea["shots"]] + [f"   Caption: {idea['caption']}"]
+    lines += ["", f"Dashboard: {cfg.store.base_url}/admin"]
+    text = "\n".join(lines)
+    html = _wrap(cfg, f'<pre style="white-space:pre-wrap;font:14px/1.5 ui-monospace,Menlo,monospace">{escape(text)}</pre>')
+    return f"[{cfg.store.name}] Weekly report {week}: ${cur['revenue']:.2f} revenue", text, html

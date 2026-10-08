@@ -81,6 +81,21 @@ def check(shop: Shop) -> int:
            "store contact details", "set store.business_address and store.contact_email (legally required in marketing email)")
     report(bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")) or not cfg.copywriting.enabled,
            "AI copywriting", "optional: set ANTHROPIC_API_KEY for better product titles and descriptions", optional=True)
+    so, tr, m = cfg.social, cfg.tracking, cfg.marketing
+    for name, ok in [("Pinterest auto-posting", bool(so.pinterest_board_id and (so.pinterest_access_token or so.pinterest_refresh_token))),
+                     ("Facebook auto-posting", bool(so.facebook_page_id and so.facebook_page_token)),
+                     ("Instagram auto-posting", bool(so.instagram_user_id and so.facebook_page_token))]:
+        report(ok, name, "optional: see 'Social accounts' in shopbot/README.md", optional=True)
+    report(bool(tr.ga4_id or tr.meta_pixel_id or tr.google_ads_id), "analytics / ad pixels",
+           "set [tracking] ids before spending on ads", optional=True)
+    if m.welcome_code and cfg.payments.stripe_secret_key:
+        try:
+            r = requests.get("https://api.stripe.com/v1/promotion_codes", params={"code": m.welcome_code, "active": "true"},
+                             auth=(cfg.payments.stripe_secret_key, ""), timeout=20)
+            report(r.ok and bool(r.json().get("data")), f"Stripe promotion code {m.welcome_code}",
+                   "create it in Stripe (Product catalog > Coupons) or the welcome emails promise a code that doesn't work")
+        except requests.RequestException as e:
+            report(False, "Stripe promotion code", str(e))
     print(f"\n{problems} item(s) to fix" if problems else "\nAll set.")
     return problems
 
@@ -88,6 +103,7 @@ def check(shop: Shop) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="shopbot", description="Automated dropshipping store")
     ap.add_argument("command", choices=["run", "serve", "worker", "research", "sync", "fulfill", "track", "newsletter",
+                                        "social", "guides", "report",
                                         "check", "demo"], help="run = website + automation; demo = try it with fake products")
     ap.add_argument("-c", "--config", default=os.environ.get("SHOPBOT_CONFIG", "config.shop.toml"))
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -116,8 +132,11 @@ def main(argv=None) -> int:
     if args.command in ("research", "sync", "fulfill", "track"):
         print(getattr(shop, args.command)())
         return 0
-    if args.command == "newsletter":
-        print(shop.newsletter(force=True))
+    if args.command in ("newsletter", "guides", "report"):
+        print(getattr(shop, args.command)(force=True))
+        return 0
+    if args.command == "social":
+        print(shop.social())
         return 0
     if args.command == "worker":
         scheduler.loop(shop)

@@ -74,12 +74,35 @@ Copy its signing secret into `STRIPE_WEBHOOK_SECRET`. Do one real purchase of a 
 ### 6. Go live
 Keep `sandbox = true` until a test order looks right in your CJ dashboard, then set `sandbox = false`.
 
-## Getting customers
-The bot keeps these fed automatically; each needs a one-time signup from you:
-1. **Google Merchant Center** (biggest free channel): add a product feed → *Scheduled fetch* → `https://your-domain.com/feeds/google.xml`, daily. Your products then appear free in Google Shopping. Merchant Center will ask you to verify the domain and check your shipping/returns pages; they're already on the site.
-2. **Google Search Console**: verify the domain and submit `https://your-domain.com/sitemap.xml`.
-3. **Meta (Facebook/Instagram) Commerce Manager** and **Pinterest catalogues**: add the same feed URL as a scheduled data source.
-4. **Paid ads** are optional and not automated: once Merchant Center approves the feed, a small Google Shopping campaign is the simplest next step. Set a daily budget you can afford to lose while you learn what sells.
+## Getting customers (automated marketing)
+
+| Channel | What the bot does | One-time setup by you |
+|---|---|---|
+| **Google Shopping (free listings)** | Keeps `/feeds/google.xml` current with prices and stock. | [Merchant Center](https://merchants.google.com): add a feed, *Scheduled fetch*, daily, `https://your-domain/feeds/google.xml`. Verify the domain. |
+| **Google search** | SEO product/collection pages with rich-result data, plus a weekly **buying guide** written by Claude (`/guides`). | [Search Console](https://search.google.com/search-console): verify the domain, submit `/sitemap.xml`. |
+| **Pinterest** | Pins products to your board, 5 a day spread through the day, best scorers first; re-pins older products after 21 days (with fresh wording when Claude is connected). | See *Social accounts* below. Also add the feed as a Pinterest catalogue. |
+| **Facebook Page + Instagram** | Posts one product a day to each with a channel-specific caption ("link in bio" on Instagram). | See *Social accounts* below. Add the feed to Meta Commerce Manager for shoppable posts and ads. |
+| **TikTok / Reels / Shorts** | Can't be automated honestly (needs real video). The Monday report gives you **3 video briefs**: hook, shot list and caption for your best sellers. | Film them with your phone and your pet. |
+| **Email** | Welcome email with your discount code on signup, best-sellers email 3 days later, abandoned-checkout reminder, weekly new arrivals, post-delivery follow-up, win-back after 60 days. Only to people who opted in. | Create the `WELCOME10` promotion code in Stripe (*Product catalog → Coupons*: 10% off, once, first-time order only). |
+| **Paid ads** | Not automated. Adds Google Analytics, Google Ads and Meta Pixel tags (`[tracking]`) with view and purchase events so ad platforms can optimise. | Create the ad accounts and campaigns yourself; the strategy doc has the plan. |
+
+**Knowing what works:** every visit is tagged with the channel it came from (UTM tags, or the referring site), and each order is credited to it. `/admin` shows *Sales by channel*; the **Monday report** to `notify.owner_email` compares the week with the one before, lists best sellers, auto-posts, and the video briefs.
+
+### Social accounts
+All optional; each channel switches on once its ids and tokens are set.
+
+**Pinterest**
+1. Convert your Pinterest account to a free business account and create a board (e.g. "Dog Grooming Tips & Tools").
+2. At [developers.pinterest.com](https://developers.pinterest.com) create an app, request **Standard access** (Trial access can only make pins visible to you), and generate a token with `boards:read`, `pins:read` and `pins:write` scopes.
+3. Put `PINTEREST_ACCESS_TOKEN`, `PINTEREST_REFRESH_TOKEN`, `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` in `.env` (with the refresh token the bot renews access by itself), and the board id in `[social] pinterest_board_id` (the number in the URL from `GET /v5/boards`, or ask me to fetch it).
+
+**Facebook Page and Instagram**
+1. Create a Facebook Page for the store, switch your Instagram to a **professional (business)** account, and link it to the Page.
+2. At [developers.facebook.com](https://developers.facebook.com) create a *Business* app. As the app's admin, in Graph API Explorer grant `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `instagram_basic` and `instagram_content_publish`, then exchange for a **long-lived Page token** (`/me/accounts` with a long-lived user token).
+3. Put it in `FACEBOOK_PAGE_TOKEN`, and set `[social] facebook_page_id` and `instagram_user_id` (`GET /{page-id}?fields=instagram_business_account`).
+4. Posting to pages you administer usually works without app review while the app is in development mode. If Meta asks for review or Business Verification, the bot reports the error in `/admin` and keeps going on the other channels.
+
+Instagram only accepts JPEG images. Most CJ product photos are JPEGs; if one isn't, that post fails and the bot moves on.
 
 ## Your part (it really is small, but not zero)
 - Answer customer emails (replies go to `contact_email`).
@@ -91,7 +114,8 @@ The bot keeps these fed automatically; each needs a one-time signup from you:
 shopbot run          # website + all automation (what the Docker image runs)
 shopbot serve        # website only
 shopbot worker       # automation only
-shopbot research | sync | fulfill | track | newsletter    # run one job now
+shopbot research | sync | fulfill | track | social        # run one job now
+shopbot newsletter | guides | report                       # send/publish now, ignoring the weekly schedule
 shopbot check        # verify setup
 shopbot demo         # try it with fake data
 ```
@@ -107,4 +131,5 @@ shopbot demo         # try it with fake data
 - CJ's API was integrated from its public documentation and tested against mocked responses, not a live CJ account. Run `shopbot check` and a sandbox order before going live, and tell me what breaks.
 - The Dockerfile hasn't been built yet (no Docker daemon where this was written); `shopbot run` itself was run and tested.
 - The built-in web server suits a small store; use gunicorn (above) when traffic grows.
-- No customer accounts, discount codes or reviews yet.
+- No customer accounts or product reviews yet. Discount codes work through Stripe promotion codes.
+- Pinterest and Meta integrations follow their public API docs and are tested against mocked responses; run `shopbot social` once after connecting each account and check the post appeared.

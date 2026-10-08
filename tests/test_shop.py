@@ -467,7 +467,7 @@ def test_demo_store_end_to_end(tmp_path):
 def test_scheduler_runs_each_job_once_per_interval(tmp_path):
     shop, _, _ = make_shop(tmp_path)
     first = scheduler.run_due(shop, now=1_000_000)
-    assert set(first) == {"fulfill", "track", "followups", "newsletter", "sync", "research"}
+    assert set(first) == {"fulfill", "track", "followups", "newsletter", "email_flows", "social", "report", "guides", "sync", "research"}
     assert scheduler.run_due(shop, now=1_000_010) == []
     assert scheduler.run_due(shop, now=1_000_000 + 301) == ["fulfill"]
 
@@ -574,3 +574,224 @@ def test_interrupted_placement_goes_to_review(tmp_path):
     shop.db.x("UPDATE orders SET status = 'ordering', ordered_at = ? WHERE id = ?", (time.time() - 3600, o["id"]))
     assert shop.fulfill() == 0 and not sup.placed
     assert shop.order(o["public_id"])["status"] == "needs_review"
+
+
+
+# --- automated marketing -----------------------------------------------------------------
+
+from shopbot import social as social_mod
+from shopbot.social import SocialPoster
+from shopbot.web import traffic_source, Request
+
+
+class FakeChannel:
+    def __init__(self, name, fail=False):
+        self.name, self.enabled, self.fail, self.posts = name, True, fail, []
+
+    def post(self, title, text, link, image, alt):
+        if self.fail:
+            raise social_mod.SocialError("boom")
+        self.posts.append((title, text, link, image))
+        return f"{self.name}-{len(self.posts)}"
+
+
+def test_social_posts_best_products_paced_with_utm_links(tmp_path):
+    shop, _, _ = make_shop(tmp_path)
+    shop.research()
+    pin, ig = FakeChannel("pinterest"), FakeChannel("instagram")
+    poster = SocialPoster(shop.cfg, shop.db, shop.copy, [pin, ig])
+    products = shop.products()
+    t = 1_000_000
+    assert poster.run(products, now=t) == 2
+    assert pin.posts[0][0] == products[0]["title"] and "utm_source=pinterest&utm_medium=social" in pin.posts[0][2]
+    assert "Link in bio" in ig.posts[0][1]
+    assert poster.run(products, now=t + 60) == 0                     # paced: not due yet
+    assert poster.run(products, now=t + 86400 / 5 + 1) == 1           # pinterest 5/day, instagram 1/day
+    assert pin.posts[1][0] != pin.posts[0][0]                         # next product, not a repeat
+    assert shop.db.one("SELECT social_copy FROM products WHERE id = ?", (products[0]["id"],))["social_copy"]
+
+
+def test_pinterest_repins_old_posts_once_catalogue_is_exhausted(tmp_path):
+    shop, _, _ = make_shop(tmp_path, research__new_per_run=2)
+    shop.research()
+    pin = FakeChannel("pinterest")
+    poster = SocialPoster(shop.cfg, shop.db, shop.copy, [pin])
+    products, t = shop.products(), 1_000_000
+    poster.run(products, now=t)
+    poster.run(products, now=t + 20000)
+    assert poster.run(products, now=t + 40000) == 0                   # everything posted, too soon to re-pin
+    assert poster.run(products, now=t + 22 * 86400) == 1              # re-pin the oldest after 21 days
+    assert pin.posts[-1][2] == pin.posts[0][2]
+
+
+def test_social_failure_is_recorded_and_not_retried_forever(tmp_path):
+    shop, _, _ = make_shop(tmp_path)
+    shop.research()
+    bad = FakeChannel("facebook", fail=True)
+    poster = SocialPoster(shop.cfg, shop.db, shop.copy, [bad])
+    products = shop.products()
+    poster.run(products, now=1_000_000)
+    poster.run(products, now=1_000_000 + 86401)
+    rows = shop.db.q("SELECT product_id, status FROM social_posts")
+    assert [r["status"] for r in rows] == ["error", "error"] and rows[0]["product_id"] != rows[1]["product_id"]
+
+
+def test_pinterest_refreshes_expired_token(tmp_path, monkeypatch):
+    shop, _, _ = make_shop(tmp_path, social__pinterest_board_id="B1", social__pinterest_access_token="old",
+                           social__pinterest_refresh_token="R", social__pinterest_client_id="id", social__pinterest_client_secret="sec")
+    calls = []
+
+    def fake_post(url, json=None, data=None, headers=None, auth=None, timeout=None):
+        calls.append((url, json, data, headers, auth))
+        if url.endswith("/oauth/token"):
+            return FakeResp({"access_token": "new", "refresh_token": "R2"})
+        if headers["Authorization"] == "Bearer old":
+            return FakeResp({"message": "expired"}, 401)
+        return FakeResp({"id": "PIN1"})
+    FakeResp.ok = property(lambda self: self.status_code < 400)
+    FakeResp.text = property(lambda self: str(self.data))
+    monkeypatch.setattr(social_mod.requests, "post", fake_post)
+    pin = social_mod.Pinterest(shop.cfg, shop.db)
+    assert pin.enabled and pin.post("T", "D", "https://x", "https://img", "alt") == "PIN1"
+    assert calls[1][2] == {"grant_type": "refresh_token", "refresh_token": "R"} and calls[1][4] == ("id", "sec")
+    assert calls[-1][1]["media_source"] == {"source_type": "image_url", "url": "https://img"} and calls[-1][1]["board_id"] == "B1"
+    assert shop.db.get_setting("pinterest_access_token") == "new" and shop.db.get_setting("pinterest_refresh_token") == "R2"
+
+
+def test_instagram_two_step_publish(tmp_path, monkeypatch):
+    shop, _, _ = make_shop(tmp_path, social__instagram_user_id="IG1", social__facebook_page_token="PT")
+    calls = []
+
+    def fake_post(url, data=None, timeout=None):
+        calls.append((url, data))
+        return FakeResp({"id": "C1"} if url.endswith("/media") else {"id": "M1"})
+    monkeypatch.setattr(social_mod.requests, "post", fake_post)
+    monkeypatch.setattr(social_mod.time, "sleep", lambda s: None)
+    assert social_mod.Instagram(shop.cfg).post("t", "caption", "l", "https://img.jpg", "a") == "M1"
+    assert calls[0][0].endswith("/v25.0/IG1/media") and calls[0][1]["image_url"] == "https://img.jpg"
+    assert calls[1][1] == {"creation_id": "C1", "access_token": "PT"}
+
+
+def req_with(path="/", referer="", qs=""):
+    env = {}
+    setup_testing_defaults(env)
+    env.update({"PATH_INFO": path, "QUERY_STRING": qs, "HTTP_REFERER": referer, "wsgi.input": io.BytesIO(b"")})
+    return Request(env)
+
+
+def test_traffic_source_classification():
+    assert traffic_source(req_with(qs="utm_source=Pinterest&utm_medium=social"), "shop.test") == "pinterest/social"
+    assert traffic_source(req_with(referer="https://www.google.com/search?q=x"), "shop.test") == "google/organic"
+    assert traffic_source(req_with(referer="https://lm.facebook.com/l.php"), "shop.test") == "facebook/social"
+    assert traffic_source(req_with(referer="https://t.co/abc"), "shop.test") == "twitter/social"
+    assert traffic_source(req_with(referer="https://dogblog.example/post"), "shop.test") == "dogblog.example/referral"
+    assert traffic_source(req_with(referer="https://shop.test/p/x"), "shop.test") == ""
+    assert traffic_source(req_with(qs="utm_source=%3Cscript%3E"), "shop.test") == "script/referral"
+
+
+def test_orders_are_credited_to_the_channel_that_brought_the_buyer(tmp_path):
+    shop, _, _ = make_shop(tmp_path)
+    shop.research()
+    app = App(shop)
+    r = call(app, "GET", "/?utm_source=pinterest&utm_medium=social")
+    src = next(h[1] for h in r["headers"] if h[1].startswith("src=")).split(";")[0].split("=", 1)[1]
+    assert src == "pinterest/social"
+    r2 = call(app, "GET", "/cart", cookies={"src": src})
+    assert not any(h[1].startswith("src=") for h in r2["headers"])   # direct revisit keeps the channel
+    v = shop.db.one("SELECT id FROM variants WHERE active = 1")
+    call(app, "POST", "/checkout", cookies={"cart": cart_cookie({str(v["id"]): 1}), "src": src})
+    order = shop.db.one("SELECT * FROM orders ORDER BY id DESC")
+    body, hdr = signed(paid_event(order["public_id"], amount=2000))
+    call(app, "POST", "/webhooks/stripe", raw=body, headers=hdr)
+    assert shop.stats()["by_source"] == [{"source": "pinterest/social", "orders": 1, "revenue": 20.0}]
+
+
+def test_welcome_series_with_code_and_promo_codes_at_checkout(tmp_path):
+    shop, _, stripe = make_shop(tmp_path, marketing__welcome_code="WELCOME10")
+    shop.research()
+    app = App(shop)
+    assert "10% off" in call(app, "GET", "/")["body"]
+    call(app, "POST", "/subscribe", {"email": "fan@example.com"})
+    token = shop.db.one("SELECT token FROM subscribers")["token"]
+    call(app, "GET", f"/subscribe/confirm?token={token}")
+    call(app, "GET", f"/subscribe/confirm?token={token}")           # clicking twice sends one welcome
+    welcomes = [m for m in shop.mailer.out if m[1].startswith("Welcome")]
+    assert len(welcomes) == 1 and "WELCOME10" in welcomes[0][2] and "utm_campaign=welcome1" in welcomes[0][2]
+    assert shop.email_flows() == 0                                     # second email waits 3 days
+    shop.db.x("UPDATE subscribers SET confirmed_at = confirmed_at - 4 * 86400")
+    assert shop.email_flows() == 1 and shop.email_flows() == 0
+    from shopbot.payments import flatten
+    data = dict(flatten({"allow_promotion_codes": True}))
+    assert data == {"allow_promotion_codes": "true"}
+
+
+def test_winback_only_for_opted_in_customers_who_have_not_returned(tmp_path):
+    shop, _, _ = make_shop(tmp_path)
+    shop.research()
+    app = App(shop)
+    o = buy(shop, app)
+    shop.db.x("UPDATE orders SET status = 'delivered', delivered_at = ?", (time.time() - 61 * 86400,))
+    assert shop.email_flows() == 1 and shop.email_flows() == 0
+    assert shop.mailer.out[-1][1].startswith("New at")
+    shop2, _, _ = make_shop(tmp_path / "b")
+    shop2.research()
+    o2 = buy(shop2, App(shop2), consent=False)
+    shop2.db.x("UPDATE orders SET status = 'delivered', delivered_at = ?", (time.time() - 61 * 86400,))
+    assert shop2.email_flows() == 0 and o and o2
+
+
+class FakeCopy(Copywriter):
+    def __init__(self):
+        super().__init__(enabled=False)
+        self.client = object()   # pretend Claude is configured
+
+    def _json(self, *a, **k):
+        return None              # listings and captions use the plain fallback
+
+    def guide(self, keyword, products):
+        return {"title": f"How to choose a {keyword}", "meta_description": "d",
+                "sections": [{"heading": f"H{i}", "paragraphs": ["<b>p</b>"], "product_ids": [products[0]["id"]]} for i in range(4)]}
+
+    def video_ideas(self, products):
+        return [{"product": p["title"], "format": "demo", "hook": "Watch this", "shots": ["a", "b"], "caption": "c"} for p in products]
+
+
+def test_weekly_guides_publish_and_render(tmp_path):
+    shop, _, _ = make_shop(tmp_path, research__new_per_run=12)
+    assert shop.guides(force=True) == 0          # no Claude: no thin template content
+    shop.copy = FakeCopy()
+    shop.research()
+    assert shop.guides() == 1 and shop.guides() == 0     # weekly
+    g = shop.db.one("SELECT * FROM guides")
+    app = App(shop)
+    page = call(app, "GET", f"/guides/{g['slug']}")["body"]
+    assert "How to choose" in page and "&lt;b&gt;p&lt;/b&gt;" in page and 'class="card"' in page
+    assert '<a href="/guides">Guides</a>' in call(app, "GET", "/")["body"]
+    assert f"/guides/{g['slug']}" in shop.sitemap()
+    assert shop.guides(force=True) == 1
+    assert len({r["keyword"] for r in shop.db.q("SELECT keyword FROM guides")}) == 2   # rotates collections
+
+
+def test_weekly_owner_report(tmp_path):
+    shop, _, _ = make_shop(tmp_path, notify__owner_email="owner@example.com")
+    shop.copy = FakeCopy()
+    shop.research()
+    buy(shop, App(shop))
+    assert shop.report(force=True) and not shop.report(force=True)    # once per week
+    to, subject, text = shop.mailer.out[-1]
+    assert to == "owner@example.com" and "Weekly report" in subject
+    assert "Revenue: $" in text and "Videos to film" in text and "Hook: Watch this" in text
+
+
+def test_pixels_fire_view_and_purchase_events(tmp_path):
+    shop, _, _ = make_shop(tmp_path, tracking__ga4_id="G-TEST1", tracking__meta_pixel_id="123",
+                           tracking__google_ads_id="AW-9", tracking__google_ads_purchase_label="lab'el")
+    shop.research()
+    app = App(shop)
+    p = shop.db.one("SELECT slug FROM products")
+    page = call(app, "GET", f"/p/{p['slug']}")["body"]
+    assert "gtag/js?id=G-TEST1" in page and "fbq('init','123')" in page and '"view_item"' in page
+    o = buy(shop, app)
+    done = call(app, "GET", f"/checkout/success?order={o['public_id']}")["body"]
+    assert '"transaction_id": "' + o["public_id"] in done and '"Purchase"' in done and "AW-9/label" in done
+    assert "gtag" not in call(App(make_shop(tmp_path / "plain")[0]), "GET", "/")["body"]

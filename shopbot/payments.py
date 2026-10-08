@@ -84,6 +84,8 @@ class Stripe:
                 "type": "fixed_amount", "display_name": f"Free tracked shipping ({s.shipping_days})",
                 "fixed_amount": {"amount": 0, "currency": s.currency}}}],
         }
+        if cfg.marketing.welcome_code:
+            data["allow_promotion_codes"] = True   # lets subscribers enter the welcome code
         if cfg.payments.automatic_tax:
             data["automatic_tax"] = {"enabled": True}
         if cfg.payments.recover_abandoned:

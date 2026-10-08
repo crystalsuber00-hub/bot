@@ -25,7 +25,9 @@ class Research:
     keywords: list = field(default_factory=lambda: ["pet grooming", "kitchen gadget", "phone stand"])
     blocked_words: list = field(default_factory=lambda: [
         "nike", "adidas", "apple", "iphone case original", "disney", "marvel", "pokemon", "gucci",
-        "louis vuitton", "chanel", "rolex", "lego", "replica", "medical", "cbd", "vape", "knife", "weapon"])
+        "louis vuitton", "chanel", "rolex", "lego", "replica", "medical", "cbd", "vape", "knife", "weapon",
+        # pet products that are regulated (EPA pesticides, FDA drugs) or ship badly as liquids
+        "flea", "tick", "pesticide", "insecticide", "dewormer", "medicine", "supplement", "shampoo", "spray"])
     min_cost: float = 3.0          # supplier price + shipping, USD
     max_cost: float = 40.0
     max_shipping_days: int = 20    # skip products whose cheapest shipping takes longer
@@ -89,6 +91,40 @@ class Marketing:
     newsletter_weekday: int = 3    # 0=Mon
     newsletter_hour_utc: int = 15
     followup_days: int = 5         # days after delivery to send the thank-you / recommendations email
+    welcome_code: str = ""         # Stripe promotion code offered to new subscribers, e.g. WELCOME10 (create it in Stripe)
+    welcome_percent: int = 10      # only used in the wording of the signup box and emails
+    welcome_second_email_days: int = 3
+    winback_days: int = 60         # days after delivery to invite opted-in customers back (0 = off)
+    guides: bool = True            # weekly SEO buying guide per collection (needs ANTHROPIC_API_KEY)
+    report_weekday: int = 0        # weekly owner report with numbers + video ideas (0=Mon)
+
+
+@dataclass
+class Social:
+    """Auto-posting new and best-selling products. Each channel is off until its credentials are set."""
+    pinterest_board_id: str = ""
+    pinterest_access_token: str = ""      # env PINTEREST_ACCESS_TOKEN
+    pinterest_refresh_token: str = ""     # env PINTEREST_REFRESH_TOKEN (lets the bot renew the access token itself)
+    pinterest_client_id: str = ""         # env PINTEREST_APP_ID
+    pinterest_client_secret: str = ""     # env PINTEREST_APP_SECRET
+    pinterest_per_day: int = 5
+    pinterest_repin_after_days: int = 21  # Pinterest rewards fresh pins: re-pin good products with new copy
+    facebook_page_id: str = ""
+    facebook_page_token: str = ""         # env FACEBOOK_PAGE_TOKEN (long-lived Page token)
+    facebook_per_day: int = 1
+    instagram_user_id: str = ""           # Instagram professional account linked to the Page; uses the Page token
+    instagram_per_day: int = 1
+    graph_version: str = "v25.0"
+    hashtags: list = field(default_factory=lambda: ["dogsofinstagram", "doggrooming", "petcare", "catsofinstagram"])
+
+
+@dataclass
+class Tracking:
+    """Analytics and ad pixels. Needed before running ads so the ad platforms can learn who buys."""
+    ga4_id: str = ""                      # G-XXXXXXX
+    meta_pixel_id: str = ""
+    google_ads_id: str = ""               # AW-XXXXXXX
+    google_ads_purchase_label: str = ""
 
 
 @dataclass
@@ -111,6 +147,7 @@ class Schedule:
     fulfill_minutes: float = 5
     tracking_minutes: float = 60
     followup_minutes: float = 60
+    social_minutes: float = 60
 
 
 @dataclass
@@ -134,6 +171,8 @@ class Config:
     email: Email = field(default_factory=Email)
     marketing: Marketing = field(default_factory=Marketing)
     copywriting: Copywriting = field(default_factory=Copywriting)
+    social: Social = field(default_factory=Social)
+    tracking: Tracking = field(default_factory=Tracking)
     notify: Notify = field(default_factory=Notify)
     schedule: Schedule = field(default_factory=Schedule)
     admin: Admin = field(default_factory=Admin)
@@ -151,6 +190,11 @@ ENV = {
     "ADMIN_PASSWORD": ("admin", "password"),
     "ADMIN_SECRET": ("admin", "secret"),
     "BASE_URL": ("store", "base_url"),
+    "PINTEREST_ACCESS_TOKEN": ("social", "pinterest_access_token"),
+    "PINTEREST_REFRESH_TOKEN": ("social", "pinterest_refresh_token"),
+    "PINTEREST_APP_ID": ("social", "pinterest_client_id"),
+    "PINTEREST_APP_SECRET": ("social", "pinterest_client_secret"),
+    "FACEBOOK_PAGE_TOKEN": ("social", "facebook_page_token"),
 }
 
 

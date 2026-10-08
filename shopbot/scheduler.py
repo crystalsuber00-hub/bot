@@ -16,6 +16,10 @@ def jobs(shop: Shop) -> list[tuple[str, float, callable]]:
         ("track", s.tracking_minutes * 60, shop.track),
         ("followups", s.followup_minutes * 60, shop.followups),
         ("newsletter", 3600, shop.newsletter),        # checks its own weekday/hour and sends once a week
+        ("email_flows", 3600, shop.email_flows),
+        ("social", s.social_minutes * 60, shop.social),
+        ("report", 3600, shop.report),                # weekly; checks its own weekday
+        ("guides", 6 * 3600, shop.guides),            # weekly; needs Claude
         ("sync", s.sync_hours * 3600, shop.sync),
         ("research", s.research_hours * 3600, shop.research),
     ]
