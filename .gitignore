@@ -6,3 +6,9 @@ state.json
 .env
 history/
 logs/
+config.shop.toml
+*.db
+*.db-wal
+*.db-shm
+*.cj_token.json
+outbox/

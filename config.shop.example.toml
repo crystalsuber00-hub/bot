@@ -1,0 +1,66 @@
+# Copy to config.shop.toml. Secrets (API keys, passwords) go in environment variables / .env, not here.
+db_path = "data/shop.db"
+port = 8000
+
+[store]
+name = "Pawsome Supply"
+tagline = "Clever gear for happy pets"
+base_url = "https://www.your-domain.com"        # or env BASE_URL
+contact_email = "support@your-domain.com"
+business_address = "Your legal business address"  # required in marketing emails
+ship_to_countries = ["US"]
+shipping_days = "7-15 business days"
+return_days = 30
+demo = false
+
+[research]
+# What the store sells. The bot searches these on the supplier daily and lists the best-scoring products.
+keywords = ["dog grooming brush", "cat toy interactive", "pet water fountain", "dog harness no pull"]
+min_cost = 3.0              # supplier price + shipping, USD
+max_cost = 35.0
+max_shipping_days = 20
+new_per_run = 5
+max_products = 60
+# blocked_words = [...]     # defaults block common brands, replicas, medical, weapons; extend rather than shrink
+
+[pricing]
+markup_tiers = [[10, 3.0], [20, 2.5], [30, 2.1], [1000000000, 1.8]]
+min_profit = 6.0
+min_price = 14.99
+
+[fulfillment]
+auto_order = true           # false: you place each order yourself from /admin
+auto_pay = true             # pay CJ from your CJ wallet balance (keep it topped up)
+auto_refund_cancelled = true
+max_auto_order_cost = 150.0
+sandbox = true              # CJ sandbox: no real orders. Set false when you go live.
+
+[supplier]
+name = "cj"                 # "cj" or "demo"
+
+[payments]
+automatic_tax = false       # turn on after enabling Stripe Tax in your dashboard
+recover_abandoned = true
+
+[email]
+smtp_port = 587
+from_address = "orders@your-domain.com"
+
+[marketing]
+newsletter = true
+newsletter_weekday = 3      # Thursday
+newsletter_hour_utc = 15
+followup_days = 5
+
+[copywriting]
+enabled = true              # uses Claude if ANTHROPIC_API_KEY is set
+model = "claude-opus-5-5"
+
+[notify]
+owner_email = "you@your-domain.com"   # urgent problems are emailed here; NTFY_TOPIC for phone push
+
+[schedule]
+research_hours = 24
+sync_hours = 6
+fulfill_minutes = 5
+tracking_minutes = 60

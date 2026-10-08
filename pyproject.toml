@@ -1,19 +1,22 @@
 [project]
 name = "spxbot"
 version = "0.1.0"
-description = "Signal-based SPX credit spread bot (15-20 delta, sells the side away from price, one trade/day)"
+description = "SPX credit spread signal bot, plus shopbot: an automated dropshipping store"
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 ibkr = ["ib_async>=1.0"]
+shop-ai = ["anthropic>=1.12"]
+shop-prod = ["gunicorn>=22"]
 
 [project.scripts]
 spxbot = "spxbot.__main__:main"
+shopbot = "shopbot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot"]
+packages = ["spxbot", "shopbot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
