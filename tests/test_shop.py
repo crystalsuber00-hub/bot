@@ -773,7 +773,7 @@ def test_weekly_guides_publish_and_render(tmp_path):
 
 
 def test_weekly_owner_report(tmp_path):
-    shop, _, _ = make_shop(tmp_path, notify__owner_email="owner@example.com")
+    shop, _, _ = make_shop(tmp_path, notify__owner_email="owner@example.com", marketing__video_mode="film")
     shop.copy = FakeCopy()
     shop.research()
     buy(shop, App(shop))
@@ -795,3 +795,48 @@ def test_pixels_fire_view_and_purchase_events(tmp_path):
     done = call(app, "GET", f"/checkout/success?order={o['public_id']}")["body"]
     assert '"transaction_id": "' + o["public_id"] in done and '"Purchase"' in done and "AW-9/label" in done
     assert "gtag" not in call(App(make_shop(tmp_path / "plain")[0]), "GET", "/")["body"]
+
+
+
+def test_fallback_ai_video_kits_are_faceless_and_anchor_on_the_product_photo(tmp_path):
+    shop, _, _ = make_shop(tmp_path)
+    shop.research()
+    kits = shop.video_kits()
+    assert len(kits) == shop.cfg.marketing.videos_per_week
+    for k in kits:
+        assert len(k["clips"]) == 3 and k["images"] and k["link"].startswith("https://shop.test/p/")
+        for c in k["clips"]:
+            assert "reference photo" in c["prompt"] and "no human faces" in c["prompt"] and len(c["overlay"]) <= 60
+        assert "link in our bio" in k["voiceover"].lower()
+    assert shop.video_kits() == kits                               # cached for the week
+
+
+class KitCopy(FakeCopy):
+    def video_kits(self, products):
+        return Copywriter.video_kits(self, products)
+
+    def _json(self, system, prompt, schema, **k):
+        if "kits" not in schema["properties"]:
+            return None
+        ids = [int(line.split()[1]) for line in prompt.splitlines() if line.startswith("product_id ")]
+        clip = {"prompt": "<b>The brush</b> from the reference photo on a rug", "overlay": "Shedding season"}
+        return {"kits": [{"product_id": 999999, "format": "x", "hook": "h", "clips": [clip, clip], "voiceover": "v", "caption": "c"}]
+                + [{"product_id": i, "format": "hero reveal", "hook": "Meet it", "clips": [clip, clip, clip],
+                    "voiceover": "Shedding season is here.", "caption": "#doggrooming"} for i in ids]}
+
+
+def test_claude_video_kits_report_and_admin_page(tmp_path):
+    shop, _, _ = make_shop(tmp_path, notify__owner_email="owner@example.com")
+    shop.copy = KitCopy()
+    shop.research()
+    kits = shop.video_kits(force=True)
+    assert len(kits) == 3 and all(k["product_id"] != 999999 for k in kits)   # unknown products dropped
+    assert shop.report(force=True)
+    text = shop.mailer.out[-1][2]
+    assert "AI videos to make this week" in text and "Clip 1 prompt:" in text and "AI-generated label" in text
+    app = App(shop)
+    assert call(app, "GET", "/admin/videos")["code"] == 401
+    page = call(app, "GET", "/admin/videos", headers=auth("admin", "pw"))["body"]
+    assert "Clip 3 prompt" in page and "&lt;b&gt;The brush&lt;/b&gt;" in page and "start frame" in page
+    r = call(app, "POST", "/admin/action", {"action": "videos", "token": app._token()}, headers=auth("admin", "pw"))
+    assert r["code"] == 303 and dict(r["headers"])["Location"] == "/admin/videos"

@@ -253,6 +253,7 @@ def admin_page(cfg, stats: dict, orders: list[dict], products: list[dict], event
 <div>Live products<b>{k['products']}</b></div><div>Subscribers<b>{k['subscribers']}</b></div></div>
 <p class="muted">{status}</p><p>{buttons}</p>
 <h2>Sales by channel</h2><div class="tablewrap"><table><tr><th>Channel</th><th>Orders</th><th>Revenue</th></tr>{source_rows}</table></div>
+<p><a class="btn ghost" href="/admin/videos" style="padding:6px 12px;font-size:14px">This week's AI video prompts</a></p>
 <p class="muted">Google Merchant Center feed: <code>{esc(cfg.store.base_url)}/feeds/google.xml</code> · Sitemap: <code>{esc(cfg.store.base_url)}/sitemap.xml</code></p>
 <h2>Orders</h2><div class="tablewrap"><table><tr><th>Order</th><th>Status</th><th>Customer</th><th>Paid</th><th>Supplier / tracking</th><th></th></tr>{order_rows}</table></div>
 <h2>Products</h2><div class="tablewrap"><table><tr><th>Product</th><th>From</th><th>Score</th><th>State</th><th></th></tr>{product_rows}</table></div>
@@ -325,3 +326,39 @@ def guide_page(g: dict, sections: list[dict], products: dict) -> str:
         if picks:
             body += '<div class="grid" style="padding:8px 0 16px">' + "".join(product_card(p) for p in picks) + "</div>"
     return f'<article class="prose"><h1>{esc(g["title"])}</h1>{body}</article>'
+
+
+# --- faceless AI video kits ------------------------------------------------------------
+
+def _copyable(text: str, label: str) -> str:
+    return (f'<div class="box" style="margin:8px 0;padding:12px 14px"><div style="display:flex;justify-content:space-between;gap:8px;'
+            f'align-items:center"><b style="font-size:14px">{esc(label)}</b><button class="btn ghost" type="button" '
+            f'style="padding:4px 10px;font-size:13px" onclick="navigator.clipboard.writeText(this.closest(\'.box\').querySelector(\'p\').innerText);'
+            f'this.textContent=\'Copied\'">Copy</button></div><p style="margin:8px 0 0;white-space:pre-wrap">{esc(text)}</p></div>')
+
+
+def video_kits_page(kits: list[dict], token: str) -> str:
+    how = """<ol>
+<li>Open <a href="https://klingai.com" target="_blank" rel="noopener">Kling</a> (cheapest realistic option; Higgsfield or Veo work too) and choose <b>Image to Video</b>, Kling 3.0, 9:16, 5 seconds, sound off. 720p is enough for phones and costs less.</li>
+<li>Download the product photo below and upload it as the <b>start frame</b>, so the video shows the real product.</li>
+<li>Paste each clip prompt, generate, and keep the best take. Regenerate if the product changes shape or colour.</li>
+<li>In CapCut (free) join the clips, add the text overlays, and make the voiceover with its built-in text-to-speech.</li>
+<li>Post to TikTok, Reels and Shorts with the caption, and switch on each app's <b>AI-generated</b> label.</li>
+</ol>"""
+    body = ""
+    for i, k in enumerate(kits, 1):
+        imgs = "".join(f'<a href="{esc(u)}" target="_blank" rel="noopener"><img src="{esc(u)}" alt="" style="width:96px;height:96px;'
+                       f'object-fit:cover;border-radius:8px"></a>' for u in k.get("images", []))
+        clips = "".join(_copyable(c["prompt"], f"Clip {j} prompt") + f'<p class="muted" style="margin:0 0 12px">Text overlay: '
+                        f'<b>{esc(c["overlay"])}</b></p>' for j, c in enumerate(k["clips"], 1))
+        body += (f'<h2>{i}. {esc(k["product"])} <span class="pill">{esc(k["format"])}</span></h2>'
+                 f'<p>Product photo (start frame): <span style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">{imgs}</span></p>'
+                 f'<p>Hook (first 2 seconds): <b>{esc(k["hook"])}</b> · <a href="{esc(k.get("link", ""))}">product page</a></p>'
+                 + clips + _copyable(k["voiceover"], "Voiceover script") + _copyable(k["caption"], "Caption"))
+    regen = (f'<form method="post" action="/admin/action"><input type="hidden" name="token" value="{token}">'
+             f'<input type="hidden" name="action" value="videos"><button class="btn ghost">Write new prompts</button></form>')
+    empty = "<p class='muted'>No products yet. Run product research first.</p>"
+    return (f'<div style="padding:24px 0 56px;max-width:860px"><h1>This week\'s AI video kits</h1>'
+            f'<p>Faceless short videos for TikTok, Reels and Shorts. <a href="/admin">Back to dashboard</a></p>'
+            f'<div class="box">{how}<p class="muted" style="margin:0">Keep it honest: show the product doing only what it really does, '
+            f'never present AI people as real customers, and label the video as AI-generated.</p></div>{body or empty}{regen}</div>')

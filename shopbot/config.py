@@ -97,6 +97,8 @@ class Marketing:
     winback_days: int = 60         # days after delivery to invite opted-in customers back (0 = off)
     guides: bool = True            # weekly SEO buying guide per collection (needs ANTHROPIC_API_KEY)
     report_weekday: int = 0        # weekly owner report with numbers + video ideas (0=Mon)
+    video_mode: str = "ai"         # "ai": faceless AI video kits with prompts to paste into Higgsfield etc.; "film": shot lists to film yourself
+    videos_per_week: int = 3
 
 
 @dataclass

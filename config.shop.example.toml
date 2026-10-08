@@ -57,7 +57,9 @@ newsletter_hour_utc = 15
 followup_days = 5
 winback_days = 60
 guides = true               # weekly buying guide (needs ANTHROPIC_API_KEY)
-report_weekday = 0          # Monday report to notify.owner_email: numbers + 3 videos to film
+report_weekday = 0          # Monday report to notify.owner_email: numbers + this week's AI video prompts
+video_mode = "ai"           # faceless: prompts for Kling/Higgsfield image-to-video ("film" = shot lists to film yourself)
+videos_per_week = 3
 
 [social]
 # Each channel switches on once its ids/tokens are set (tokens go in .env). See shopbot/README.md "Social accounts".

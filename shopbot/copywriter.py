@@ -136,6 +136,19 @@ class Copywriter:
             return fallback_videos(products)
         return data["ideas"][:6]
 
+    def video_kits(self, products: list[dict]) -> list[dict]:
+        """Faceless AI video kits: image-to-video prompts (to paste into Higgsfield, Kling, Veo...), text overlays,
+        a voiceover script and a caption, one kit per product."""
+        brief = "\n\n".join(f"product_id {p['id']}\n" + _product_brief(p, json.loads(p.get("bullets") or "[]")) for p in products)
+        data = self._json(VIDEO_AI_SYSTEM, brief, VIDEO_AI_SCHEMA, max_tokens=12000, effort="medium")
+        by_id = {p["id"]: p for p in products}
+        kits = [k for k in (data or {}).get("kits", []) if k.get("product_id") in by_id and len(k.get("clips") or []) >= 2]
+        if not kits:
+            return fallback_video_kits(products)
+        for k in kits:
+            k["product"] = by_id[k["product_id"]]["title"]
+        return kits[:6]
+
 
 def _product_brief(p: dict, bullets: list[str]) -> str:
     return (f"Product: {p['title']}\nPrice: ${p['price']:.2f}\nKeyword: {p.get('keyword', '')}\n"
@@ -202,6 +215,74 @@ VIDEO_SCHEMA = {
     "required": ["ideas"],
     "additionalProperties": False,
 }
+
+
+VIDEO_AI_SYSTEM = (
+    "You write prompts for image-to-video AI generators (Kling, Veo, Seedance or Sora, used through Higgsfield) for a "
+    "faceless pet-grooming shop. The owner uploads the real product photo as the start frame, so every clip prompt "
+    "begins with the product from the reference image and says it keeps its exact shape, colours and details. Each "
+    "clip prompt is one paragraph under 80 words: subject, action, setting, camera movement, lighting, style, about "
+    "5 seconds, vertical 9:16. Faceless: never show a human face; hands and forearms are fine. Choose a dog or cat "
+    "that fits the product. " + HONEST + " Show the product used as intended with modest, realistic results: no "
+    "dramatic before/after, no performance the real product could not deliver, no fake customers, testimonials or "
+    "reviews, no text, logos or captions inside the generated video (overlays are added later in an editor). "
+    "Give 3 clips per product, an on-screen text overlay per clip (max 8 words), a voiceover script read by an AI "
+    "voice (max 60 words, speaks about the product, never claims to be a customer), and a caption with 4-6 hashtags.")
+VIDEO_AI_SCHEMA = {
+    "type": "object",
+    "properties": {"kits": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "product_id": {"type": "integer"},
+            "format": {"type": "string", "description": "e.g. hero reveal, hands-only demo, pet reaction, cozy routine"},
+            "hook": {"type": "string", "description": "On-screen text for the first 2 seconds"},
+            "clips": {"type": "array", "items": {
+                "type": "object",
+                "properties": {"prompt": {"type": "string"}, "overlay": {"type": "string"}},
+                "required": ["prompt", "overlay"], "additionalProperties": False}},
+            "voiceover": {"type": "string"},
+            "caption": {"type": "string"},
+        },
+        "required": ["product_id", "format", "hook", "clips", "voiceover", "caption"],
+        "additionalProperties": False,
+    }}},
+    "required": ["kits"],
+    "additionalProperties": False,
+}
+
+KEEP = ("The product keeps exactly the same shape, colours and details as the reference photo. "
+        "Vertical 9:16, about 5 seconds, no text, no logos, no human faces.")
+
+
+def _pet(p: dict) -> tuple[str, str]:
+    words = f"{p['title']} {p.get('keyword', '')}".lower()
+    return ("a fluffy grey tabby cat", "cat") if "cat" in words else ("a golden retriever with a thick coat", "dog")
+
+
+def fallback_video_kits(products: list[dict]) -> list[dict]:
+    """Template kits used when Claude isn't configured: three faceless formats rotated across products."""
+    kits = []
+    for i, p in enumerate(products):
+        name, (pet, kind) = p["title"], _pet(p)
+        hero = (f"The {name} from the reference photo resting on a light oak table in a bright, cozy living room. "
+                f"Slow cinematic push-in, soft morning window light, shallow depth of field. {KEEP}")
+        use = (f"Close-up from above: a person's hands, no face visible, gently using the {name} from the reference photo "
+               f"on {pet} lying calmly on a soft rug. Slow, careful movements, natural daylight, handheld phone-video look. {KEEP}")
+        calm = (f"{pet[0].upper() + pet[1:]} stretches out, relaxed and content, next to the {name} from the reference photo "
+                f"on a sunny windowsill. Gentle slow-motion, warm afternoon light, cozy home feel. {KEEP}")
+        formats = [("hero reveal", f"Shedding season? Meet the {kind}-owner fix", [hero, use, calm]),
+                   ("hands-only demo", "Grooming routine, no stress", [use, hero, calm]),
+                   ("calm pet", f"Your {kind} will thank you", [calm, use, hero])]
+        fmt, hook, clips = formats[i % 3]
+        overlays = [hook[:60], "Gentle on fur, easy for you", "Free tracked shipping"]
+        kits.append({
+            "product_id": p["id"], "product": name, "format": fmt, "hook": hook,
+            "clips": [{"prompt": c, "overlay": o} for c, o in zip(clips, overlays)],
+            "voiceover": (f"Shedding season is here. The {name} makes at-home grooming simple and calm, for you and your {kind}. "
+                          f"Free tracked shipping. Tap the link in our bio to shop."),
+            "caption": f"At-home grooming made easy with the {name} 🐾 Link in bio. #petgrooming #{kind}grooming #petcare #{kind}sofinstagram",
+        })
+    return kits
 
 
 def fallback_social(p: dict, bullets: list[str], hashtags: list[str]) -> dict:

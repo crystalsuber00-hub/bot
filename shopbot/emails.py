@@ -174,7 +174,17 @@ def owner_report(cfg, week: str, cur: dict, prev: dict, top: list[dict], posts: 
     lines += ["", "Best sellers (30 days):"] + ([f"  {p['title']} (${p['price']:.2f})" for p in top] or ["  none yet"])
     lines += ["", "Auto-posts this week:"] + ([f"  {p['channel']}: {p['ok']} posted, {p['failed']} failed" for p in posts]
                                               or ["  none (connect Pinterest/Facebook/Instagram in the config)"])
-    if ideas:
+    if ideas and "clips" in ideas[0]:
+        lines += ["", "AI videos to make this week (faceless; paste into Kling's Image to Video, or Higgsfield/Veo):",
+                  "Upload the product photo as the start frame for each clip. Turn on the AI-generated label when posting.",
+                  f"Copy-friendly version: {cfg.store.base_url}/admin/videos"]
+        for i, k in enumerate(ideas, 1):
+            lines += ["", f"{i}. {k['product']} [{k['format']}]", f"   Product photo: {(k.get('images') or [''])[0]}",
+                      f"   Hook: {k['hook']}"]
+            for j, c in enumerate(k["clips"], 1):
+                lines += [f"   Clip {j} prompt: {c['prompt']}", f"   Clip {j} text overlay: {c['overlay']}"]
+            lines += [f"   Voiceover: {k['voiceover']}", f"   Caption: {k['caption']}"]
+    elif ideas:
         lines += ["", "Videos to film this week (TikTok / Reels / Shorts):"]
         for i, idea in enumerate(ideas, 1):
             lines += [f"{i}. {idea['product']} [{idea['format']}]", f"   Hook: {idea['hook']}"]

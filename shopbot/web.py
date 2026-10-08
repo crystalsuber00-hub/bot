@@ -119,7 +119,7 @@ class App:
             ("GET", r"/pages/([a-z]+)", self.policy), ("GET", r"/sitemap.xml", self.sitemap), ("GET", r"/robots.txt", self.robots),
             ("GET", r"/feeds/google.xml", self.feed), ("POST", r"/webhooks/stripe", self.stripe_webhook),
             ("GET", r"/guides", self.guide_list), ("GET", r"/guides/([a-z0-9-]+)", self.guide),
-            ("GET", r"/admin", self.admin), ("POST", r"/admin/action", self.admin_action), ("GET", r"/healthz", self.health),
+            ("GET", r"/admin", self.admin), ("GET", r"/admin/videos", self.admin_videos), ("POST", r"/admin/action", self.admin_action), ("GET", r"/healthz", self.health),
         ]
 
     # --- WSGI ---------------------------------------------------------------
@@ -352,6 +352,13 @@ class App:
         r.headers.append(("Cache-Control", "no-store"))
         return r
 
+    def admin_videos(self, req):
+        if not self._authorized(req):
+            return self._deny()
+        r = Response(self.page(req, "AI video kits", T.video_kits_page(self.shop.video_kits(), self._token())))
+        r.headers.append(("Cache-Control", "no-store"))
+        return r
+
     def admin_action(self, req):
         if not self._authorized(req):
             return self._deny()
@@ -366,6 +373,9 @@ class App:
             shop.db.x("UPDATE products SET active = ?, inactive_reason = ? WHERE id = ?",
                       (int(action == "show"), "" if action == "show" else "manual", int(ident)))
             msg = "Product updated."
+        elif action == "videos":
+            shop.video_kits(force=True)
+            return redirect("/admin/videos")
         elif action in ("research", "sync", "fulfill", "track", "social", "report"):
             target = (lambda: shop.report(force=True)) if action == "report" else getattr(shop, action)
             threading.Thread(target=target, daemon=True, name=f"admin-{action}").start()

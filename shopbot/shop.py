@@ -503,7 +503,28 @@ class Shop:
         posts = self.db.q("SELECT channel, SUM(status = 'posted') AS ok, SUM(status = 'error') AS failed FROM social_posts "
                           "WHERE posted_at >= ? GROUP BY channel", (t - 7 * 86400,))
         new_subs = self.db.one("SELECT COUNT(*) AS n FROM subscribers WHERE created_at >= ? AND confirmed = 1", (t - 7 * 86400,))["n"]
-        ideas = self.copy.video_ideas(top) if top else []
+        if self.cfg.marketing.video_mode == "ai":
+            ideas = self.video_kits(force=True)
+        else:
+            ideas = self.copy.video_ideas(top) if top else []
         self.mailer.send(to, *emails.owner_report(self.cfg, week, cur, prev, top, posts, new_subs, ideas))
         self.db.log("report", f"Weekly report {week} sent")
         return True
+
+    def video_kits(self, force: bool = False) -> list[dict]:
+        """This week's faceless AI video kits, cached so the dashboard doesn't regenerate them on every view."""
+        week = dt.datetime.now(dt.timezone.utc).strftime("%G-W%V")
+        cached = json.loads(self.db.get_setting("video_kits") or "{}")
+        if cached.get("week") == week and cached.get("kits") and not force:
+            return cached["kits"]
+        n = max(1, self.cfg.marketing.videos_per_week)
+        products = self.best_sellers(n, since=time.time() - 30 * 86400)
+        kits = self.copy.video_kits(products) if products else []
+        base, by_id = self.cfg.store.base_url, {p["id"]: p for p in products}
+        for k in kits:
+            p = by_id[k["product_id"]]
+            images = [i for i in json.loads(p.get("images") or "[]") if i] or [p["image"]]
+            k["images"] = images[:3]
+            k["link"] = f"{base}/p/{p['slug']}"
+        self.db.set_setting("video_kits", jdump({"week": week, "kits": kits}))
+        return kits
