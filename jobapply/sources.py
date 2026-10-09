@@ -16,11 +16,11 @@ def _id(source: str, url: str) -> str:
     return hashlib.sha1(f"{source}|{url}".encode()).hexdigest()[:12]
 
 
-def _job(source, title, company, url, location="", description="", salary=0, email="", contact=""):
+def _job(source, title, company, url, location="", description="", salary=0, email="", contact="", force=False):
     return {
         "id": _id(source, url), "source": source, "title": title, "company": company,
         "url": url, "location": location, "description": description,
-        "salary": salary, "email": email, "contact": contact, "status": "new", "score": 0,
+        "salary": salary, "email": email, "contact": contact, "force": bool(force), "status": "new", "score": 0,
     }
 
 
@@ -59,7 +59,8 @@ def from_file(path: str) -> list[dict]:
         rows = list(csv.DictReader(open(path, newline="")))
     return [
         _job("file", r["title"], r.get("company", ""), r["url"], r.get("location", ""),
-             r.get("description", ""), int(r.get("salary") or 0), r.get("email", ""), r.get("contact", ""))
+             r.get("description", ""), int(r.get("salary") or 0), r.get("email", ""), r.get("contact", ""),
+             str(r.get("force", "")).lower() in ("1", "true", "yes"))
         for r in rows
     ]
 
@@ -94,8 +95,16 @@ def from_inbox(folder: str) -> list[dict]:
 SOURCES = {"remotive": remotive, "remoteok": remoteok, "adzuna": adzuna}
 
 
+def _hits(job: dict, p: Profile) -> int:
+    text = re.sub(r"<[^>]+>", " ", f"{job['title']} {job['description']}".lower())
+    kws = dict.fromkeys(k.lower() for k in p.keywords + p.title_keywords)  # title words count too
+    return sum(k in text for k in kws)
+
+
 def score(job: dict, p: Profile) -> int:
     """-1 = rejected by filters, otherwise number of keyword hits."""
+    if job.get("force"):  # user asked for this one by name: skip the filters
+        return max(1, _hits(job, p))
     if p.title_keywords and not any(k.lower() in job["title"].lower() for k in p.title_keywords):
         return -1
     text = f"{job['title']} {job['description']}".lower()
@@ -107,5 +116,4 @@ def score(job: dict, p: Profile) -> int:
         return -1
     if p.min_salary and job["salary"] and job["salary"] < p.min_salary:
         return -1
-    kws = dict.fromkeys(k.lower() for k in p.keywords + p.title_keywords)  # title words count too
-    return sum(k in text for k in kws)
+    return _hits(job, p)

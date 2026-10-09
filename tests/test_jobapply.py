@@ -153,3 +153,18 @@ def test_accounts_payable_titles_are_accepted_and_scored():
     j = sources._job("t", "Accounts Payable Specialist", "Co", "u")
     assert sources.score(j, p) >= 1
     assert sources.score(sources._job("t", "Office Manager", "Co", "u2"), p) == -1
+
+
+def test_force_skips_filters_but_normal_jobs_do_not():
+    p = Profile(name="A", email="a@x.com", keywords=["payroll"], exclude=["senior payroll", "ai trainer"],
+                locations=["Oakland"])
+    plain = sources._job("t", "Senior Payroll Analyst", "Co", "u1", "Remote")
+    forced = sources._job("t", "Senior Payroll Analyst", "Co", "u2", "Remote", force=True)
+    assert sources.score(plain, p) == -1
+    assert sources.score(forced, p) >= 1
+
+
+def test_force_column_in_json_import(tmp_path):
+    f = tmp_path / "l.json"
+    f.write_text('[{"title":"Payroll Manager","company":"C","url":"http://x","force":true}]')
+    assert sources.from_file(str(f))[0]["force"] is True

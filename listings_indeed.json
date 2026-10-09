@@ -409,5 +409,95 @@
   "salary": 60700,
   "url": "https://to.indeed.com/aar6njswzrdy",
   "description": "accounts payable clerk remote $28.72-29.74/hr"
+ },
+ {
+  "title": "Payroll Accountant",
+  "company": "Plaid",
+  "location": "Remote (US) / San Francisco",
+  "salary": 100000,
+  "url": "https://plaid.com/careers/openings/finance/remote-united-states/payroll-accountant/",
+  "description": "payroll accountant fintech $85-120k asks for Workday payroll experience; 2-5 years multi-state payroll",
+  "force": true
+ },
+ {
+  "title": "HR & Payroll Administrator (remote)",
+  "company": "Human Services Research Institute",
+  "location": "Remote",
+  "salary": 66000,
+  "url": "https://to.indeed.com/aaslqdv7mkqx",
+  "description": "hr payroll administrator multi-state remote $57-75k; asks for a cover letter",
+  "force": true
+ },
+ {
+  "title": "HR/Admin Specialist",
+  "company": "Zeeba Automotive Group, Inc.",
+  "location": "Remote",
+  "salary": 77500,
+  "url": "https://jobs.gusto.com/postings/zeeba-automotive-group-inc-hr-admin-specialist-3164d711-c6dc-40cb-a7a9-b359a142ef1a",
+  "description": "hr admin specialist weekly payroll in Gusto, benefits, executive admin $70-85k",
+  "force": true
+ },
+ {
+  "title": "Payroll & Benefits Manager",
+  "company": "Assurance Health System",
+  "location": "Remote",
+  "salary": 82500,
+  "url": "https://to.indeed.com/aasnbv6k6vy2",
+  "description": "payroll benefits manager remote eastern time $75-90k",
+  "force": true
+ },
+ {
+  "title": "Senior Payroll Analyst",
+  "company": "DoorDash",
+  "location": "Remote (US)",
+  "salary": 117000,
+  "url": "https://job-boards.greenhouse.io/doordashusa/jobs/8023474",
+  "description": "senior payroll analyst remote $95-140k, posting may already be closed",
+  "force": true
+ },
+ {
+  "title": "Global Payroll Manager",
+  "company": "Demandbase",
+  "location": "Remote (US)",
+  "salary": 178000,
+  "url": "https://jobs.ashbyhq.com/demandbase/7310052e-8945-4379-ba6f-948884b0e987",
+  "description": "global payroll manager remote, ADP Workforce Now, manager level stretch",
+  "force": true
+ },
+ {
+  "title": "Senior Payroll Analyst",
+  "company": "FloQast",
+  "location": "Remote / San Jose (hybrid)",
+  "salary": 115000,
+  "url": "https://jobs.lever.co/floqast/d585d44d-af6d-47c0-b19f-f0d0c652fb4d",
+  "description": "senior payroll analyst UKG Pro $90-140k, stretch",
+  "force": true
+ },
+ {
+  "title": "Certified Payroll Specialist/Labor Compliance Officer",
+  "company": "JG Contracting",
+  "location": "Remote",
+  "salary": 78000,
+  "url": "https://to.indeed.com/aaktdthftvds",
+  "description": "certified payroll specialist part-time remote $25-50/hr",
+  "force": true
+ },
+ {
+  "title": "Payroll Entry Specialist",
+  "company": "SmartPay Solutions",
+  "location": "Remote",
+  "salary": 39000,
+  "url": "https://to.indeed.com/aa4rft88gtbk",
+  "description": "payroll entry specialist remote $18-20/hr low pay",
+  "force": true
+ },
+ {
+  "title": "Payroll Specialist - AI Trainer",
+  "company": "DataAnnotation",
+  "location": "Remote",
+  "salary": 0,
+  "url": "https://to.indeed.com/aan6pbrtstmj",
+  "description": "gig training AI models, not a payroll job, $50-100/hr part-time",
+  "force": true
  }
 ]
