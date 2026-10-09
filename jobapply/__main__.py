@@ -85,7 +85,7 @@ def cmd_apply(a, p, jobs):
     room = max(p.daily_limit - sent_today, 0)
     print(f"{len(approved)} approved, {len(owed)} intro emails owed, {room} sends left today"
           + (" (dry run)" if a.dry_run else ""))
-    if not a.dry_run:
+    if not a.dry_run and not a.no_email:
         for j in owed:  # retry intros that failed on an earlier run
             if _send_intro(j, p):
                 queue.save(jobs)
@@ -100,7 +100,7 @@ def cmd_apply(a, p, jobs):
                 print(f"\n[intro email to {j['contact']}]\n{intro_letter(j, p)}")
             continue
         emailed = False
-        if j["email"]:
+        if j["email"] and not a.no_email:
             try:
                 send_email(j, p, letter)
             except Exception as e:
@@ -121,7 +121,7 @@ def cmd_apply(a, p, jobs):
                   "finish in browser, press Enter when submitted ")
         j["status"], j["applied_on"] = "applied", today
         queue.save(jobs)  # persist before the intro so a failure never re-applies
-        if j["contact"] and not j.get("intro_sent"):
+        if j["contact"] and not j.get("intro_sent") and not a.no_email:
             emailed = _send_intro(j, p) or emailed
             queue.save(jobs)
         if emailed:  # only pace actual email sends; browser applications are already slow
@@ -217,6 +217,8 @@ def main(argv=None):
     r.add_argument("--approve-above", type=int, help="bulk-approve score >= N")
     d = sub.add_parser("apply", help="send approved applications")
     d.add_argument("--dry-run", action="store_true")
+    d.add_argument("--no-email", action="store_true",
+                   help="never send email; open every job in the browser instead (no password needed)")
     sub.add_parser("contacts", help="list jobs that will not get an intro email (no company contact known)")
     w = sub.add_parser("watch", help="search on a schedule and alert you about new jobs (sends nothing)")
     w.add_argument("--once", action="store_true", help="one check then exit")

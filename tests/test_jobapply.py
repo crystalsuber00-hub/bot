@@ -168,3 +168,19 @@ def test_force_column_in_json_import(tmp_path):
     f = tmp_path / "l.json"
     f.write_text('[{"title":"Payroll Manager","company":"C","url":"http://x","force":true}]')
     assert sources.from_file(str(f))[0]["force"] is True
+
+
+def test_no_email_flag_opens_browser_and_sends_nothing(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\ndelay_seconds=0\nsources=[]\n')
+    (tmp_path / "l.csv").write_text("title,company,url,email,contact\nPayroll Clerk,Co,http://j/1,jobs@co.com,hr@co.com\n")
+    from jobapply import __main__ as m
+    sent, opened = [], []
+    monkeypatch.setattr(m, "send_email", lambda *a, **k: sent.append(1))
+    monkeypatch.setattr(m, "open_manual", lambda j, l, d, copy=True: opened.append(j["company"]) or Path("x"))
+    monkeypatch.setattr("builtins.input", lambda *_: "")
+    main(["search", "-f", "l.csv"])
+    main(["review", "--approve-above", "1"])
+    main(["apply", "--no-email"])
+    assert sent == [] and opened == ["Co"]
+    assert next(iter(queue.load().values()))["status"] == "applied"
