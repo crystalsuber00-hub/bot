@@ -184,3 +184,19 @@ def test_no_email_flag_opens_browser_and_sends_nothing(tmp_path, monkeypatch):
     main(["apply", "--no-email"])
     assert sent == [] and opened == ["Co"]
     assert next(iter(queue.load().values()))["status"] == "applied"
+
+
+def test_skip_letter_imports_and_stays_resume_only(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "profile.toml").write_text('[profile]\nname="A"\nemail="a@x.com"\nkeywords=["payroll"]\nsources=[]\ndelay_seconds=0\n')
+    (tmp_path / "l.json").write_text(
+        '[{"title":"Phlebotomist","company":"Lab","url":"http://x","force":true,"skip_letter":true}]')
+    from jobapply import __main__ as m
+    copied = []
+    monkeypatch.setattr(m, "open_manual", lambda j, l, d, copy=True: copied.append(copy) or Path("x"))
+    monkeypatch.setattr("builtins.input", lambda *_: "")
+    main(["search", "-f", "l.json"])
+    main(["review", "--approve-above", "1"])
+    main(["apply", "--no-email"])
+    assert copied == [False]
+    assert "doesn't fit this job" in capsys.readouterr().out

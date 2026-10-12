@@ -20,7 +20,7 @@ def _job(source, title, company, url, location="", description="", salary=0, ema
     return {
         "id": _id(source, url), "source": source, "title": title, "company": company,
         "url": url, "location": location, "description": description,
-        "salary": salary, "email": email, "contact": contact, "force": bool(force), "status": "new", "score": 0,
+        "salary": salary, "email": email, "contact": contact, "force": bool(force), "skip_letter": False, "status": "new", "score": 0,
     }
 
 
@@ -57,12 +57,15 @@ def from_file(path: str) -> list[dict]:
         rows = json.load(open(path))
     else:
         rows = list(csv.DictReader(open(path, newline="")))
-    return [
+    jobs = [
         _job("file", r["title"], r.get("company", ""), r["url"], r.get("location", ""),
              r.get("description", ""), int(r.get("salary") or 0), r.get("email", ""), r.get("contact", ""),
              str(r.get("force", "")).lower() in ("1", "true", "yes"))
         for r in rows
     ]
+    for j, r in zip(jobs, rows):
+        j["skip_letter"] = str(r.get("skip_letter", "")).lower() in ("1", "true", "yes")
+    return jobs
 
 
 def adzuna(query: str, p: Profile) -> list[dict]:

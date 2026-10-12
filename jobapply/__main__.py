@@ -109,10 +109,12 @@ def cmd_apply(a, p, jobs):
             emailed = True
             print(f"applied by email: {j['company']}")
         else:
-            use_letter = letters_used < p.cover_letters_per_day
+            use_letter = letters_used < p.cover_letters_per_day and not j.get("skip_letter")
             if use_letter:
                 letters_used += 1
                 j["letter_on"] = today
+            elif j.get("skip_letter"):
+                print(f"  resume only for {j['company']} (the payroll cover letter doesn't fit this job)")
             else:
                 print(f"  resume only for {j['company']} "
                       f"({p.cover_letters_per_day} cover letters already used today)")

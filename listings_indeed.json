@@ -499,5 +499,84 @@
   "url": "https://to.indeed.com/aan6pbrtstmj",
   "description": "gig training AI models, not a payroll job, $50-100/hr part-time",
   "force": true
+ },
+ {
+  "title": "Mobile Phlebotomist/Paramedical Examiner",
+  "company": "Quest Diagnostics",
+  "location": "Union City, CA",
+  "salary": 50000,
+  "url": "https://to.indeed.com/aa9brycv2mdc",
+  "description": "phlebotomist mobile part-time $24-26/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Junior Phlebotomist (Part Time)",
+  "company": "Any Lab Test Now - Pleasanton",
+  "location": "Pleasanton, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aax84k2jhrr2",
+  "description": "phlebotomist junior part-time $25-30/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist",
+  "company": "DashealthDx",
+  "location": "Fremont, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aaz2b284x2l7",
+  "description": "phlebotomist mobile part-time $25/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist",
+  "company": "GLABS",
+  "location": "Concord, CA",
+  "salary": 39000,
+  "url": "https://to.indeed.com/aa869st4q2ty",
+  "description": "phlebotomist mobile temporary $17.50-20.50/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Medical Assistant/Phlebotomist - Dermatology",
+  "company": "Pacific Skin and Cosmetic Dermatology",
+  "location": "Corte Madera, CA (Bay Area)",
+  "salary": 58000,
+  "url": "https://to.indeed.com/aawxq4t78f6k",
+  "description": "medical assistant phlebotomist full-time $27-29/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Biometric Health Screener - (Phlebotomist) - PRN",
+  "company": "Integrated Health 21, LLC",
+  "location": "San Francisco, CA",
+  "salary": 45000,
+  "url": "https://to.indeed.com/aa8p98tvjxj4",
+  "description": "phlebotomist screener PRN $18-25/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Wellness Screeners PRN - Venipuncture event",
+  "company": "Onsite Health Screening",
+  "location": "San Francisco, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aa6kr2phdllg",
+  "description": "venipuncture screener PRN $23-27/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Payroll Specialist/Construction Accounting Assistant",
+  "company": "Remote HR Consulting",
+  "location": "Loomis, CA (Bay Area)",
+  "salary": 77000,
+  "url": "https://to.indeed.com/aalbjhn6qjd2",
+  "description": "payroll specialist construction accounting assistant $34-40/hr California; check whether remote",
+  "force": true
  }
 ]
