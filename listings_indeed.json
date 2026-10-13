@@ -578,5 +578,185 @@
   "url": "https://to.indeed.com/aalbjhn6qjd2",
   "description": "payroll specialist construction accounting assistant $34-40/hr California; check whether remote",
   "force": true
+ },
+ {
+  "title": "Payroll Coordinator",
+  "company": "Quanta Manufacturing Nashville",
+  "location": "Fremont, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aavdbyy42dl2",
+  "description": "payroll coordinator $28-35/hr",
+  "force": true
+ },
+ {
+  "title": "Program Analyst - Fiscal Services Department (Payroll)",
+  "company": "San Jose Unified School District",
+  "location": "San Jose, CA",
+  "salary": 71000,
+  "url": "https://to.indeed.com/aan6htpck4mc",
+  "description": "payroll school district $34.07/hr",
+  "force": true
+ },
+ {
+  "title": "Payroll Specialist (Temporary)",
+  "company": "Nidec Genmark Automation",
+  "location": "Fremont, CA",
+  "salary": 72000,
+  "url": "https://to.indeed.com/aa72nrwj6qgp",
+  "description": "payroll specialist temporary $60-85k",
+  "force": true
+ },
+ {
+  "title": "Prevailing Wage & Payroll Administrator",
+  "company": "BKF Engineers",
+  "location": "San Jose, CA",
+  "salary": 102000,
+  "url": "https://to.indeed.com/aa9g6c96qfds",
+  "description": "prevailing wage payroll administrator $87-117k",
+  "force": true
+ },
+ {
+  "title": "Payroll Specialist",
+  "company": "Sedaa Consulting",
+  "location": "San Ramon, CA",
+  "salary": 57500,
+  "url": "https://to.indeed.com/aakvhyzqckss",
+  "description": "payroll specialist $50-65k",
+  "force": true
+ },
+ {
+  "title": "Payroll Accountant (Temporary)",
+  "company": "Robert Half",
+  "location": "Oakland, CA",
+  "salary": 90000,
+  "url": "https://to.indeed.com/aa27ygq8jzxr",
+  "description": "payroll accountant temporary $41-45/hr",
+  "force": true
+ },
+ {
+  "title": "Payroll/Accounts Receivable Coordinator",
+  "company": "Hallsten Corporation",
+  "location": "North Highlands, CA (Sacramento area)",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aazqbv4rzwl4",
+  "description": "payroll accounts receivable coordinator $28-32/hr, Sacramento area",
+  "force": true
+ },
+ {
+  "title": "Payroll/HR Support Coordinator",
+  "company": "La Familia Counseling Center, Inc.",
+  "location": "Sacramento, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aa7yt82jgzs8",
+  "description": "payroll hr support coordinator from $60k, Sacramento",
+  "force": true
+ },
+ {
+  "title": "Payroll and Staff Accountant",
+  "company": "Sandis",
+  "location": "Roseville, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aactlj22869l",
+  "description": "payroll staff accountant $28-40/hr, Roseville",
+  "force": true
+ },
+ {
+  "title": "Prevailing Wage & Payroll Administrator",
+  "company": "BKF Engineers (Sacramento)",
+  "location": "Sacramento, CA",
+  "salary": 102000,
+  "url": "https://to.indeed.com/aa96kwwww7yv",
+  "description": "prevailing wage payroll administrator $87-117k Sacramento",
+  "force": true
+ },
+ {
+  "title": "Phlebotomist II",
+  "company": "Quest Diagnostics (Sunnyvale)",
+  "location": "Sunnyvale, CA",
+  "salary": 64000,
+  "url": "https://to.indeed.com/aakdb8dklzkd",
+  "description": "phlebotomist full-time $29.60-32.19/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Phlebotomist/Medical Assistant",
+  "company": "Any Lab Test Now (Sunnyvale)",
+  "location": "Sunnyvale, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aaspn69m8hv2",
+  "description": "phlebotomist medical assistant full-time $24-36/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Examiner (Insurance Exams & Specimen Collection)",
+  "company": "APPS Paramedical",
+  "location": "San Jose, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aarr4gcnkjvm",
+  "description": "mobile phlebotomy examiner part-time $800-1200/week",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Phlebotomist I",
+  "company": "Quest Diagnostics (Santa Cruz)",
+  "location": "Santa Cruz, CA",
+  "salary": 55000,
+  "url": "https://to.indeed.com/aanlcjjqsd2w",
+  "description": "phlebotomist full-time $24.10-28.75/hr Santa Cruz",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Phlebotomist",
+  "company": "Foundation Laboratory",
+  "location": "Los Gatos, CA",
+  "salary": 39000,
+  "url": "https://to.indeed.com/aam42pyrknpv",
+  "description": "phlebotomist part-time $18-20/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Phlebotomist I",
+  "company": "Quest Diagnostics (Castro Valley)",
+  "location": "Castro Valley, CA",
+  "salary": 59000,
+  "url": "https://to.indeed.com/aat8wxjvbfmc",
+  "description": "phlebotomist full-time $27-29.45/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Laboratory - Phlebotomist",
+  "company": "Slate Healthcare, LLC",
+  "location": "Oakland, CA",
+  "salary": 64600,
+  "url": "https://to.indeed.com/aafgy7pg8nn2",
+  "description": "phlebotomist $1,242/week Oakland",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist",
+  "company": "The One Health Group",
+  "location": "Oakland, CA",
+  "salary": 44000,
+  "url": "https://to.indeed.com/aasp9gmvwvqk",
+  "description": "mobile phlebotomist full-time from $21/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Phlebotomy Team Lead",
+  "company": "Vitalant",
+  "location": "Brisbane, CA",
+  "salary": 66000,
+  "url": "https://to.indeed.com/aamthp6h9h7b",
+  "description": "phlebotomy team lead full-time $31.25-32.25/hr (lead role)",
+  "force": true,
+  "skip_letter": true
  }
 ]
