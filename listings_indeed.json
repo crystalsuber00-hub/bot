@@ -50,22 +50,6 @@
   "description": "payroll coordinator accounts payable"
  },
  {
-  "title": "Payroll/HR",
-  "company": "Blackstone Fresno",
-  "location": "San Jose, CA",
-  "salary": 62000,
-  "url": "https://to.indeed.com/aaqk9kdwwsnj",
-  "description": "payroll HR $30-34/hr"
- },
- {
-  "title": "Payroll Specialist (Temporary)",
-  "company": "Robert Half",
-  "location": "San Jose, CA",
-  "salary": 69000,
-  "url": "https://to.indeed.com/aa7dr4rmddwh",
-  "description": "payroll specialist temp $33-38/hr"
- },
- {
   "title": "Payroll & Accounting Specialist (Temporary)",
   "company": "LOVEFOODIES INC",
   "location": "Palo Alto, CA",
@@ -97,14 +81,6 @@
   "url": "https://to.indeed.com/aanbp79c47xx",
   "description": "payroll specialist $40.87-50.48/hr",
   "contact": "hrteam@shschools.org"
- },
- {
-  "title": "Payroll Coordinator",
-  "company": "Woodlands Healthcare Center",
-  "location": "Los Gatos, CA",
-  "salary": 54000,
-  "url": "https://to.indeed.com/aat6j6h9f9mn",
-  "description": "payroll coordinator from $26/hr"
  },
  {
   "title": "HR and Payroll Administrator - Automotive Dealership",
@@ -219,14 +195,6 @@
   "description": "accounts payable specialist $36-41/hr"
  },
  {
-  "title": "Staff Accountant, Accounts Payable and Operations",
-  "company": "HomeFirst",
-  "location": "San Jose, CA",
-  "salary": 75000,
-  "url": "https://to.indeed.com/aa6q4y7jqrqh",
-  "description": "accounts payable staff accountant $75-80k (a step up in level)"
- },
- {
   "title": "Accounts Payable Specialist",
   "company": "sam martinovich",
   "location": "Concord, CA",
@@ -235,28 +203,12 @@
   "description": "accounts payable specialist $27.62-28.72/hr"
  },
  {
-  "title": "Accounts Payable Clerk",
-  "company": "Black Diamond Paver Stones and Landscape, Inc.",
-  "location": "San Jose, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aax9nfpfg88x",
-  "description": "accounts payable clerk $25-28/hr"
- },
- {
   "title": "Accounts Payable Specialist",
   "company": "Westside Community Services",
   "location": "San Francisco, CA",
   "salary": 83200,
   "url": "https://to.indeed.com/aavtgqfqbxjw",
   "description": "accounts payable specialist $40/hr"
- },
- {
-  "title": "Automotive Accounts Payable Clerk",
-  "company": "Del Grande Dealer Group",
-  "location": "San Jose, CA",
-  "salary": 57000,
-  "url": "https://to.indeed.com/aazt22kwqwly",
-  "description": "accounts payable clerk automotive $25-30/hr"
  },
  {
   "title": "Payroll Specialist",
@@ -291,28 +243,12 @@
   "description": "payroll specialist bank $25-35/hr"
  },
  {
-  "title": "Accounts Payable & Payroll Bookkeeper",
-  "company": "Care Must Home Health and Hospice",
-  "location": "San Jose, CA",
-  "salary": 66560,
-  "url": "https://to.indeed.com/aawbqbj6vy8c",
-  "description": "accounts payable payroll bookkeeper from $32/hr"
- },
- {
   "title": "Payroll Specialist and HR Assistant",
   "company": "JMK INVESTMENTS, INC.",
   "location": "Santa Clara, CA",
   "salary": 57200,
   "url": "https://to.indeed.com/aa444dmfcvv2",
   "description": "payroll specialist hr assistant $25-30/hr"
- },
- {
-  "title": "Payroll Specialist (Part-time)",
-  "company": "Daley's Drywall & Taping, Inc.",
-  "location": "Campbell, CA (Bay Area)",
-  "salary": 66560,
-  "url": "https://to.indeed.com/aapmtddc2qzj",
-  "description": "payroll specialist part-time $30-34/hr"
  },
  {
   "title": "Certified Payroll Specialist (Temporary)",
@@ -501,16 +437,6 @@
   "force": true
  },
  {
-  "title": "Mobile Phlebotomist/Paramedical Examiner",
-  "company": "Quest Diagnostics",
-  "location": "Union City, CA",
-  "salary": 50000,
-  "url": "https://to.indeed.com/aa9brycv2mdc",
-  "description": "phlebotomist mobile part-time $24-26/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Junior Phlebotomist (Part Time)",
   "company": "Any Lab Test Now - Pleasanton",
   "location": "Pleasanton, CA",
@@ -531,16 +457,6 @@
   "skip_letter": true
  },
  {
-  "title": "Mobile Phlebotomist",
-  "company": "GLABS",
-  "location": "Concord, CA",
-  "salary": 39000,
-  "url": "https://to.indeed.com/aa869st4q2ty",
-  "description": "phlebotomist mobile temporary $17.50-20.50/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Medical Assistant/Phlebotomist - Dermatology",
   "company": "Pacific Skin and Cosmetic Dermatology",
   "location": "Corte Madera, CA",
@@ -549,35 +465,6 @@
   "description": "medical assistant phlebotomist full-time $27-29/hr",
   "force": true,
   "skip_letter": true
- },
- {
-  "title": "Biometric Health Screener - (Phlebotomist) - PRN",
-  "company": "Integrated Health 21, LLC",
-  "location": "San Francisco, CA",
-  "salary": 45000,
-  "url": "https://to.indeed.com/aa8p98tvjxj4",
-  "description": "phlebotomist screener PRN $18-25/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Wellness Screeners PRN - Venipuncture event",
-  "company": "Onsite Health Screening",
-  "location": "San Francisco, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aa6kr2phdllg",
-  "description": "venipuncture screener PRN $23-27/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Payroll Specialist/Construction Accounting Assistant",
-  "company": "Remote HR Consulting",
-  "location": "Loomis, CA (near Sacramento)",
-  "salary": 77000,
-  "url": "https://to.indeed.com/aalbjhn6qjd2",
-  "description": "payroll specialist construction accounting assistant $34-40/hr California; check whether remote",
-  "force": true
  },
  {
   "title": "Payroll Coordinator",
@@ -589,30 +476,12 @@
   "force": true
  },
  {
-  "title": "Program Analyst - Fiscal Services Department (Payroll)",
-  "company": "San Jose Unified School District",
-  "location": "San Jose, CA",
-  "salary": 71000,
-  "url": "https://to.indeed.com/aan6htpck4mc",
-  "description": "payroll school district $34.07/hr",
-  "force": true
- },
- {
   "title": "Payroll Specialist (Temporary)",
   "company": "Nidec Genmark Automation",
   "location": "Fremont, CA",
   "salary": 72000,
   "url": "https://to.indeed.com/aa72nrwj6qgp",
   "description": "payroll specialist temporary $60-85k",
-  "force": true
- },
- {
-  "title": "Prevailing Wage & Payroll Administrator",
-  "company": "BKF Engineers",
-  "location": "San Jose, CA",
-  "salary": 102000,
-  "url": "https://to.indeed.com/aa9g6c96qfds",
-  "description": "prevailing wage payroll administrator $87-117k",
   "force": true
  },
  {
@@ -634,88 +503,12 @@
   "force": true
  },
  {
-  "title": "Payroll/Accounts Receivable Coordinator",
-  "company": "Hallsten Corporation",
-  "location": "North Highlands, CA (Sacramento area)",
-  "salary": 62000,
-  "url": "https://to.indeed.com/aazqbv4rzwl4",
-  "description": "payroll accounts receivable coordinator $28-32/hr, Sacramento area",
-  "force": true
- },
- {
-  "title": "Payroll/HR Support Coordinator",
-  "company": "La Familia Counseling Center, Inc.",
-  "location": "Sacramento, CA",
-  "salary": 60000,
-  "url": "https://to.indeed.com/aa7yt82jgzs8",
-  "description": "payroll hr support coordinator from $60k, Sacramento",
-  "force": true
- },
- {
-  "title": "Payroll and Staff Accountant",
-  "company": "Sandis",
-  "location": "Roseville, CA",
-  "salary": 70000,
-  "url": "https://to.indeed.com/aactlj22869l",
-  "description": "payroll staff accountant $28-40/hr, Roseville",
-  "force": true
- },
- {
-  "title": "Prevailing Wage & Payroll Administrator",
-  "company": "BKF Engineers (Sacramento)",
-  "location": "Sacramento, CA",
-  "salary": 102000,
-  "url": "https://to.indeed.com/aa96kwwww7yv",
-  "description": "prevailing wage payroll administrator $87-117k Sacramento",
-  "force": true
- },
- {
   "title": "Phlebotomist II",
   "company": "Quest Diagnostics (Sunnyvale)",
   "location": "Sunnyvale, CA",
   "salary": 64000,
   "url": "https://to.indeed.com/aakdb8dklzkd",
   "description": "phlebotomist full-time $29.60-32.19/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Phlebotomist/Medical Assistant",
-  "company": "Any Lab Test Now (Sunnyvale)",
-  "location": "Sunnyvale, CA",
-  "salary": 62000,
-  "url": "https://to.indeed.com/aaspn69m8hv2",
-  "description": "phlebotomist medical assistant full-time $24-36/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Mobile Examiner (Insurance Exams & Specimen Collection)",
-  "company": "APPS Paramedical",
-  "location": "San Jose, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aarr4gcnkjvm",
-  "description": "mobile phlebotomy examiner part-time $800-1200/week",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Phlebotomist I",
-  "company": "Quest Diagnostics (Santa Cruz)",
-  "location": "Santa Cruz, CA",
-  "salary": 55000,
-  "url": "https://to.indeed.com/aanlcjjqsd2w",
-  "description": "phlebotomist full-time $24.10-28.75/hr Santa Cruz",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Phlebotomist",
-  "company": "Foundation Laboratory",
-  "location": "Los Gatos, CA",
-  "salary": 39000,
-  "url": "https://to.indeed.com/aam42pyrknpv",
-  "description": "phlebotomist part-time $18-20/hr",
   "force": true,
   "skip_letter": true
  },
@@ -740,16 +533,6 @@
   "skip_letter": true
  },
  {
-  "title": "Mobile Phlebotomist",
-  "company": "The One Health Group",
-  "location": "Oakland, CA",
-  "salary": 44000,
-  "url": "https://to.indeed.com/aasp9gmvwvqk",
-  "description": "mobile phlebotomist full-time from $21/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Phlebotomy Team Lead",
   "company": "Vitalant",
   "location": "Brisbane, CA",
@@ -760,39 +543,12 @@
   "skip_letter": true
  },
  {
-  "title": "Business Office / Payroll",
-  "company": "Confidential employer (Napa)",
-  "location": "Napa, CA",
-  "salary": 54000,
-  "url": "https://to.indeed.com/aasg2bnbryk8",
-  "description": "business office payroll from $26/hr Napa",
-  "force": true
- },
- {
   "title": "Senior Payroll & HR Administrator",
   "company": "AppleOne (Petaluma)",
   "location": "Petaluma, CA",
   "salary": 82500,
   "url": "https://to.indeed.com/aat7bnw2scgc",
   "description": "senior payroll hr administrator temp-to-hire $75-90k, senior level stretch",
-  "force": true
- },
- {
-  "title": "BILINGUAL Human Resources & Payroll Generalist",
-  "company": "Nelson Connects",
-  "location": "Sebastopol, CA",
-  "salary": 86000,
-  "url": "https://to.indeed.com/aajkbrx4mhwm",
-  "description": "bilingual hr payroll generalist temp-to-hire $38-45/hr, bilingual required",
-  "force": true
- },
- {
-  "title": "Payroll Tax Operations and Services Specialist - SelectTime",
-  "company": "Intuit",
-  "location": "San Jose, CA",
-  "salary": 80000,
-  "url": "https://to.indeed.com/aascjtkqfyxc",
-  "description": "payroll tax operations specialist part-time $27-49/hr",
   "force": true
  },
  {
@@ -806,62 +562,12 @@
   "skip_letter": true
  },
  {
-  "title": "Mobile Phlebotomist/Paramedical Examiner",
-  "company": "Quest Diagnostics (Sausalito)",
-  "location": "Sausalito, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aahgntvz9l8j",
-  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Mobile Phlebotomy/Paramedical Examiner",
-  "company": "Quest Diagnostics (Larkspur)",
-  "location": "Larkspur, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aa6x8vv96d9w",
-  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Mobile Phlebotomist/Paramedical Examiner",
-  "company": "Quest Diagnostics (Petaluma)",
-  "location": "Petaluma, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aarlc6f87rgb",
-  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "PHLEBOTOMIST (CLA)",
-  "company": "Sonoma Specialty Hospital",
-  "location": "Sebastopol, CA",
-  "salary": 51000,
-  "url": "https://to.indeed.com/aacrmhdlqycq",
-  "description": "phlebotomist CLA part-time $23-26/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Mobile Phlebotomist",
   "company": "DashealthDx (Vallejo)",
   "location": "Vallejo, CA",
   "salary": 52000,
   "url": "https://to.indeed.com/aadrh8k9xvkd",
   "description": "mobile phlebotomist part-time $25/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Mobile Phlebotomist",
-  "company": "The One Health Group (Pittsburg)",
-  "location": "Pittsburg, CA",
-  "salary": 44000,
-  "url": "https://to.indeed.com/aax9ngkk6dzq",
-  "description": "mobile phlebotomist full-time from $21/hr",
   "force": true,
   "skip_letter": true
  }
