@@ -199,6 +199,15 @@ def cmd_edit(a, p, jobs):
     subprocess.call([editor, a.config])
 
 
+def cmd_applied(a, p, jobs):
+    """Everything you already applied to, so you can check a job before applying again."""
+    done = sorted((j for j in jobs.values() if j["status"] == "applied"),
+                  key=lambda j: j.get("applied_on") or "")
+    for j in done:
+        print(f"{j.get('applied_on') or '?'}  {j['company']} | {j['title']} | {j['location']}")
+    print(f"{len(done)} applied")
+
+
 def cmd_status(a, p, jobs):
     counts: dict[str, int] = {}
     for j in jobs.values():
@@ -225,13 +234,14 @@ def main(argv=None):
     w = sub.add_parser("watch", help="search on a schedule and alert you about new jobs (sends nothing)")
     w.add_argument("--once", action="store_true", help="one check then exit")
     sub.add_parser("status")
+    sub.add_parser("applied", help="list every job you already applied to")
     sub.add_parser("preview", help="show the emails exactly as they will be sent")
     sub.add_parser("edit", help="open your profile to change the email wording")
     a = ap.parse_args(argv)
     p = load_profile(a.config)
     jobs = queue.load()
     apply_contacts(jobs)
-    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status,
+    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status, "applied": cmd_applied,
      "preview": cmd_preview, "edit": cmd_edit, "contacts": cmd_contacts,
      "watch": cmd_watch}[a.cmd](a, p, jobs)
     queue.save(jobs)

@@ -200,3 +200,11 @@ def test_skip_letter_imports_and_stays_resume_only(tmp_path, monkeypatch, capsys
     main(["apply", "--no-email"])
     assert copied == [False]
     assert "doesn't fit this job" in capsys.readouterr().out
+
+
+def test_merge_skips_job_already_applied_under_another_link():
+    from jobapply import queue
+    jobs = {"a": {"id": "a", "company": "Acme", "title": "Scheduler", "status": "applied"}}
+    found = [{"id": "b", "company": "ACME", "title": "scheduler", "status": "new"}]
+    queue.merge(jobs, found)
+    assert jobs["b"]["status"] == "skipped"
