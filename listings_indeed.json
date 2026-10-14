@@ -598,5 +598,23 @@
   "description": "phlebotomist $26.25-28.25/hr posted Oct 5",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Temporary Payroll Coordinator",
+  "company": "Service by Medallion",
+  "location": "Mountain View, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aacgrkr9vljf",
+  "description": "payroll coordinator temporary $28-33/hr posted Oct 13; Mountain View is north of San Jose",
+  "force": true
+ },
+ {
+  "title": "Office Manager - Payroll & Invoice Coordinator (Part-Time)",
+  "company": "Aries Hospitality Services",
+  "location": "Walnut Creek, CA",
+  "salary": 48000,
+  "url": "https://to.indeed.com/aatf6k9fxvcy",
+  "description": "payroll invoice coordinator part-time contract $22-25/hr posted Oct 9",
+  "force": true
  }
 ]
