@@ -706,5 +706,105 @@
   "description": "front office scheduler $60-80k posted Oct 2",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Patient Scheduler - Outpatient Infusion (Oncology)",
+  "company": "Legacy Personnel Inc",
+  "location": "Greenbrae, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aanlyymprjcg",
+  "description": "patient scheduler outpatient infusion $30-32/hr posted Oct 7",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Senior Administrative Assistant / Office Manager",
+  "company": "The Croner Company",
+  "location": "San Rafael, CA",
+  "salary": 85000,
+  "url": "https://to.indeed.com/aakmhvxj2xhp",
+  "description": "senior administrative assistant office manager $38.46-45/hr posted Oct 7",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Special Projects Administrator",
+  "company": "Brilliant Homes Inc. Brilliant Electric",
+  "location": "Union City, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aahpbjwmb6mh",
+  "description": "administrative customer coordination $25-30/hr posted Oct 9",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Assistant/Coordinator",
+  "company": "Bell Plumbing (Burlingame)",
+  "location": "Burlingame, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aafvs44s7bq6",
+  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Assistant/Coordinator",
+  "company": "Bell Plumbing (San Mateo)",
+  "location": "San Mateo, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aa487h2xyhz7",
+  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Assistant/Coordinator",
+  "company": "Bell Plumbing (Millbrae)",
+  "location": "Millbrae, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aabdbzrm2cxh",
+  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Assistant/Coordinator",
+  "company": "Bell Plumbing (Foster City)",
+  "location": "Foster City, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aambwxf9ddsh",
+  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Family Services Receptionist (Temporary)",
+  "company": "Saint Vincent's Day Home",
+  "location": "Oakland, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aazydhzrg47d",
+  "description": "receptionist family services temporary $33.71/hr posted Oct 12",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Business Office Assistant",
+  "company": "City View Post Acute",
+  "location": "San Francisco, CA",
+  "salary": 67000,
+  "url": "https://to.indeed.com/aa6bzfnl7gyt",
+  "description": "business office assistant healthcare $30-35/hr posted Sep 29",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Project Administrator",
+  "company": "Alvah Contractors, Inc.",
+  "location": "South San Francisco, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aavckzkb4p9q",
+  "description": "project administrator office $25-30/hr posted Sep 11",
+  "force": true,
+  "skip_letter": true
  }
 ]
