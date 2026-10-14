@@ -616,5 +616,95 @@
   "url": "https://to.indeed.com/aatf6k9fxvcy",
   "description": "payroll invoice coordinator part-time contract $22-25/hr posted Oct 9",
   "force": true
+ },
+ {
+  "title": "Procedure Scheduler",
+  "company": "Remedy Medical Group",
+  "location": "San Mateo, CA",
+  "salary": 68000,
+  "url": "https://to.indeed.com/aa4mvs2g7vwb",
+  "description": "patient scheduler medical group $30-38/hr posted Oct 6",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Admission Coordinator",
+  "company": "Bristol Hospice",
+  "location": "Walnut Creek, CA",
+  "salary": 67000,
+  "url": "https://to.indeed.com/aarzmmz42gkz",
+  "description": "patient admissions intake coordinator $30-34/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Clinical Services Coordinator",
+  "company": "Dream Youth Clinic",
+  "location": "Oakland, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aalz9q4cnmrs",
+  "description": "clinic patient services coordinator $29-34/hr posted Sep 16",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Home Health Intake/Scheduling Coordinator",
+  "company": "Health Link Home Health Agency",
+  "location": "Walnut Creek, CA",
+  "salary": 61000,
+  "url": "https://to.indeed.com/aalclxmjfft7",
+  "description": "patient intake scheduling coordinator $27-32/hr posted Aug 28",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Front Desk Receptionist and Treatment Coordinator",
+  "company": "Dental office (Redwood City)",
+  "location": "Redwood City, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aakbrvhxzg74",
+  "description": "front desk receptionist treatment coordinator $27-33/hr posted Sep 20",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Assistant (Dental Office)",
+  "company": "Ivory Smiles",
+  "location": "Danville, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aahypfqdr6lc",
+  "description": "front office administrative assistant $27-40/hr posted Sep 23",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Experienced Front Office Treatment Coordinator",
+  "company": "Confidential (South San Francisco)",
+  "location": "South San Francisco, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aa4xtglzvw6k",
+  "description": "front office treatment coordinator part-time $33-43/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Client Services Representative",
+  "company": "GPO Direct Network",
+  "location": "Union City, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aahbwky9pzfd",
+  "description": "customer service client services representative $70k posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Sr. Dental Front Office Scheduler",
+  "company": "Cosmetic Dentistry of Hayward",
+  "location": "Hayward, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aajstxgk7y8s",
+  "description": "front office scheduler $60-80k posted Oct 2",
+  "force": true,
+  "skip_letter": true
  }
 ]
