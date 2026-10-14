@@ -570,5 +570,33 @@
   "description": "mobile phlebotomist part-time $25/hr",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Accounts Payable Specialist (temporary)",
+  "company": "HKIT Architects",
+  "location": "Oakland, CA",
+  "salary": 63000,
+  "url": "https://to.indeed.com/aapsvcnrd7kh",
+  "description": "accounts payable temporary $30.29-35.58/hr, posted Oct 13",
+  "force": true
+ },
+ {
+  "title": "Payroll Tax Specialist (Remote, part-time)",
+  "company": "Petit Clair",
+  "location": "Remote",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aahp4q4twbjy",
+  "description": "payroll tax remote part-time $28.58-34.42/hr, posted Oct 5; no state restriction listed, confirm CA with employer",
+  "force": true
+ },
+ {
+  "title": "Phlebotomist (Castro)",
+  "company": "One Medical (San Francisco)",
+  "location": "San Francisco, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aasdrthfx9gg",
+  "description": "phlebotomist $26.25-28.25/hr posted Oct 5",
+  "force": true,
+  "skip_letter": true
  }
 ]
