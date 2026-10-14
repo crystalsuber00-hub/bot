@@ -758,5 +758,111 @@
   "description": "phlebotomy team lead full-time $31.25-32.25/hr (lead role)",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Business Office / Payroll",
+  "company": "Confidential employer (Napa)",
+  "location": "Napa, CA",
+  "salary": 54000,
+  "url": "https://to.indeed.com/aasg2bnbryk8",
+  "description": "business office payroll from $26/hr Napa",
+  "force": true
+ },
+ {
+  "title": "Senior Payroll & HR Administrator",
+  "company": "AppleOne (Petaluma)",
+  "location": "Petaluma, CA",
+  "salary": 82500,
+  "url": "https://to.indeed.com/aat7bnw2scgc",
+  "description": "senior payroll hr administrator temp-to-hire $75-90k, senior level stretch",
+  "force": true
+ },
+ {
+  "title": "BILINGUAL Human Resources & Payroll Generalist",
+  "company": "Nelson Connects",
+  "location": "Sebastopol, CA",
+  "salary": 86000,
+  "url": "https://to.indeed.com/aajkbrx4mhwm",
+  "description": "bilingual hr payroll generalist temp-to-hire $38-45/hr, bilingual required",
+  "force": true
+ },
+ {
+  "title": "Payroll Tax Operations and Services Specialist - SelectTime",
+  "company": "Intuit",
+  "location": "San Jose, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aascjtkqfyxc",
+  "description": "payroll tax operations specialist part-time $27-49/hr",
+  "force": true
+ },
+ {
+  "title": "Phlebotomist",
+  "company": "One Medical",
+  "location": "Mill Valley, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aajvhpbzmmzq",
+  "description": "phlebotomist full-time $26.25-28.25/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist/Paramedical Examiner",
+  "company": "Quest Diagnostics (Sausalito)",
+  "location": "Sausalito, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aahgntvz9l8j",
+  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomy/Paramedical Examiner",
+  "company": "Quest Diagnostics (Larkspur)",
+  "location": "Larkspur, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aa6x8vv96d9w",
+  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist/Paramedical Examiner",
+  "company": "Quest Diagnostics (Petaluma)",
+  "location": "Petaluma, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aarlc6f87rgb",
+  "description": "mobile phlebotomist part-time $24-26/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "PHLEBOTOMIST (CLA)",
+  "company": "Sonoma Specialty Hospital",
+  "location": "Sebastopol, CA",
+  "salary": 51000,
+  "url": "https://to.indeed.com/aacrmhdlqycq",
+  "description": "phlebotomist CLA part-time $23-26/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist",
+  "company": "DashealthDx (Vallejo)",
+  "location": "Vallejo, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aadrh8k9xvkd",
+  "description": "mobile phlebotomist part-time $25/hr",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Mobile Phlebotomist",
+  "company": "The One Health Group (Pittsburg)",
+  "location": "Pittsburg, CA",
+  "salary": 44000,
+  "url": "https://to.indeed.com/aax9ngkk6dzq",
+  "description": "mobile phlebotomist full-time from $21/hr",
+  "force": true,
+  "skip_letter": true
  }
 ]
