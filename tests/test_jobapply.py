@@ -204,10 +204,12 @@ def test_skip_letter_imports_and_stays_resume_only(tmp_path, monkeypatch, capsys
 
 def test_merge_skips_job_already_applied_under_another_link():
     from jobapply import queue
-    jobs = {"a": {"id": "a", "company": "Acme", "title": "Scheduler", "status": "applied"}}
-    found = [{"id": "b", "company": "ACME", "title": "scheduler", "status": "new"}]
+    jobs = {"a": {"id": "a", "company": "Acme", "title": "Scheduler", "location": "Oakland, CA", "status": "applied"}}
+    found = [{"id": "b", "company": "ACME (Oakland)", "title": "scheduler", "location": "Oakland, CA", "status": "new"},
+             {"id": "c", "company": "Acme", "title": "Scheduler", "location": "Fremont, CA", "status": "new"}]
     queue.merge(jobs, found)
     assert jobs["b"]["status"] == "skipped"
+    assert jobs["c"]["status"] == "new"  # different city is a different opening
 
 
 def test_init_writes_a_loadable_profile(tmp_path, monkeypatch):

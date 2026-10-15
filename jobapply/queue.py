@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 PATH = Path("jobs.json")
@@ -14,8 +15,13 @@ def save(jobs: dict[str, dict], path: Path = PATH) -> None:
     path.write_text(json.dumps(jobs, indent=2))
 
 
-def _key(j: dict) -> tuple[str, str]:
-    return ((j.get("company") or "").strip().lower(), (j.get("title") or "").strip().lower())
+def _norm(s: str) -> str:
+    return "".join(c for c in re.sub(r"\(.*?\)", "", (s or "").lower()) if c.isalnum())
+
+
+def _key(j: dict) -> tuple[str, str, str]:
+    """Same company + title + city = same job, even when the link or label differs."""
+    return (_norm(j.get("company")), _norm(j.get("title")), _norm((j.get("location") or "").split(",")[0]))
 
 
 def merge(jobs: dict[str, dict], found: list[dict]) -> int:

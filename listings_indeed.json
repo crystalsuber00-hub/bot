@@ -562,16 +562,6 @@
   "skip_letter": true
  },
  {
-  "title": "Mobile Phlebotomist",
-  "company": "DashealthDx (Vallejo)",
-  "location": "Vallejo, CA",
-  "salary": 52000,
-  "url": "https://to.indeed.com/aadrh8k9xvkd",
-  "description": "mobile phlebotomist part-time $25/hr",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Accounts Payable Specialist (temporary)",
   "company": "HKIT Architects",
   "location": "Oakland, CA",
@@ -753,26 +743,6 @@
   "location": "San Mateo, CA",
   "salary": 57000,
   "url": "https://to.indeed.com/aa487h2xyhz7",
-  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Office Assistant/Coordinator",
-  "company": "Bell Plumbing (Millbrae)",
-  "location": "Millbrae, CA",
-  "salary": 57000,
-  "url": "https://to.indeed.com/aabdbzrm2cxh",
-  "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Office Assistant/Coordinator",
-  "company": "Bell Plumbing (Foster City)",
-  "location": "Foster City, CA",
-  "salary": 57000,
-  "url": "https://to.indeed.com/aambwxf9ddsh",
   "description": "office coordinator customer calls scheduling $25-30/hr posted Oct 14",
   "force": true,
   "skip_letter": true
@@ -968,26 +938,6 @@
   "skip_letter": true
  },
  {
-  "title": "Office Assistant/Coordinator",
-  "company": "Bell Plumbing (Redwood City)",
-  "location": "Redwood City, CA",
-  "salary": 57000,
-  "url": "https://to.indeed.com/aabcztsk7ql6",
-  "description": "office coordinator $25-30/hr posted Oct 14",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Office Assistant/Coordinator",
-  "company": "Bell Plumbing (San Carlos)",
-  "location": "San Carlos, CA",
-  "salary": 57000,
-  "url": "https://to.indeed.com/aawctkgkpxck",
-  "description": "office coordinator $25-30/hr posted Oct 14",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Family Liaison (part-time)",
   "company": "San Francisco Unified School District",
   "location": "San Francisco, CA",
@@ -1006,16 +956,6 @@
   "description": "healthcare liaison referrals intake $36-44/hr posted Sep 25 (stretch fit)",
   "force": true,
   "skip_letter": true
- },
- {
-  "title": "Payroll Clerk",
-  "company": "Putnam Toyota - Burlingame",
-  "location": "Burlingame, CA",
-  "salary": 62000,
-  "url": "https://to.indeed.com/aaf7wrxgppjw",
-  "description": "payroll clerk $28-33/hr posted Sep 23",
-  "force": true,
-  "skip_letter": false
  },
  {
   "title": "Senior Payroll, HR & Property Administrator",
