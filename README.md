@@ -192,3 +192,17 @@ Night games: the international site dates event slugs by UTC and Polymarket US b
 | BreakTheBank alone, plus second side bought by hand | same | 21 | 13 | +$20.53 |
 
 All of the fair test's profit came from BreakTheBank; vito3corleone stopped trading. 12-21 trades is far too few to tell skill from luck: one or two games decide the result. BreakTheBank is also very volatile (weekly results from -$2.5M to +$3.4M; worst drawdown $5.2M against $1.1M of 90-day profit). Files: `data/polyscan_backtest_top2_*.json`, `data/polyscan_backtest_breakthebank_*.json`.
+
+### Out-of-sample check: Oct 1 - 15, 2026 (watchlists frozen on Oct 1)
+| Wallets | Setting | Trades | Won | P&L on $100 |
+|---|---|---|---|---|
+| BreakTheBank | as built | 12 | 7 | +$6.55 |
+| BreakTheBank | plus second side bought by hand | 17 | 8 | +$3.11 (1 still open) |
+| Top 15 by profit on Oct 1 | as built | 44 | 26 | +$17.59 (1 still open) |
+| Top 15 by profit on Oct 1 | plus second side bought by hand | 80 | 47 | +$29.97 (4 still open) |
+
+Both periods together:
+- **BreakTheBank, as built:** 24 trades, +$14.89. **With second-side bets by hand:** 38 trades, +$23.64. Ahead in both periods.
+- **Top 15:** -$24.80 on 97 trades (Sept, Sept 3 list), then +$17.59 on 44 trades (Oct, Oct 1 list). Results this size swing from loss to gain between two-week windows, so a few dozen trades is weak evidence either way.
+- BreakTheBank's bets are almost all NFL game winners; the October gain leans on a few underdogs (Patriots at 26c paid +$5.01 on a $2 bet).
+Files: `data/polyscan_backtest_*2026-10-01_2026-10-15.json`.
