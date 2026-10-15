@@ -1006,5 +1006,195 @@
   "description": "healthcare liaison referrals intake $36-44/hr posted Sep 25 (stretch fit)",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Payroll Clerk",
+  "company": "Putnam Toyota - Burlingame",
+  "location": "Burlingame, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aaf7wrxgppjw",
+  "description": "payroll clerk $28-33/hr posted Sep 23",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Senior Payroll, HR & Property Administrator",
+  "company": "SerenEthos Care and Rehab",
+  "location": "Hayward, CA",
+  "salary": 76000,
+  "url": "https://to.indeed.com/aaj88scfjtk8",
+  "description": "payroll HR administrator $33-40/hr posted Sep 17",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Accounts Receivable and Payable Specialist",
+  "company": "Luminalt",
+  "location": "San Francisco, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aaxkn4kzrxww",
+  "description": "accounts payable receivable $27-33/hr posted Oct 12",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Accounting Assistant",
+  "company": "Bay City Mechanical, Inc.",
+  "location": "Richmond, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aan46qlkqdqb",
+  "description": "accounting assistant accounts payable $26-29/hr posted Oct 6",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Phlebotomist",
+  "company": "One Medical (San Rafael)",
+  "location": "San Rafael, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aatk4x9sy22f",
+  "description": "phlebotomist $26.25-28.25/hr posted Oct 2",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Surgery Scheduler",
+  "company": "IASM",
+  "location": "San Francisco, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aa84y4rvwlkg",
+  "description": "surgery scheduler $25-35/hr posted Sep 23",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Patient Ambassador (temporary)",
+  "company": "Legacy Personnel Inc",
+  "location": "Greenbrae, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aat7t7xmvmhf",
+  "description": "patient ambassador $27-28/hr posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Front Desk Patient Coordinator",
+  "company": "Ross Family Dentistry",
+  "location": "Ross, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aacbqsrc9dtn",
+  "description": "front desk patient coordinator $25-35/hr posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Treatment Coordinator",
+  "company": "Dental office in Fremont",
+  "location": "Fremont, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aarym9c766h7",
+  "description": "treatment coordinator $25-35/hr posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Front Office Receptionist/Hygiene Appointment Coordinator",
+  "company": "Porteous and Burke Family Dentistry",
+  "location": "Rodeo, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aamtc4lltwt2",
+  "description": "front office receptionist appointment coordinator $27-33/hr posted Oct 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Receptionist",
+  "company": "United Dental",
+  "location": "Redwood City, CA",
+  "salary": 59000,
+  "url": "https://to.indeed.com/aa6v4tsj7qvr",
+  "description": "dental receptionist $25-32/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Front Desk Receptionist - Integrated Care Center Clinic",
+  "company": "HealthRIGHT 360",
+  "location": "San Francisco, CA",
+  "salary": 54000,
+  "url": "https://to.indeed.com/aaxhcfyhlqqn",
+  "description": "clinic front desk receptionist $25-27/hr posted Sep 8",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Receptionist / Office Manager",
+  "company": "Sierra Dental Care",
+  "location": "Concord, CA",
+  "salary": 56000,
+  "url": "https://to.indeed.com/aad7sx6hxw47",
+  "description": "dental receptionist office manager from $26/hr posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dedicated Coordinator",
+  "company": "ABC Fire Protection",
+  "location": "Newark, CA",
+  "salary": 63000,
+  "url": "https://to.indeed.com/aadm7szhrghm",
+  "description": "customer coordinator $25-36/hr posted Sep 30",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Network Development Coordinator",
+  "company": "altais",
+  "location": "Oakland, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aamrncynp86f",
+  "description": "healthcare network coordinator $56.9-74.5k posted Oct 9",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Office Manager",
+  "company": "Top Pinole Dental",
+  "location": "Pinole, CA",
+  "salary": 88000,
+  "url": "https://to.indeed.com/aafcwtcphsjn",
+  "description": "dental office manager $40-45/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Office Manager",
+  "company": "Seven Hills Dental Group",
+  "location": "San Francisco, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aapbvwd7nwv2",
+  "description": "dental office manager from $80k posted Oct 9",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Manager/Bookkeeper",
+  "company": "Seaport Stainless",
+  "location": "Richmond, CA",
+  "salary": 93000,
+  "url": "https://to.indeed.com/aa942xlgt6jt",
+  "description": "office manager bookkeeper $40-50/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Human Resources Coordinator II",
+  "company": "Acumen, LLC",
+  "location": "Burlingame, CA",
+  "salary": 74000,
+  "url": "https://to.indeed.com/aapkhytmttj9",
+  "description": "HR coordinator $67-80.6k posted Oct 14 (payroll-adjacent)",
+  "force": true,
+  "skip_letter": true
  }
 ]
