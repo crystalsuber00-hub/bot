@@ -208,3 +208,18 @@ def test_merge_skips_job_already_applied_under_another_link():
     found = [{"id": "b", "company": "ACME", "title": "scheduler", "status": "new"}]
     queue.merge(jobs, found)
     assert jobs["b"]["status"] == "skipped"
+
+
+def test_init_writes_a_loadable_profile(tmp_path, monkeypatch):
+    import builtins
+    from jobapply import __main__ as m
+    from jobapply.profile import load_profile
+    answers = iter(["Pat Lee", "pat@example.com", "555-1", "medical receptionist, scheduler",
+                    "Oakland", "ca", "Berkeley, Alameda", "y", "26", "me.pdf"])
+    monkeypatch.setattr(builtins, "input", lambda *_: next(answers))
+    cfg = tmp_path / "profile.toml"
+    m.main(["-c", str(cfg), "init"])
+    p = load_profile(cfg)
+    assert p.name == "Pat Lee" and p.title_keywords == ["medical receptionist", "scheduler"]
+    assert p.locations == ["Oakland", "Berkeley", "Alameda", "Remote"]
+    assert p.search_locations[0] == "Oakland, CA" and p.min_salary == 26 * 2080

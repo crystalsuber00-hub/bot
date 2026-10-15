@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -199,6 +200,68 @@ def cmd_edit(a, p, jobs):
     subprocess.call([editor, a.config])
 
 
+def _ask(prompt: str, default: str = "") -> str:
+    ans = input(f"{prompt}{f' [{default}]' if default else ''}: ").strip()
+    return ans or default
+
+
+def _csv(text: str) -> list[str]:
+    return [x.strip() for x in text.split(",") if x.strip()]
+
+
+def build_profile_toml(name, email, phone, titles, home_city, commute_cities, state,
+                       remote, hourly, resume) -> str:
+    """Turn the setup answers into a profile.toml (strings are JSON-escaped, which TOML accepts)."""
+    q = json.dumps
+    cities = [home_city] + [c for c in commute_cities if c.lower() != home_city.lower()]
+    locations = [c for c in cities if c] + (["Remote"] if remote else [])
+    search = [f"{c}, {state}" if state else c for c in cities if c]
+    first = titles[0] if titles else "professional"
+    headline = f"I'm a {first.lower()} based in {home_city or 'the area'}, available to start right away."
+    return "\n".join([
+        "[profile]",
+        f"name = {q(name)}", f"email = {q(email)}", f"phone = {q(phone)}", f"resume = {q(resume)}",
+        f"headline = {q(headline)}",
+        f"summary = {q(headline)}",
+        "highlights = []",
+        f"keywords = {q(titles)}",
+        f"title_keywords = {q([x.lower() for x in titles])}",
+        'exclude = ["unpaid", "commission only"]',
+        f"locations = {q(locations)}",
+        f"search_locations = {q(search)}",
+        f"min_salary = {int(hourly * 2080)}",
+        "cover_letters_per_day = 3",
+        'smtp_host = "smtp.gmail.com"', "smtp_port = 587", "",
+    ])
+
+
+def cmd_init(a, p, jobs):
+    """Ask a few questions and write profile.toml."""
+    path = Path(a.config)
+    if path.exists() and _ask(f"{path} already exists. Overwrite? (y/n)", "n").lower() != "y":
+        print("Nothing changed.")
+        return
+    print("Let's set up your job bot. Press Enter to accept a [default].\n")
+    name = _ask("Your full name")
+    email = _ask("Your email")
+    phone = _ask("Your phone (optional)")
+    titles = _csv(_ask("Job titles you want, separated by commas (e.g. medical receptionist, scheduler)"))
+    home = _ask("Your city (where you live)")
+    state = _ask("Your state (2 letters)", "CA").upper()
+    commute = _csv(_ask("Other cities you will commute to, separated by commas"))
+    remote = _ask("Open to remote jobs? (y/n)", "y").lower() == "y"
+    try:
+        hourly = float(_ask("Lowest hourly pay you will accept (number)", "0") or 0)
+    except ValueError:
+        hourly = 0
+    resume = _ask("Path to your resume PDF", "resume.pdf")
+    path.write_text(build_profile_toml(name, email, phone, titles, home, commute, state,
+                                       remote, hourly, resume))
+    print(f"\nSaved {path}. Next:\n  jobapply search -f your_listings.json   (or: jobapply search)\n"
+          "  jobapply review --approve-above 1\n  jobapply apply --no-email\n"
+          "Change anything later with: jobapply edit")
+
+
 def cmd_applied(a, p, jobs):
     """Everything you already applied to, so you can check a job before applying again."""
     done = sorted((j for j in jobs.values() if j["status"] == "applied"),
@@ -233,11 +296,17 @@ def main(argv=None):
     sub.add_parser("contacts", help="list jobs that will not get an intro email (no company contact known)")
     w = sub.add_parser("watch", help="search on a schedule and alert you about new jobs (sends nothing)")
     w.add_argument("--once", action="store_true", help="one check then exit")
+    sub.add_parser("init", help="first-time setup: asks a few questions and writes profile.toml")
     sub.add_parser("status")
     sub.add_parser("applied", help="list every job you already applied to")
     sub.add_parser("preview", help="show the emails exactly as they will be sent")
     sub.add_parser("edit", help="open your profile to change the email wording")
     a = ap.parse_args(argv)
+    if a.cmd == "init":
+        cmd_init(a, None, {})
+        return
+    if not Path(a.config).exists():
+        sys.exit(f"No {a.config} yet. Run:  jobapply init")
     p = load_profile(a.config)
     jobs = queue.load()
     apply_contacts(jobs)

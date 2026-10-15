@@ -130,3 +130,6 @@ jobapply watch --once     # a single check
 jobapply contacts         # which jobs won't get an intro email (no company contact known)
 ```
 `watch` uses your `search_locations`, drops in any JSON/CSV files in `inbox/`, and alerts when new payroll jobs appear (phone push via `NTFY_TOPIC` from the free ntfy app, plus a Mac banner). You then run `jobapply review --approve-above 1` and `jobapply apply`. Add real HR/careers addresses you find to `contacts.csv` (`company,email`) and every job at that company gets the intro email. Optional job source: set `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` (free at developer.adzuna.com) and add `"adzuna"` to `sources` in your profile.
+
+### Giving the job bot to someone else
+`bash scripts/make_copy.sh` builds `dist/jobbot.zip`: the bot only, with none of your resumes, listings, contacts or history. They unzip it, follow `SETUP.md`, and `jobapply init` asks for their name, email, phone, job titles, cities, remote preference, lowest pay and resume.
