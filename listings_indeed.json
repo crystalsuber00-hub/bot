@@ -1226,5 +1226,125 @@
   "description": "HR assistant remote $30/hr posted Oct 15; confirm California hiring",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Recruiter 4-HR",
+  "company": "Genius Tech Development",
+  "location": "San Francisco, CA",
+  "salary": 75000,
+  "url": "https://to.indeed.com/aaqjjjcrjlpb",
+  "description": "recruiter $65-85k posted Oct 10",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Senior Recruiter, Marketing & Creative",
+  "company": "Robert Half",
+  "location": "San Francisco, CA",
+  "salary": 72000,
+  "url": "https://to.indeed.com/aaywqb2xb86v",
+  "description": "recruiter $70.3-75k posted Oct 14 (senior level, stretch)",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Talent Manager (Administrative & Customer Support)",
+  "company": "Robert Half",
+  "location": "San Ramon, CA",
+  "salary": 78000,
+  "url": "https://to.indeed.com/aa84pl86zthg",
+  "description": "recruiter admin customer support placement $70.3-87k posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Human Resources - Administrative Recruiting Specialist",
+  "company": "Gordon Rees Scully Mansukhani, LLP",
+  "location": "Walnut Creek, CA",
+  "salary": 87000,
+  "url": "https://to.indeed.com/aavvgyctzy74",
+  "description": "administrative recruiting specialist $75-100k posted Aug 20",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruitment and Care Coordination Specialist",
+  "company": "FirstLight Home Care",
+  "location": "Danville, CA",
+  "salary": 54000,
+  "url": "https://to.indeed.com/aaqw8qgbyjvr",
+  "description": "recruiting care coordination $25-27/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruiting Coordinator (Remote)",
+  "company": "Net Law Group LLC",
+  "location": "Remote",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aa4xpym6jdjp",
+  "description": "recruiting coordinator remote $25-30/hr posted Oct 15; confirm California hiring",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Healthcare Recruiter (Remote)",
+  "company": "Figs Home Care Alliance",
+  "location": "Remote",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aa2jdv7qz6lh",
+  "description": "healthcare recruiter remote $28-30/hr posted Sep 29; confirm California hiring",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruiting Coordinator - Temporary",
+  "company": "Lifehouse Agency",
+  "location": "San Rafael, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aa86t6cwqpnt",
+  "description": "recruiting coordinator temporary up to $36/hr (low end not listed) posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "HR and Payroll Coordinator (temporary)",
+  "company": "Premier Talent Partners",
+  "location": "Oakland, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aa8m2y7sywj4",
+  "description": "HR and payroll coordinator temporary $29/hr posted Sep 9",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Human Resources Specialist",
+  "company": "C&H Enterprises",
+  "location": "Fremont, CA",
+  "salary": 77500,
+  "url": "https://to.indeed.com/aay8q6l6lvpm",
+  "description": "HR specialist $75-80k posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Staffing Coordinator Home Care Agency (Remote)",
+  "company": "Home Care of SF",
+  "location": "Remote",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aa9mxdntpjlc",
+  "description": "staffing coordinator remote $65-75k posted Sep 25; confirm California hiring",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Scheduling Associate I, Centralized Staffing Office (per diem)",
+  "company": "MarinHealth",
+  "location": "Greenbrae, CA",
+  "salary": 85000,
+  "url": "https://to.indeed.com/aaww492tnyf6",
+  "description": "staffing office scheduling per diem $33.35-50/hr posted Oct 8",
+  "force": true,
+  "skip_letter": true
  }
 ]
