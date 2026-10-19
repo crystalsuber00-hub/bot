@@ -1136,5 +1136,95 @@
   "description": "HR coordinator $67-80.6k posted Oct 14 (payroll-adjacent)",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Human Resources Generalist",
+  "company": "Photomatica",
+  "location": "San Francisco Bay Area, CA",
+  "salary": 85000,
+  "url": "https://to.indeed.com/aa9d7bxxkk6g",
+  "description": "HR generalist $80-90k posted Sep 14",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "People & Culture Coordinator",
+  "company": "Tenderloin Community Benefit District",
+  "location": "San Francisco, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aadw8hdvzw4p",
+  "description": "HR people and culture coordinator $65-75k posted Oct 1",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruiting Coordinator",
+  "company": "Generalist",
+  "location": "San Mateo, CA",
+  "salary": 72000,
+  "url": "https://to.indeed.com/aa9w7hj4drzh",
+  "description": "recruiting coordinator $60.6-84.9k posted Sep 9",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruiting Coordinator",
+  "company": "factory",
+  "location": "San Francisco, CA",
+  "salary": 74000,
+  "url": "https://to.indeed.com/aa4fz9hjjjb7",
+  "description": "recruiting coordinator $64.7-84.5k posted Aug 3",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "HR Generalist",
+  "company": "Manos Home Care",
+  "location": "Oakland, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aajgqplbzbr4",
+  "description": "HR generalist $34/hr posted Aug 12",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Staffing Coordinator",
+  "company": "DLS Events LLC",
+  "location": "San Francisco, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aaynhj2gbmfl",
+  "description": "staffing coordinator $30/hr posted Oct 12",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Human Resources Specialist",
+  "company": "Yellow Brick Road Logistics (YELW)",
+  "location": "Richmond, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aa9qvx9ck4b4",
+  "description": "HR specialist $65-75k posted Aug 19",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Temporary Talent Acquisition Specialist",
+  "company": "First 5 Alameda",
+  "location": "Alameda, CA",
+  "salary": 104000,
+  "url": "https://to.indeed.com/aansgqvpjggz",
+  "description": "talent acquisition temporary $85-123k posted Oct 12",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Human Resource Assistant (Remote)",
+  "company": "Gersh Autism",
+  "location": "Remote",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aart4sfg2xtc",
+  "description": "HR assistant remote $30/hr posted Oct 15; confirm California hiring",
+  "force": true,
+  "skip_letter": true
  }
 ]
