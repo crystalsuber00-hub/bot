@@ -133,3 +133,11 @@ jobapply contacts         # which jobs won't get an intro email (no company cont
 
 ### Giving the job bot to someone else
 `bash scripts/make_copy.sh` builds `dist/jobbot.zip`: the bot only, with none of your resumes, listings, contacts or history. They unzip it, follow `SETUP.md`, and `jobapply init` asks for their name, email, phone, job titles, cities, remote preference, lowest pay and resume.
+
+### More job sources
+`jobapply search` now also reads company career pages on Greenhouse and Lever. Add companies in `profile.toml`:
+```
+greenhouse_boards = ["gusto", "reddit", "stripe"]   # the name in boards.greenhouse.io/<name>
+lever_boards = ["palantir"]                         # the name in jobs.lever.co/<name>
+```
+Adzuna (free keys in ADZUNA_APP_ID / ADZUNA_APP_KEY, then add "adzuna" to `sources`) searches by city and covers local jobs from many sites. Any other site: save its jobs as JSON/CSV and run `jobapply search -f file.json`.

@@ -225,3 +225,27 @@ def test_init_writes_a_loadable_profile(tmp_path, monkeypatch):
     assert p.name == "Pat Lee" and p.title_keywords == ["medical receptionist", "scheduler"]
     assert p.locations == ["Oakland", "Berkeley", "Alameda", "Remote"]
     assert p.search_locations[0] == "Oakland, CA" and p.min_salary == 26 * 2080
+
+
+def test_greenhouse_and_lever_sources(monkeypatch):
+    from jobapply import sources
+    from jobapply.profile import Profile
+
+    class R:
+        def __init__(self, data): self.data = data
+        def raise_for_status(self): pass
+        def json(self): return self.data
+
+    def fake_get(url, **kw):
+        if "greenhouse" in url:
+            return R({"jobs": [{"title": "Payroll Specialist", "absolute_url": "https://g/1", "location": {"name": "Oakland, CA"}},
+                               {"title": "Engineer", "absolute_url": "https://g/2", "location": {"name": "Remote"}}]})
+        return R([{"text": "Payroll Analyst", "hostedUrl": "https://l/1", "categories": {"location": "San Francisco"}, "descriptionPlain": "x"}])
+
+    monkeypatch.setattr(sources.requests, "get", fake_get)
+    sources._BOARD_CACHE.clear()
+    p = Profile(name="a", email="b", greenhouse_boards=["acme"], lever_boards=["beta"])
+    g = sources.greenhouse("payroll", p)
+    l = sources.lever("payroll", p)
+    assert [j["title"] for j in g] == ["Payroll Specialist"] and g[0]["location"] == "Oakland, CA"
+    assert l[0]["url"] == "https://l/1" and l[0]["company"] == "beta"

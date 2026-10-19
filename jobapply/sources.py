@@ -51,6 +51,42 @@ def remoteok(query: str, p: Profile | None = None) -> list[dict]:
     return out
 
 
+_BOARD_CACHE: dict[str, list[dict]] = {}
+
+
+def _board(kind: str, token: str) -> list[dict]:
+    """One company's public job board (Greenhouse or Lever), fetched once per run. Missing boards are skipped."""
+    key = f"{kind}:{token}"
+    if key not in _BOARD_CACHE:
+        url = (f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs" if kind == "greenhouse"
+               else f"https://api.lever.co/v0/postings/{token}?mode=json")
+        try:
+            r = requests.get(url, headers=UA, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+        except (requests.RequestException, ValueError):
+            data = {"jobs": []} if kind == "greenhouse" else []
+        _BOARD_CACHE[key] = data["jobs"] if kind == "greenhouse" else data
+    return _BOARD_CACHE[key]
+
+
+def greenhouse(query: str, p: Profile) -> list[dict]:
+    """Jobs from company career pages hosted on Greenhouse (list the companies in p.greenhouse_boards)."""
+    q = query.lower()
+    return [_job("greenhouse", j["title"], token, j["absolute_url"], (j.get("location") or {}).get("name", ""))
+            for token in p.greenhouse_boards for j in _board("greenhouse", token)
+            if q in j["title"].lower()]
+
+
+def lever(query: str, p: Profile) -> list[dict]:
+    """Jobs from company career pages hosted on Lever (list the companies in p.lever_boards)."""
+    q = query.lower()
+    return [_job("lever", j["text"], token, j["hostedUrl"], (j.get("categories") or {}).get("location", "") or "",
+                 j.get("descriptionPlain", ""))
+            for token in p.lever_boards for j in _board("lever", token)
+            if q in j["text"].lower()]
+
+
 def from_file(path: str) -> list[dict]:
     """Import listings from JSON (list of objects) or CSV with title,company,url,... columns."""
     if path.endswith(".json"):
@@ -95,7 +131,8 @@ def from_inbox(folder: str) -> list[dict]:
     return out
 
 
-SOURCES = {"remotive": remotive, "remoteok": remoteok, "adzuna": adzuna}
+SOURCES = {"remotive": remotive, "remoteok": remoteok, "adzuna": adzuna,
+           "greenhouse": greenhouse, "lever": lever}
 
 
 def _hits(job: dict, p: Profile) -> int:

@@ -43,7 +43,11 @@ class Profile:
     send_hours: list[int] = field(default_factory=lambda: [8, 18])  # only email between these local hours
     run_every_minutes: int = 60
     inbox: str = "inbox"           # drop JSON/CSV listing files here; run mode imports them
-    sources: list[str] = field(default_factory=lambda: ["remotive", "remoteok"])
+    sources: list[str] = field(default_factory=lambda: ["remotive", "remoteok", "greenhouse", "lever"])
+    # company career pages to watch: the name in boards.greenhouse.io/<name> or jobs.lever.co/<name>
+    greenhouse_boards: list[str] = field(default_factory=lambda: [
+        "gusto", "reddit", "okta", "stripe", "airbnb", "lyft", "pinterest", "dropbox", "asana"])
+    lever_boards: list[str] = field(default_factory=lambda: ["palantir", "plaid"])
     daily_limit: int = 25          # max applications sent per day
     delay_seconds: int = 45        # pause between sends
     smtp_host: str = ""
