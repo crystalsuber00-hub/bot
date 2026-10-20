@@ -1,6 +1,8 @@
 # spxbot
 
 > This repo also contains **shopbot**, an automated dropshipping store (product research, website, checkout, fulfilment, marketing). See [shopbot/README.md](shopbot/README.md).
+>
+> And **clientbot**, which finds, emails and signs local businesses (med spas, dental, trades, salons) for an AI front-desk service built on n8n + Claude, then generates each client's workflows. See [clientbot/README.md](clientbot/README.md) and the 30-day [PLAYBOOK](clientbot/PLAYBOOK.md).
 
 Signal bot for a SPX credit-spread routine:
 

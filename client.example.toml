@@ -1,0 +1,38 @@
+# One file per client. Build their workflows with:  clientbot agent clients/glow.toml
+# Everything here is what the AI is allowed to tell customers, so keep prices and hours accurate.
+
+[business]
+name = "Glow Med Spa"
+niche = "med spa"
+city = "Austin, TX"
+mode = "forward"                      # "forward": their line forwards unanswered calls to the Twilio number (most common)
+                                      # "dial": the Twilio number is the public number and rings main_phone first
+main_phone = "+15125550100"           # their real line (needed for "dial" mode)
+twilio_number = "+15125550199"        # the number you buy in Twilio for this client
+owner_mobile = "+15125550111"         # gets a text when a person is needed
+from_email = "hello@glowmedspa.com"   # sender for web-lead emails (the SMTP credential in n8n)
+booking_url = "https://glowmedspa.janeapp.com"   # leave empty to collect details and hand off instead
+hours = "Tue-Fri 10am-7pm, Sat 9am-3pm, closed Sun-Mon"
+address = "1200 S Lamar Blvd, Austin, TX 78704"
+timezone = "America/Chicago"
+services = [
+  "Botox: $12 per unit, most foreheads take 20-30 units",
+  "Lip filler: from $650",
+  "HydraFacial: $199",
+  "Free 15-minute consultation for any injectable",
+]
+faq = [
+  "Financing: yes, through Cherry; apply at the front desk or online",
+  "Parking: free lot behind the building",
+  "First visit: arrive 10 minutes early to fill in forms",
+]
+policies = "24-hour cancellation policy; late cancellations are charged $50."
+emergency = "For a reaction after treatment that feels severe (trouble breathing, vision changes), call 911 first."
+tone = "warm, upbeat and brief"
+ring_seconds = 18
+
+[n8n]
+n8n_url = "https://n8n.your-agency.com"
+
+[ai]
+model = "claude-opus-5-5"

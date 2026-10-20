@@ -12,3 +12,9 @@ config.shop.toml
 *.db-shm
 *.cj_token.json
 outbox/
+config.agency.toml
+clients/
+builds/
+proposals/
+proposals-demo/
+outbox-demo/

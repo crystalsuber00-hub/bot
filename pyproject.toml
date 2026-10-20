@@ -1,7 +1,7 @@
 [project]
 name = "spxbot"
 version = "0.1.0"
-description = "SPX credit spread signal bot, plus shopbot: an automated dropshipping store"
+description = "SPX credit spread signal bot, plus shopbot (automated dropshipping store) and clientbot (AI-automation agency client finder)"
 requires-python = ">=3.11"
 dependencies = ["requests>=2.31"]
 
@@ -10,13 +10,15 @@ dev = ["pytest>=8"]
 ibkr = ["ib_async>=1.0"]
 shop-ai = ["anthropic>=1.12"]
 shop-prod = ["gunicorn>=22"]
+agency-ai = ["anthropic>=1.12"]
 
 [project.scripts]
 spxbot = "spxbot.__main__:main"
 shopbot = "shopbot.__main__:main"
+clientbot = "clientbot.__main__:main"
 
 [tool.setuptools]
-packages = ["spxbot", "shopbot"]
+packages = ["spxbot", "shopbot", "clientbot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

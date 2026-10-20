@@ -1,0 +1,70 @@
+# Copy to config.agency.toml. Passwords and API keys go in environment variables / .env, not here.
+db_path = "data/clients.db"
+
+[agency]
+name = "Front Desk AI"
+owner_name = "Your Name"
+owner_title = "Founder"
+phone = ""                                   # optional, in your signature
+website = ""                                 # optional; a one-page site helps people trust a cold email
+calendar_url = "https://cal.com/you/15min"   # 15-minute call link (Cal.com or Calendly, both free)
+business_address = "Your mailing address"    # REQUIRED in every cold email (CAN-SPAM). A PO box or virtual mailbox is fine.
+timezone = "America/Chicago"                 # your sending window and daily digest use this
+
+[offer]
+monthly_price = 2500                         # salons/beauty default to 1500 (niches.py); change per niche in [niche_overrides]
+setup_fee = 0
+guarantee = "If it hasn't recovered at least {breakeven} {unit}s in the first 30 days, you don't pay for month two."
+target_clients = 4
+mrr_goal = 10000
+
+[targeting]
+# Highest-paying niches first. One city to start; add nearby cities when it runs low.
+niches = ["med spa", "dental", "hvac", "plumber", "roofer"]
+cities = ["Austin, TX"]
+min_reviews = 15
+max_reviews = 1500
+min_rating = 3.5
+min_score = 50
+
+[sources]
+provider = "auto"                            # google if GOOGLE_PLACES_API_KEY is set, else OpenStreetMap (free)
+contact = "you@your-agency.com"              # sent to OpenStreetMap with requests (their usage policy)
+
+[outreach]
+auto_send = false                            # read the first 20-30 drafts yourself, then switch to true
+send_weekdays = [0, 1, 2, 3, 4]
+send_start_hour = 8
+send_end_hour = 16
+min_gap_seconds = 150
+followup_days = [3, 4, 7]                    # email 2 three days after email 1, email 3 four days later, email 4 a week later
+
+[copywriting]
+enabled = true                               # needs ANTHROPIC_API_KEY; templates otherwise
+model = "claude-opus-5-5"
+
+[notify]
+owner_email = "you@your-own-inbox.com"       # reply alerts + daily digest. Phone push: NTFY_TOPIC in .env
+
+# One block per sending mailbox. Use a SECOND domain (e.g. getfrontdeskai.com if your site is frontdeskai.com) so cold
+# email can never hurt your main domain. 2-3 mailboxes x 40/day after a 2-week warm-up = 1,600-2,400 emails a month.
+[[mailboxes]]
+address = "sam@getfrontdeskai.com"
+smtp_host = "smtp.gmail.com"                 # Google Workspace. Microsoft 365: smtp.office365.com; Zoho: smtp.zoho.com
+smtp_port = 587
+password_env = "MAILBOX1_PASSWORD"           # app password (Google: myaccount.google.com/apppasswords, needs 2-step verification)
+imap_host = "imap.gmail.com"                 # replies and bounces; outlook.office365.com / imap.zoho.com
+daily_limit = 40
+ramp_start = 10
+ramp_per_day = 3
+
+# [[mailboxes]]
+# address = "sam@tryfrontdeskai.com"
+# smtp_host = "smtp.gmail.com"
+# password_env = "MAILBOX2_PASSWORD"
+# imap_host = "imap.gmail.com"
+
+[niche_overrides]
+# Adjust the average job value for your city, or the price for a niche:
+# hvac = { ticket = 550 }
+# "hair salon" = { price = 1200 }
