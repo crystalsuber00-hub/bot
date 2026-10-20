@@ -71,7 +71,7 @@ def fallback_sequence(lead: dict, niche: Niche, audit: dict, ctx: dict) -> dict:
     short = re.sub(r"\b(llc|inc|pllc|co|ltd)\.?$", "", lead["name"], flags=re.I).strip(" ,")
     obs = (f"I was on {short}'s website and noticed {seen[0]}." if audit.get("ok") and seen
            else f"I came across {short} while looking at {niche.label} in {lead.get('city') or 'your area'}.")
-    stars = (f" ({lead['rating']} stars from {lead['reviews']} reviews, so people clearly want to book with you)"
+    stars = (f" With {lead['rating']} stars from {lead['reviews']} reviews, people clearly want to book with you."
              if lead.get("rating") and lead.get("reviews") and lead["rating"] >= 4.3 and lead["reviews"] >= 30 else "")
     cal = f" Here's my calendar if a 15-minute call is easier: {ctx['calendar_url']}" if ctx.get("calendar_url") else \
         " Happy to walk you through it on a 15-minute call."
