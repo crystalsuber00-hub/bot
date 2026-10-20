@@ -126,7 +126,7 @@ clientbot export leads.csv
 - The generated workflows were imported and run in n8n 2.41 with simulated Twilio calls/texts, a simulated web lead
   and a stand-in for the Claude API: text-backs, conversation memory, STOP, handoffs and lead replies all behaved as
   designed. Real Twilio and Claude calls weren't part of that run, so do the 5 tests in `SETUP.md` on each client
-  before going live. Use n8n 1.x or newer (2.x tested). The texting assistant sends booking links; real-time calendar booking (Cal.com,
+  before going live. Tested on n8n 2.41; older versions may need small changes. The texting assistant sends booking links; real-time calendar booking (Cal.com,
   Google Calendar, Jane, Vagaro APIs) is an upgrade you'd add per client.
 - Dental and medical clients: their patients' texts can contain health information. Use Twilio's and Anthropic's
   HIPAA offerings (both need a signed BAA) and self-hosted n8n, or keep those clients on booking-only messages.
