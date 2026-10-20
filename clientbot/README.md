@@ -123,8 +123,10 @@ clientbot export leads.csv
   (Apollo, Outscraper's email finder), import its CSV; verify emails before sending to keep bounces under 5%.
 - The bot only sends from mailboxes you own and stops at the limits you set. It can't make a new domain trusted faster:
   that's the warm-up.
-- The n8n workflows were checked for structure and their JavaScript logic is tested, but run the 5 tests in `SETUP.md`
-  on each client before going live. The texting assistant sends booking links; real-time calendar booking (Cal.com,
+- The generated workflows were imported and run in n8n 2.41 with simulated Twilio calls/texts, a simulated web lead
+  and a stand-in for the Claude API: text-backs, conversation memory, STOP, handoffs and lead replies all behaved as
+  designed. Real Twilio and Claude calls weren't part of that run, so do the 5 tests in `SETUP.md` on each client
+  before going live. Use n8n 1.x or newer (2.x tested). The texting assistant sends booking links; real-time calendar booking (Cal.com,
   Google Calendar, Jane, Vagaro APIs) is an upgrade you'd add per client.
 - Dental and medical clients: their patients' texts can contain health information. Use Twilio's and Anthropic's
   HIPAA offerings (both need a signed BAA) and self-hosted n8n, or keep those clients on booking-only messages.
