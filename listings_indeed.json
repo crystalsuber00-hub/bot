@@ -494,15 +494,6 @@
   "force": true
  },
  {
-  "title": "Payroll Accountant (Temporary)",
-  "company": "Robert Half",
-  "location": "Oakland, CA",
-  "salary": 90000,
-  "url": "https://to.indeed.com/aa27ygq8jzxr",
-  "description": "payroll accountant temporary $41-45/hr",
-  "force": true
- },
- {
   "title": "Phlebotomist II",
   "company": "Quest Diagnostics (Sunnyvale)",
   "location": "Sunnyvale, CA",
@@ -1238,26 +1229,6 @@
   "skip_letter": true
  },
  {
-  "title": "Senior Recruiter, Marketing & Creative",
-  "company": "Robert Half",
-  "location": "San Francisco, CA",
-  "salary": 72000,
-  "url": "https://to.indeed.com/aaywqb2xb86v",
-  "description": "recruiter $70.3-75k posted Oct 14 (senior level, stretch)",
-  "force": true,
-  "skip_letter": true
- },
- {
-  "title": "Talent Manager (Administrative & Customer Support)",
-  "company": "Robert Half",
-  "location": "San Ramon, CA",
-  "salary": 78000,
-  "url": "https://to.indeed.com/aa84pl86zthg",
-  "description": "recruiter admin customer support placement $70.3-87k posted Oct 15",
-  "force": true,
-  "skip_letter": true
- },
- {
   "title": "Human Resources - Administrative Recruiting Specialist",
   "company": "Gordon Rees Scully Mansukhani, LLP",
   "location": "Walnut Creek, CA",
@@ -1374,96 +1345,6 @@
   "salary": 80000,
   "url": "https://to.indeed.com/aaddk2xwzmym",
   "description": "HR payroll $70-90k posted Oct 20 (manager title, stretch)",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Clerk (construction, contract)",
-  "company": "Robert Half",
-  "location": "Walnut Creek, CA",
-  "salary": 68000,
-  "url": "https://www.roberthalf.com/us/en/job/walnut-creek-ca/payroll-clerk/04692-9504405973-usen",
-  "description": "weekly construction payroll certified payroll $30-35/hr posted Oct 3",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Clerk (construction, contract)",
-  "company": "Robert Half",
-  "location": "Pleasant Hill, CA",
-  "salary": 68000,
-  "url": "https://www.roberthalf.com/us/en/job/pleasant-hill-ca/payroll-clerk/04692-9504405975-usen",
-  "description": "weekly construction payroll $30-35/hr posted Oct 3",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Clerk (construction, contract)",
-  "company": "Robert Half",
-  "location": "Martinez, CA",
-  "salary": 61000,
-  "url": "https://www.roberthalf.com/us/en/job/martinez-ca/payroll-clerk/04692-9504405974-usen",
-  "description": "weekly construction payroll $27-32/hr posted Oct 3",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Clerk (temp to hire)",
-  "company": "Robert Half",
-  "location": "Benicia, CA",
-  "salary": 63000,
-  "url": "https://www.roberthalf.com/us/en/job/benicia-ca/payroll-clerk/00470-0013527370-usen",
-  "description": "payroll clerk temp-to-hire $28.98-31.75/hr posted Oct 19",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Clerk (contract to hire)",
-  "company": "Robert Half",
-  "location": "Benicia, CA",
-  "salary": 58000,
-  "url": "https://www.roberthalf.com/us/en/job/benicia-ca/payroll-clerk/00470-9504413160-usen",
-  "description": "payroll clerk contract-to-hire ~350 staff $25.50-32.50/hr posted Oct 19",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Specialist (contract)",
-  "company": "Robert Half",
-  "location": "Burlingame, CA",
-  "salary": 90000,
-  "url": "https://www.roberthalf.com/us/en/job/burlingame-ca/payroll-specialist/00430-9504410516-usen",
-  "description": "full-cycle payroll 200+ staff $40-50/hr posted Oct 12",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Analyst (remote, contract)",
-  "company": "Robert Half",
-  "location": "San Ramon, CA",
-  "salary": 69000,
-  "url": "https://www.roberthalf.com/us/en/job/san-ramon-ca/payroll-analyst/00400-0013523239-usen",
-  "description": "payroll analyst remote healthcare $31.35-36.30/hr posted Oct 19",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll Specialist (hybrid, permanent)",
-  "company": "Robert Half",
-  "location": "San Francisco Bay Area, CA",
-  "salary": 95000,
-  "url": "https://www.roberthalf.com/us/en/job/san-francisco-bay-area-ca/payroll-specialist/00430-0013376572-usen",
-  "description": "payroll specialist $90-100k posted Oct 1",
-  "force": true,
-  "skip_letter": false
- },
- {
-  "title": "Payroll and Accounting Specialist",
-  "company": "Robert Half",
-  "location": "Richmond, CA",
-  "salary": 91000,
-  "url": "https://www.roberthalf.com/us/en/job/richmond-ca/payroll/00340-0013513433-usen",
-  "description": "payroll $87-95k posted Sep 24",
   "force": true,
   "skip_letter": false
  },
