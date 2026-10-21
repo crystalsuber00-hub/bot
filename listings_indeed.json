@@ -1346,5 +1346,35 @@
   "description": "staffing office scheduling per diem $33.35-50/hr posted Oct 8",
   "force": true,
   "skip_letter": true
+ },
+ {
+  "title": "Office Manager/Accounting Bookkeeper",
+  "company": "BBSI",
+  "location": "Livermore, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aamtzqwfnhbh",
+  "description": "office manager bookkeeper payroll PEO $70k posted Oct 14",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Payroll & HR Manager - Part-Time",
+  "company": "City Nights",
+  "location": "San Francisco, CA",
+  "salary": 100000,
+  "url": "https://to.indeed.com/aafgcmpzkynd",
+  "description": "payroll HR part-time $45-55/hr posted Oct 15 (manager title, stretch)",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "HR / Payroll Manager",
+  "company": "San Francisco Post Acute",
+  "location": "San Francisco, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aaddk2xwzmym",
+  "description": "HR payroll $70-90k posted Oct 20 (manager title, stretch)",
+  "force": true,
+  "skip_letter": false
  }
 ]
