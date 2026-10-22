@@ -3,584 +3,540 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Golden Barber &amp; Salon | Houston, TX</title>
-<meta name="description" content="Golden Barber & Salon on Hillcroft Ave in Houston. Fades, men's cuts, kids' cuts, beard shaping, braids, color and blowouts. Walk-ins welcome.">
+<title>Golden Barber &amp; Salon · Hillcroft, Houston</title>
+<meta name="description" content="Golden Barber & Salon, upstairs at 5901 Hillcroft Ave in Houston. Fades, lineups, beard work, kids' cuts, braids, color and blowouts. Walk-ins welcome.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@600;700&family=Archivo:wght@400;500;700;800&family=DM+Serif+Display:ital@0;1&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #0d0c0a;
-    --ink-2: #16140f;
-    --ink-3: #201d16;
-    --line: rgba(212, 175, 92, .18);
-    --gold: #d4af5c;
-    --gold-hi: #f1d48a;
-    --gold-lo: #a07c2c;
-    --cream: #f5efe2;
-    --muted: #b3aa98;
-    --radius: 18px;
-    --maxw: 1160px;
+    --paper: #f2e9d6;
+    --paper-2: #e9dcc2;
+    --ink: #161310;
+    --ink-soft: #4a4238;
+    --red: #c4321e;
+    --blue: #1f3d73;
+    --mustard: #e3a72a;
+    --wood: #7b4a22;
+    --felt: #1a1917;
+    --maxw: 1180px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    background: var(--ink);
-    color: var(--cream);
-    font-family: "Manrope", system-ui, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .17 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color: var(--ink);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
     overflow-x: hidden;
   }
-  a { color: inherit; text-decoration: none; }
-  img, svg { display: block; }
-  .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
-  .serif { font-family: "Playfair Display", Georgia, serif; }
-  .gold-text {
-    background: linear-gradient(100deg, var(--gold-lo), var(--gold-hi) 45%, var(--gold) 70%, var(--gold-lo));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-size: 12px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
-  }
-  .eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--gold); }
+  main, footer { overflow-x: clip; }
+  a { color: inherit; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  .marker { font-family: "Permanent Marker", cursive; font-weight: 400; }
 
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    padding: 15px 26px; border-radius: 999px; font-weight: 700; font-size: 15px;
-    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-    white-space: nowrap;
+  /* Barber pole stripe */
+  .pole-stripe {
+    height: 14px;
+    background: repeating-linear-gradient(-45deg, var(--red) 0 14px, #fff8ea 14px 28px, var(--blue) 28px 42px, #fff8ea 42px 56px);
+    background-size: 79.2px 14px;
+    animation: slide 2.4s linear infinite;
   }
-  .btn-gold {
-    background: linear-gradient(135deg, var(--gold-hi), var(--gold) 50%, var(--gold-lo));
-    color: #1a1406; box-shadow: 0 10px 30px -10px rgba(212,175,92,.6);
-  }
-  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -10px rgba(212,175,92,.75); }
-  .btn-ghost { border: 1px solid rgba(245,239,226,.28); color: var(--cream); }
-  .btn-ghost:hover { border-color: var(--gold); color: var(--gold-hi); }
-  .btn svg { width: 18px; height: 18px; }
+  @keyframes slide { to { background-position: 79.2px 0; } }
 
-  /* Preview ribbon */
-  .ribbon {
-    background: var(--gold); color: #1a1406; text-align: center;
-    font-size: 12.5px; font-weight: 700; letter-spacing: .04em; padding: 7px 16px;
+  .preview-tag {
+    background: var(--ink); color: var(--paper);
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase; text-align: center; padding: 6px 12px;
   }
 
   /* Nav */
-  header.nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(13,12,10,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--line);
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-badge {
+    width: 50px; height: 50px; border-radius: 50%; flex: none;
+    background: var(--ink); color: var(--mustard);
+    display: grid; place-items: center;
+    font-family: "DM Serif Display", serif; font-size: 28px; line-height: 1;
+    box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
   }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 74px; gap: 16px; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark { width: 44px; height: 44px; flex: none; }
-  .brand-name { line-height: 1.05; }
-  .brand-name b { font-family: "Playfair Display", serif; font-size: 20px; font-weight: 800; letter-spacing: .02em; display: block; }
-  .brand-name span { font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
-  .nav-links { display: flex; gap: 30px; font-size: 14.5px; font-weight: 600; color: var(--muted); }
-  .nav-links a:hover { color: var(--gold-hi); }
-  .nav-cta { padding: 11px 20px; font-size: 14px; }
+  .logo-text { font-family: "Anton", sans-serif; font-size: 22px; letter-spacing: .03em; line-height: 1; text-transform: uppercase; }
+  .logo-text small { display: block; font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .24em; color: var(--red); margin-top: 4px; }
+  .nav-links { display: flex; gap: 28px; font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .1em; }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--red); }
+
+  /* Buttons: flat, hard offset shadow */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 14px 24px; border: 2.5px solid var(--ink); border-radius: 6px; text-decoration: none;
+    box-shadow: 4px 4px 0 var(--ink); transition: transform .12s ease, box-shadow .12s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn-red { background: var(--red); color: #fff8ea; }
+  .btn-paper { background: #fff8ea; color: var(--ink); }
+  .btn-mustard { background: var(--mustard); color: var(--ink); }
+  .btn svg { width: 18px; height: 18px; }
 
   /* Hero */
-  .hero { position: relative; padding: 96px 0 110px; overflow: hidden; isolation: isolate; }
-  .hero::before {
-    content: ""; position: absolute; inset: 0; z-index: -2;
-    background:
-      radial-gradient(900px 500px at 85% 10%, rgba(212,175,92,.20), transparent 60%),
-      radial-gradient(700px 500px at -10% 110%, rgba(212,175,92,.12), transparent 60%),
-      var(--ink);
+  .hero { position: relative; padding: 30px 0 70px; }
+  .hero-kicker {
+    font-family: "Archivo Narrow", sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .22em; font-size: 14px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
   }
-  .hero::after {
-    content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
-    background-image: linear-gradient(rgba(212,175,92,.05) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(212,175,92,.05) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse at 70% 30%, #000 20%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse at 70% 30%, #000 20%, transparent 70%);
-  }
-  .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
+  .hero-kicker span.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
   .hero h1 {
-    font-family: "Playfair Display", serif; font-weight: 800;
-    font-size: clamp(44px, 7vw, 86px); line-height: 1.02; letter-spacing: -.015em; margin: 22px 0 22px;
+    font-family: "Anton", sans-serif; font-weight: 400; text-transform: uppercase;
+    font-size: clamp(96px, 21vw, 300px); line-height: .82; letter-spacing: -.01em;
+    margin: 18px 0 0; color: var(--ink);
   }
-  .hero h1 em { font-style: italic; font-weight: 600; }
-  .hero p.lead { font-size: 18.5px; color: var(--muted); max-width: 520px; }
-  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
-  .hero-meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 42px; font-size: 14px; color: var(--muted); }
-  .hero-meta div { display: flex; align-items: center; gap: 8px; }
-  .hero-meta svg { width: 18px; height: 18px; color: var(--gold); }
+  .hero h1 .o {
+    display: inline-block; color: var(--mustard);
+    -webkit-text-stroke: 3px var(--ink);
+    text-shadow: 6px 6px 0 var(--ink);
+  }
+  .hero-sub {
+    font-family: "DM Serif Display", serif; font-style: italic; font-size: clamp(36px, 6vw, 76px); line-height: 1;
+    margin: 6px 0 0 .1em; color: var(--red);
+  }
+  .hero-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: end; margin-top: 40px; }
+  .hero-row p { font-size: 20px; max-width: 520px; color: var(--ink-soft); }
+  .hero-row p b { color: var(--ink); }
+  .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
 
-  /* Hero visual: barber pole + medallion */
-  .hero-art { position: relative; aspect-ratio: 4 / 5; max-width: 420px; justify-self: end; width: 100%; }
-  .medallion {
-    position: absolute; inset: 0; border-radius: 220px 220px 28px 28px;
-    background:
-      radial-gradient(circle at 50% 32%, rgba(241,212,138,.22), transparent 55%),
-      linear-gradient(180deg, var(--ink-3), var(--ink-2));
-    border: 1px solid var(--line);
-    overflow: hidden;
-    box-shadow: 0 40px 80px -30px rgba(0,0,0,.8), inset 0 0 0 10px rgba(13,12,10,.6), inset 0 0 0 11px var(--line);
+  /* Rotating stamp */
+  .stamp {
+    position: absolute; right: 2%; top: 40px; width: 190px; height: 190px;
+    border-radius: 50%; background: var(--blue); color: #fff8ea;
+    display: grid; place-items: center; transform: rotate(-8deg);
+    box-shadow: 5px 5px 0 var(--ink); border: 3px solid var(--ink);
   }
-  .medallion svg.big { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 64%; height: auto; }
-  .medallion .caption {
-    position: absolute; left: 0; right: 0; bottom: 34px; text-align: center;
-  }
-  .medallion .caption b { font-family: "Playfair Display", serif; font-size: 26px; display: block; }
-  .medallion .caption span { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
-  .pole {
-    position: absolute; left: -22px; top: 14%; width: 30px; height: 62%; border-radius: 16px;
-    background: repeating-linear-gradient(135deg, #f5efe2 0 14px, var(--gold) 14px 28px, #1a1406 28px 42px);
-    background-size: 100% 200%;
-    animation: pole 3.5s linear infinite;
-    box-shadow: 0 0 0 4px var(--ink), 0 0 0 5px var(--line), 0 20px 40px -10px rgba(0,0,0,.7);
-  }
-  .pole::before, .pole::after {
-    content: ""; position: absolute; left: -5px; right: -5px; height: 14px; border-radius: 8px;
-    background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo));
-  }
-  .pole::before { top: -10px; } .pole::after { bottom: -10px; }
-  @keyframes pole { to { background-position: 0 -84px; } }
-  .badge-float {
-    position: absolute; right: -14px; bottom: 18%;
-    background: var(--cream); color: var(--ink); border-radius: 16px; padding: 14px 18px;
-    box-shadow: 0 20px 40px -12px rgba(0,0,0,.7);
-  }
-  .badge-float .stars { color: #c9971f; font-size: 15px; letter-spacing: 2px; }
-  .badge-float b { font-size: 22px; font-weight: 800; }
-  .badge-float small { display: block; font-size: 12px; color: #5b5446; font-weight: 600; }
+  .stamp svg.ring { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); animation: spin 22s linear infinite; }
+  .stamp .center { text-align: center; line-height: 1; }
+  .stamp .center b { font-family: "Anton", sans-serif; font-weight: 400; font-size: 52px; display: block; }
+  .stamp .center span { font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Strip */
-  .strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ink-2); }
-  .strip-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .strip-item { padding: 26px 20px; display: flex; gap: 14px; align-items: center; }
-  .strip-item + .strip-item { border-left: 1px solid var(--line); }
-  .strip-item svg { width: 30px; height: 30px; color: var(--gold); flex: none; }
-  .strip-item b { display: block; font-size: 15.5px; }
-  .strip-item span { font-size: 13.5px; color: var(--muted); }
-
-  /* Sections */
-  section.block { padding: 110px 0; scroll-margin-top: 74px; }
-  .sec-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 54px; flex-wrap: wrap; }
-  .sec-head h2 { font-family: "Playfair Display", serif; font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; margin-top: 14px; font-weight: 800; }
-  .sec-head p { color: var(--muted); max-width: 420px; }
-
-  /* Services */
-  .svc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-  .svc-card {
-    background: linear-gradient(180deg, var(--ink-2), var(--ink));
-    border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 32px;
+  /* Marquee */
+  .marquee { background: var(--ink); color: var(--paper); overflow: hidden; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); }
+  .marquee-track { display: flex; width: max-content; animation: marquee 32s linear infinite; }
+  .marquee-track span {
+    font-family: "Anton", sans-serif; font-size: 30px; text-transform: uppercase; letter-spacing: .04em;
+    padding: 14px 0; display: flex; align-items: center; white-space: nowrap;
   }
-  .svc-card h3 { display: flex; align-items: center; gap: 12px; font-family: "Playfair Display", serif; font-size: 26px; margin-bottom: 8px; }
-  .svc-card h3 svg { width: 28px; height: 28px; color: var(--gold); }
-  .svc-card > p { color: var(--muted); font-size: 14.5px; margin-bottom: 18px; }
-  .svc-row { display: flex; align-items: baseline; gap: 12px; padding: 15px 0; border-top: 1px dashed rgba(212,175,92,.2); }
-  .svc-row .name { font-weight: 700; }
-  .svc-row .desc { display: block; font-size: 13.5px; color: var(--muted); font-weight: 500; }
-  .svc-row .dots { flex: 1; }
-  .svc-row .price { font-family: "Playfair Display", serif; font-size: 20px; color: var(--gold-hi); white-space: nowrap; }
-  .svc-row .price.ask { font-family: "Manrope", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
-  .svc-note { margin-top: 26px; text-align: center; color: var(--muted); font-size: 14px; }
-  .svc-note a { color: var(--gold-hi); font-weight: 700; border-bottom: 1px solid var(--gold-lo); }
+  .marquee-track span::after { content: "✂"; color: var(--mustard); margin: 0 28px; font-size: 24px; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
 
-  /* About */
-  .about { background: var(--ink-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
-  .about h2 { font-family: "Playfair Display", serif; font-size: clamp(34px, 4.4vw, 50px); line-height: 1.1; margin: 14px 0 22px; font-weight: 800; }
-  .about p { color: var(--muted); margin-bottom: 16px; font-size: 16.5px; }
-  .why { display: grid; gap: 16px; }
-  .why-item {
-    display: flex; gap: 18px; padding: 22px 24px; border-radius: var(--radius);
-    background: var(--ink); border: 1px solid var(--line);
-    transition: border-color .2s ease, transform .2s ease;
+  /* Section headings */
+  section { padding: 100px 0; }
+  section[id] { scroll-margin-top: 10px; }
+  .h2 {
+    font-family: "Anton", sans-serif; font-weight: 400; text-transform: uppercase;
+    font-size: clamp(48px, 8vw, 104px); line-height: .9; letter-spacing: .005em;
   }
-  .why-item:hover { border-color: rgba(212,175,92,.5); transform: translateX(4px); }
-  .why-num { font-family: "Playfair Display", serif; font-size: 30px; line-height: 1; color: var(--gold); flex: none; width: 40px; }
-  .why-item b { display: block; font-size: 17px; margin-bottom: 4px; }
-  .why-item span { color: var(--muted); font-size: 14.5px; }
+  .h2 em { font-family: "DM Serif Display", serif; font-style: italic; text-transform: none; color: var(--red); font-size: .82em; letter-spacing: 0; }
+  .lede { font-size: 19px; color: var(--ink-soft); max-width: 460px; }
+  .head-row { display: flex; justify-content: space-between; align-items: end; gap: 30px; flex-wrap: wrap; margin-bottom: 50px; }
 
-  /* Gallery */
-  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 220px; gap: 16px; }
-  .tile {
-    position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
-    background: radial-gradient(circle at 30% 20%, rgba(241,212,138,.18), transparent 60%), linear-gradient(160deg, var(--ink-3), var(--ink));
-    display: flex; align-items: flex-end; padding: 20px;
+  /* Letterboard price list */
+  .board-wrap { position: relative; }
+  .board {
+    position: relative;
+    border: 18px solid var(--wood);
+    border-image: linear-gradient(135deg, #9a6230, #6a3d1a 40%, #8b5527 70%, #5c3315) 1;
+    background: repeating-linear-gradient(180deg, #232120 0 3px, var(--felt) 3px 38px);
+    box-shadow: 10px 10px 0 var(--ink), inset 0 0 40px rgba(0,0,0,.6);
+    padding: 34px 40px 38px;
+    color: #f4f1ea;
+    font-family: "Archivo Narrow", sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
   }
-  .tile:nth-child(1) { grid-column: span 2; grid-row: span 2; }
-  .tile svg { position: absolute; right: 18px; top: 18px; width: 40%; max-width: 120px; height: auto; color: var(--gold); opacity: .32; }
-  .tile:nth-child(1) svg { max-width: 220px; opacity: .25; }
-  .tile b { font-family: "Playfair Display", serif; font-size: 22px; display: block; }
-  .tile span { font-size: 13px; color: var(--muted); }
-  .tile::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(135deg, transparent 0 22px, rgba(212,175,92,.035) 22px 23px);
-  }
-  .gallery-cta { margin-top: 28px; display: flex; justify-content: center; }
+  .board-title { text-align: center; font-size: 30px; letter-spacing: .3em; line-height: 38px; margin-bottom: 38px; }
+  .board-title i { font-style: normal; color: var(--mustard); }
+  .board-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 56px; }
+  .board h3 { font-size: 22px; line-height: 38px; color: var(--mustard); letter-spacing: .26em; font-weight: 700; }
+  .line { display: flex; gap: 10px; align-items: baseline; font-size: 19px; line-height: 38px; text-shadow: 0 1px 0 rgba(0,0,0,.6); }
+  .line .lead { flex: 1; border-bottom: 3px dotted rgba(244,241,234,.35); transform: translateY(-8px); min-width: 20px; }
+  .line .p { white-space: nowrap; }
+  .line .p.ask { color: rgba(244,241,234,.6); }
+  .board-foot { text-align: center; margin-top: 38px; font-size: 15px; line-height: 38px; color: rgba(244,241,234,.75); letter-spacing: .2em; }
 
-  /* Visit */
-  .visit-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 28px; }
-  .visit-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 36px 34px; }
-  .visit-card h3 { font-family: "Playfair Display", serif; font-size: 30px; margin-bottom: 24px; }
-  .info { display: flex; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
-  .info:first-of-type { border-top: 0; padding-top: 0; }
-  .info svg { width: 22px; height: 22px; color: var(--gold); flex: none; margin-top: 3px; }
-  .info small { display: block; font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 2px; }
-  .info a:hover { color: var(--gold-hi); }
-  .info .sub { color: var(--muted); font-size: 14px; }
-  .visit-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
-  .map { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); min-height: 420px; background: var(--ink-2); }
-  .map iframe { width: 100%; height: 100%; min-height: 420px; border: 0; filter: grayscale(.4) contrast(1.05); }
+  .sticky {
+    position: absolute; width: 210px; padding: 22px 20px 20px;
+    background: #ffe873; color: var(--ink); font-size: 21px; line-height: 1.2;
+    box-shadow: 3px 6px 12px rgba(0,0,0,.25);
+    transform: rotate(4deg); right: -26px; bottom: -48px; z-index: 2;
+  }
+  .sticky::before {
+    content: ""; position: absolute; top: -12px; left: 50%; width: 90px; height: 26px; transform: translateX(-50%) rotate(-3deg);
+    background: rgba(255,255,255,.55); box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  }
+  .sticky a { color: var(--red); }
 
-  /* CTA band */
-  .band {
-    margin: 0 auto 110px; border-radius: 28px; padding: 64px 48px; text-align: center; position: relative; overflow: hidden;
-    background: linear-gradient(135deg, var(--gold-hi), var(--gold) 45%, var(--gold-lo));
-    color: #1a1406;
+  /* Tickets */
+  .tickets { background: var(--paper-2); border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); }
+  .ticket-row { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+  .ticket {
+    position: relative; display: grid; grid-template-columns: 1fr 120px; min-height: 260px;
+    filter: drop-shadow(6px 6px 0 var(--ink));
   }
-  .band::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(135deg, transparent 0 26px, rgba(26,20,6,.06) 26px 27px);
+  .ticket .main {
+    -webkit-mask: radial-gradient(circle 16px at 0 50%, #0000 98%, #000);
+            mask: radial-gradient(circle 16px at 0 50%, #0000 98%, #000);
   }
-  .band h2 { font-family: "Playfair Display", serif; font-size: clamp(32px, 4.6vw, 52px); line-height: 1.08; font-weight: 800; position: relative; z-index: 1; }
-  .band p { margin: 14px auto 30px; max-width: 520px; font-weight: 600; position: relative; z-index: 1; opacity: .85; }
-  .band .row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
-  .btn-dark { background: #1a1406; color: var(--gold-hi); }
-  .btn-dark:hover { transform: translateY(-2px); }
-  .btn-outline-dark { border: 1.5px solid #1a1406; color: #1a1406; }
-  .btn-outline-dark:hover { background: rgba(26,20,6,.08); }
+  .ticket .stub {
+    -webkit-mask: radial-gradient(circle 16px at 100% 50%, #0000 98%, #000);
+            mask: radial-gradient(circle 16px at 100% 50%, #0000 98%, #000);
+  }
+  .ticket .main { padding: 34px 34px 30px 40px; }
+  .ticket .stub {
+    border-left: 3px dashed rgba(22,19,16,.45); display: grid; place-items: center;
+    font-family: "Anton", sans-serif; font-size: 22px; letter-spacing: .1em; text-transform: uppercase;
+  }
+  .ticket .stub span { writing-mode: vertical-rl; transform: rotate(180deg); }
+  .t-walk .main, .t-walk .stub { background: var(--mustard); }
+  .t-book .main, .t-book .stub { background: var(--blue); color: #fff8ea; }
+  .t-book .stub { border-left-color: rgba(255,248,234,.45); }
+  .ticket small { font-family: "Archivo Narrow", sans-serif; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; font-size: 13px; opacity: .8; }
+  .ticket h3 { font-family: "Anton", sans-serif; font-weight: 400; font-size: 58px; line-height: 1; text-transform: uppercase; margin: 8px 0 12px; }
+  .ticket p { font-size: 17px; max-width: 360px; margin-bottom: 22px; }
+
+  /* Polaroids */
+  .polaroids { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; margin-top: 10px; }
+  .polaroid {
+    background: #fffdf7; padding: 12px 12px 0; box-shadow: 0 10px 22px -8px rgba(30,20,10,.45), 0 1px 0 rgba(0,0,0,.08);
+    transition: transform .25s ease;
+  }
+  .polaroid:nth-child(1) { transform: rotate(-3deg); }
+  .polaroid:nth-child(2) { transform: rotate(2deg) translateY(18px); }
+  .polaroid:nth-child(3) { transform: rotate(-1.5deg); }
+  .polaroid:nth-child(4) { transform: rotate(3deg) translateY(12px); }
+  .polaroid:hover { transform: rotate(0) scale(1.04); z-index: 2; position: relative; }
+  .shot {
+    aspect-ratio: 1 / 1.1; position: relative; overflow: hidden;
+    background: #2a2622;
+    display: grid; place-items: center; color: rgba(242,233,214,.55);
+  }
+  .shot svg { width: 46%; height: auto; }
+  .shot::after {
+    content: "photo from TikTok"; position: absolute; bottom: 10px; left: 0; right: 0; text-align: center;
+    font-family: "Archivo Narrow", sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(242,233,214,.4);
+  }
+  .polaroid .cap { font-family: "Permanent Marker", cursive; font-size: 22px; text-align: center; padding: 14px 4px 18px; color: #2b2723; }
+  .tiktok-link { margin-top: 60px; text-align: center; font-size: 18px; }
+  .tiktok-link a { font-weight: 800; text-decoration-thickness: 3px; text-decoration-color: var(--red); text-underline-offset: 4px; }
+
+  /* Upstairs */
+  .upstairs { background: var(--ink); color: var(--paper); }
+  .upstairs .h2 em { color: var(--mustard); }
+  .upstairs .lede { color: rgba(242,233,214,.75); }
+  .up-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 60px; align-items: start; }
+  .steps { list-style: none; position: relative; margin-top: 10px; }
+  .steps::before {
+    content: ""; position: absolute; left: 27px; top: 30px; bottom: 30px; border-left: 3px dashed rgba(227,167,42,.6);
+  }
+  .steps li { display: grid; grid-template-columns: 56px 1fr; gap: 20px; align-items: center; padding: 14px 0; position: relative; }
+  .steps .n {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--mustard); color: var(--ink);
+    display: grid; place-items: center; font-family: "Anton", sans-serif; font-size: 26px;
+    box-shadow: 0 0 0 5px var(--ink);
+  }
+  .steps b { font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: .04em; display: block; line-height: 1.1; }
+  .steps span { color: rgba(242,233,214,.7); font-size: 16px; }
+  .contact-lines { margin-top: 34px; display: grid; gap: 6px; font-size: 18px; }
+  .contact-lines a { color: var(--mustard); font-weight: 700; text-decoration: none; }
+  .contact-lines a:hover { text-decoration: underline; }
+  .up-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 30px; }
+  .upstairs .btn { border-color: var(--paper); box-shadow: 4px 4px 0 var(--mustard); }
+  .upstairs .btn:hover { box-shadow: 6px 6px 0 var(--mustard); }
+
+  .map-frame { position: relative; background: #fffdf7; padding: 12px; transform: rotate(1.2deg); box-shadow: 0 20px 40px -12px rgba(0,0,0,.7); }
+  .map-frame iframe { display: block; width: 100%; height: 420px; border: 0; filter: sepia(.25) contrast(1.05); background: #ddd2bb; }
+  .tape { position: absolute; width: 110px; height: 30px; background: rgba(255,240,190,.75); box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .tape.a { top: -14px; left: 24px; transform: rotate(-6deg); }
+  .tape.b { top: -12px; right: 24px; transform: rotate(5deg); }
+  .map-note { color: var(--ink); position: absolute; left: -30px; bottom: -34px; background: #ffe873; padding: 12px 18px; font-size: 20px; transform: rotate(-4deg); box-shadow: 3px 6px 12px rgba(0,0,0,.35); }
 
   /* Footer */
-  footer { border-top: 1px solid var(--line); padding: 44px 0 34px; color: var(--muted); font-size: 14px; }
-  .foot { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
-  .social { display: flex; gap: 12px; }
-  .social a {
-    width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line);
-    display: grid; place-items: center; transition: border-color .2s, color .2s;
-  }
-  .social a:hover { border-color: var(--gold); color: var(--gold-hi); }
-  .social svg { width: 18px; height: 18px; }
-  .copy { margin-top: 26px; font-size: 12.5px; opacity: .7; }
+  footer { padding: 90px 0 40px; text-align: center; }
+  .see-you { font-family: "Anton", sans-serif; text-transform: uppercase; font-size: clamp(54px, 11vw, 150px); line-height: .88; }
+  .see-you span { color: var(--red); font-family: "DM Serif Display", serif; font-style: italic; text-transform: none; font-size: .7em; display: block; margin-top: 8px; }
+  .foot-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 40px 0 60px; }
+  .foot-small { font-size: 14px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 2px solid var(--ink); padding-top: 20px; }
+  .foot-small a { color: var(--ink); }
 
-  /* Mobile sticky action bar */
   .mbar { display: none; }
 
-  /* Reveal */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
-  .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .pole { animation: none; }
+    .pole-stripe, .marquee-track, .stamp svg.ring { animation: none; }
     html { scroll-behavior: auto; }
   }
 
-  /* Responsive */
   @media (max-width: 960px) {
     .nav-links { display: none; }
-    .hero { padding: 64px 0 80px; }
-    .hero-grid, .about-grid, .visit-grid, .svc-cols { grid-template-columns: 1fr; }
-    .hero-art { justify-self: center; max-width: 340px; margin-top: 10px; }
-    .strip-grid { grid-template-columns: 1fr 1fr; }
-    .strip-item:nth-child(3) { border-left: 0; }
-    .strip-item:nth-child(n+3) { border-top: 1px solid var(--line); }
-    .gallery { grid-template-columns: 1fr 1fr; grid-auto-rows: 170px; }
-    section.block { padding: 80px 0; }
-    .about-grid { gap: 40px; }
+    .hero-row, .up-grid { grid-template-columns: 1fr; }
+    .hero-ctas { justify-content: flex-start; }
+    .stamp { width: 140px; height: 140px; top: 70px; right: 0; }
+    .stamp .center b { font-size: 38px; }
+    .stamp .center span { font-size: 11px; }
+    .board-cols { grid-template-columns: 1fr; }
+    .board-cols > div + div { margin-top: 38px; }
+    .ticket-row { grid-template-columns: 1fr; }
+    .polaroids { grid-template-columns: 1fr 1fr; gap: 30px 22px; }
+    .sticky { right: 10px; bottom: -70px; }
+    section { padding: 80px 0; }
+    .map-note { left: 10px; }
   }
   @media (max-width: 560px) {
+    body { font-size: 16px; padding-bottom: 76px; }
     .wrap { padding: 0 16px; }
-    .nav-inner { height: 66px; }
-    .ribbon { font-size: 11px; padding: 6px 12px; }
-    .brand-mark { width: 38px; height: 38px; }
-    .brand-name b { font-size: 17px; }
-    .nav-cta { display: none; }
+    .logo-badge { width: 42px; height: 42px; font-size: 24px; }
+    .logo-text { font-size: 19px; }
+    .nav .btn { display: none; }
+    .hero { padding-top: 16px; }
+    .hero-kicker { font-size: 12px; letter-spacing: .16em; }
+    .hero h1 .o { -webkit-text-stroke: 2px var(--ink); text-shadow: 4px 4px 0 var(--ink); }
+    .stamp { width: 112px; height: 112px; top: auto; bottom: 330px; right: 12px; }
+    .stamp .center b { font-size: 30px; }
+    .stamp .center span { font-size: 9px; }
+    .hero-row p { font-size: 18px; }
     .hero-ctas .btn { flex: 1 1 100%; }
-    .hero-meta { gap: 14px 22px; }
-    .pole { left: -10px; width: 24px; }
-    .badge-float { right: -6px; }
-    .strip-grid { grid-template-columns: 1fr; }
-    .strip-item + .strip-item { border-left: 0; border-top: 1px solid var(--line); }
-    .svc-card, .visit-card { padding: 26px 20px; }
-    .gallery { grid-template-columns: 1fr; grid-auto-rows: 150px; }
-    .tile:nth-child(1) { grid-column: span 1; grid-row: span 1; }
-    .band { padding: 48px 22px; margin-bottom: 80px; border-radius: 22px; }
-    .band .btn { flex: 1 1 100%; }
-    body { padding-bottom: 74px; }
+    .marquee-track span { font-size: 22px; }
+    .board { border-width: 12px; padding: 24px 16px 26px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 30px rgba(0,0,0,.6); }
+    .board-title { font-size: 22px; letter-spacing: .18em; }
+    .line { font-size: 15px; letter-spacing: .08em; gap: 6px; }
+    .board h3 { font-size: 18px; }
+    .board-foot { font-size: 12px; letter-spacing: .1em; line-height: 1.6; }
+    .sticky { position: relative; right: auto; bottom: auto; margin: 34px auto 0; transform: rotate(-2deg); }
+    .ticket { grid-template-columns: 1fr 64px; min-height: 0; }
+    .ticket .main { padding: 26px 18px 24px 30px; }
+    .ticket h3 { font-size: 44px; }
+    .ticket .stub { font-size: 16px; }
+    .polaroids { gap: 22px 14px; }
+    .polaroid { padding: 8px 8px 0; }
+    .polaroid .cap { font-size: 17px; padding: 10px 2px 12px; }
+    .map-frame iframe { height: 320px; }
+    .map-note { font-size: 17px; bottom: -30px; }
+    .foot-ctas .btn { flex: 1 1 100%; }
     .mbar {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(13,12,10,.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border-top: 1px solid var(--line);
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: var(--paper); border-top: 3px solid var(--ink);
     }
-    .mbar .btn { padding: 13px 10px; font-size: 14.5px; }
+    .mbar .btn { padding: 12px 8px; font-size: 16px; box-shadow: 3px 3px 0 var(--ink); }
   }
 </style>
 </head>
 <body>
 
-<!-- Reusable icons -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <symbol id="i-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></symbol>
-    <symbol id="i-razor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 14 6l4 4L7 21H3v-4Z"/><path d="m14 6 2.5-2.5a1.4 1.4 0 0 1 2 0l2 2a1.4 1.4 0 0 1 0 2L18 10"/><path d="m9 12 3 3"/></symbol>
-    <symbol id="i-comb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9M8 9v11M11 9v9M14 9v11M17 9v9M20 9v7"/></symbol>
-    <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
-    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 5.1 5.1l1.4-2.3L19 13.5V17a2 2 0 0 1-2 2A15 15 0 0 1 3 5a2 2 0 0 1 2-2Z"/></symbol>
-    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
-    <symbol id="i-walk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="2"/><path d="m9 21 2-6 3 3v3M7 11l3-3.5 4 1 2.5 3.5M11 15l1.5-5"/></symbol>
-    <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8L12 3Z"/></symbol>
-    <symbol id="i-kid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M9 14.5a4 4 0 0 0 6 0"/></symbol>
-    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8" r="1.5"/></symbol>
-    <symbol id="i-stairs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h5v-5h5v-5h5V5h3"/></symbol>
-    <symbol id="i-tiktok" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 3c.3 2.2 1.6 3.7 3.9 3.9v3a7.3 7.3 0 0 1-3.9-1.2v6.1A5.8 5.8 0 1 1 10.8 9v3.1a2.8 2.8 0 1 0 2.8 2.8V3h3Z"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
-  </defs>
-</svg>
+<div class="preview-tag">Preview · concept website for Golden Barber &amp; Salon</div>
+<div class="pole-stripe" aria-hidden="true"></div>
 
-<div class="ribbon">Website preview — concept design for Golden Barber &amp; Salon</div>
-
-<header class="nav">
-  <div class="wrap nav-inner">
-    <a href="#top" class="brand" aria-label="Golden Barber & Salon home">
-      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d48a"/><stop offset=".55" stop-color="#d4af5c"/><stop offset="1" stop-color="#a07c2c"/></linearGradient></defs>
-        <circle cx="24" cy="24" r="22.5" fill="none" stroke="url(#g1)" stroke-width="1.5"/>
-        <circle cx="24" cy="24" r="18.5" fill="none" stroke="url(#g1)" stroke-width=".6" opacity=".6"/>
-        <text x="24" y="31.5" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-weight="800" font-size="22" fill="url(#g1)">G</text>
-      </svg>
-      <div class="brand-name"><b>Golden</b><span>Barber &amp; Salon</span></div>
+<div class="wrap">
+  <header class="nav">
+    <a href="#top" class="logo" aria-label="Golden Barber & Salon">
+      <span class="logo-badge" aria-hidden="true">G</span>
+      <span class="logo-text">Golden<small>Barber &amp; Salon</small></span>
     </a>
     <nav class="nav-links" aria-label="Main">
-      <a href="#services">Services</a>
-      <a href="#about">About</a>
-      <a href="#gallery">Gallery</a>
-      <a href="#visit">Visit</a>
+      <a href="#prices">Prices</a>
+      <a href="#how">Walk in / Book</a>
+      <a href="#work">The work</a>
+      <a href="#find">Find us</a>
     </nav>
-    <a class="btn btn-gold nav-cta" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book Now</a>
-  </div>
-</header>
+    <a class="btn btn-red" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book</a>
+  </header>
+</div>
 
 <main id="top">
   <!-- Hero -->
   <section class="hero">
-    <div class="wrap hero-grid">
-      <div class="reveal">
-        <span class="eyebrow">Barbershop &amp; Hair Salon · Houston</span>
-        <h1>Sharp cuts.<br><em class="gold-text">The golden</em> standard.</h1>
-        <p class="lead">Clean fades, crisp lineups, kids' cuts, braids, color and blowouts, all in one relaxed shop on Hillcroft. Walk in or book ahead.</p>
+    <div class="wrap">
+      <div class="hero-kicker"><span>5901 Hillcroft Ave</span><span class="dot"></span><span>Houston, TX</span><span class="dot"></span><span>2nd Floor</span></div>
+      <h1>G<span class="o">o</span>lden</h1>
+      <div class="hero-sub">barber &amp; salon</div>
+
+      <div class="hero-row">
+        <p>Fades, lineups, beard work, kids' cuts, braids and color. <b>Come upstairs and grab a seat,</b> or book your time ahead.</p>
         <div class="hero-ctas">
-          <a class="btn btn-gold" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">
-            <svg><use href="#i-cal"/></svg>Book an Appointment
+          <a class="btn btn-red" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book a cut</a>
+          <a class="btn btn-paper" href="tel:+18322307726">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 5.1 5.1l1.4-2.3L19 13.5V17a2 2 0 0 1-2 2A15 15 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>
+            832-230-7726
           </a>
-          <a class="btn btn-ghost" href="tel:+18322307726">
-            <svg><use href="#i-phone"/></svg>(832) 230-7726
-          </a>
-        </div>
-        <div class="hero-meta">
-          <div><svg><use href="#i-walk"/></svg>Walk-ins welcome</div>
-          <div><svg><use href="#i-kid"/></svg>Kid friendly</div>
-          <div><svg><use href="#i-pin"/></svg>5901 Hillcroft Ave</div>
-        </div>
-      </div>
-
-      <div class="hero-art reveal" aria-hidden="true">
-        <div class="pole"></div>
-        <div class="medallion">
-          <svg class="big" viewBox="0 0 200 200">
-            <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d48a"/><stop offset=".55" stop-color="#d4af5c"/><stop offset="1" stop-color="#a07c2c"/></linearGradient></defs>
-            <circle cx="100" cy="100" r="92" fill="none" stroke="url(#g2)" stroke-width="2"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="url(#g2)" stroke-width=".8" stroke-dasharray="2 5"/>
-            <g transform="translate(100 100) rotate(-45)" fill="none" stroke="url(#g2)" stroke-width="5" stroke-linecap="round">
-              <circle cx="-44" cy="-14" r="13"/>
-              <circle cx="-44" cy="14" r="13"/>
-              <path d="M-32 -9 L46 8"/>
-              <path d="M-32 9 L46 -8"/>
-            </g>
-            <circle cx="100" cy="100" r="4" fill="url(#g2)"/>
-          </svg>
-          <div class="caption"><b class="gold-text">Est. on Hillcroft</b><span>Houston · Texas</span></div>
-        </div>
-        <div class="badge-float">
-          <div class="stars">★★★★★</div>
-          <b>5.0</b> <small>rated on Booksy</small>
         </div>
       </div>
     </div>
+
+    <div class="stamp" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 200 200">
+        <defs><path id="circ" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
+        <text font-family="Archivo Narrow, sans-serif" font-weight="700" font-size="17" letter-spacing="4.2" fill="#fff8ea">
+          <textPath href="#circ">WALK-INS WELCOME ★ KIDS WELCOME ★ </textPath>
+        </text>
+      </svg>
+      <div class="center"><b>$25</b><span>Men's cuts</span></div>
+    </div>
   </section>
 
-  <!-- Strip -->
-  <div class="strip">
-    <div class="wrap strip-grid">
-      <div class="strip-item reveal"><svg><use href="#i-tag"/></svg><div><b>$25 men's cuts</b><span>Fair, upfront pricing</span></div></div>
-      <div class="strip-item reveal"><svg><use href="#i-walk"/></svg><div><b>Walk-ins welcome</b><span>Or book online anytime</span></div></div>
-      <div class="strip-item reveal"><svg><use href="#i-kid"/></svg><div><b>Great with kids</b><span>Patient, gentle barbers</span></div></div>
-      <div class="strip-item reveal"><svg><use href="#i-star"/></svg><div><b>5-star service</b><span>Fades done right</span></div></div>
+  <!-- Marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Skin fades</span><span>Zero mid fades</span><span>Lineups</span><span>Beard shaping</span><span>Kids' cuts</span><span>Braids</span><span>Color</span><span>Blowouts</span><span>Head shaves</span>
+      <span>Skin fades</span><span>Zero mid fades</span><span>Lineups</span><span>Beard shaping</span><span>Kids' cuts</span><span>Braids</span><span>Color</span><span>Blowouts</span><span>Head shaves</span>
     </div>
   </div>
 
-  <!-- Services -->
-  <section class="block" id="services">
+  <!-- Prices: letterboard -->
+  <section id="prices">
     <div class="wrap">
-      <div class="sec-head reveal">
-        <div>
-          <span class="eyebrow">Services</span>
-          <h2>Barber chair or<br>salon chair, <span class="gold-text">we've got you.</span></h2>
-        </div>
-        <p>From a quick lineup to a full color and blowout, every service is done with care and attention to detail.</p>
+      <div class="head-row">
+        <h2 class="h2">What we<br>do <em>&amp; what it costs</em></h2>
+        <p class="lede">The menu's on the wall, same as in the shop. Anything not priced, just ask when you come in or call ahead.</p>
       </div>
 
-      <div class="svc-cols">
-        <div class="svc-card reveal">
-          <h3><svg><use href="#i-scissors"/></svg>Barber</h3>
-          <p>Cuts, fades and grooming for men and boys.</p>
-          <div class="svc-row"><div><span class="name">Men's Haircut</span><span class="desc">Any style, finished with a crisp lineup · 40 min</span></div><span class="dots"></span><span class="price">$25</span></div>
-          <div class="svc-row"><div><span class="name">Skin &amp; Zero Fades</span><span class="desc">Low, mid or high, blended clean</span></div><span class="dots"></span><span class="price">$25</span></div>
-          <div class="svc-row"><div><span class="name">Kids' Haircut</span><span class="desc">Patient barbers, happy kids</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Beard Shaping</span><span class="desc">Trim, shape and line up</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Head Shave</span><span class="desc">Smooth razor finish</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Shampoo</span><span class="desc">Add a wash to any service</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-        </div>
-
-        <div class="svc-card reveal">
-          <h3><svg><use href="#i-comb"/></svg>Salon</h3>
-          <p>Styling, color and protective styles.</p>
-          <div class="svc-row"><div><span class="name">Women's Cut &amp; Style</span><span class="desc">Shape, trim and finish</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Color</span><span class="desc">All-over color and touch-ups</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Blowout</span><span class="desc">Smooth, full-volume finish</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Cut, Color &amp; Blowout</span><span class="desc">The full transformation</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-          <div class="svc-row"><div><span class="name">Braids</span><span class="desc">By appointment</span></div><span class="dots"></span><span class="price ask">Book</span></div>
-          <div class="svc-row"><div><span class="name">Kids' Styles</span><span class="desc">Cuts and braids for little ones</span></div><span class="dots"></span><span class="price ask">Ask us</span></div>
-        </div>
-      </div>
-      <p class="svc-note reveal">See live prices and open times on <a href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Booksy</a>, or call <a href="tel:+18322307726">(832) 230-7726</a>.</p>
-    </div>
-  </section>
-
-  <!-- About -->
-  <section class="block about" id="about">
-    <div class="wrap about-grid">
-      <div class="reveal">
-        <span class="eyebrow">About the shop</span>
-        <h2>A relaxed chair.<br>A <span class="gold-text">precise</span> cut.</h2>
-        <p>Golden Barber &amp; Salon is a neighborhood barbershop and hair salon upstairs at 5901 Hillcroft, in Houston's Mahatma Gandhi District.</p>
-        <p>We keep the shop clean, the chairs comfortable and the vibe easy. Tell us what you want and we'll do it right, down to the warm towel and finishing powder after every cut.</p>
-      </div>
-      <div class="why">
-        <div class="why-item reveal"><span class="why-num">01</span><div><b>Fades exactly how you ask</b><span>Bring a photo or describe it. We listen first, then cut.</span></div></div>
-        <div class="why-item reveal"><span class="why-num">02</span><div><b>Patient with kids</b><span>Even the toughest first haircut goes smoothly here.</span></div></div>
-        <div class="why-item reveal"><span class="why-num">03</span><div><b>Barber and salon in one place</b><span>Fades for him, braids and color for her, cuts for the kids.</span></div></div>
-        <div class="why-item reveal"><span class="why-num">04</span><div><b>Fair prices, no surprises</b><span>Men's cuts from $25, with clear pricing on every service.</span></div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Gallery -->
-  <section class="block" id="gallery">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <div>
-          <span class="eyebrow">The work</span>
-          <h2>Fresh from <span class="gold-text">the chair.</span></h2>
-        </div>
-        <p>See the latest fades, braids and transformations on our TikTok.</p>
-      </div>
-      <div class="gallery">
-        <div class="tile reveal"><svg><use href="#i-scissors"/></svg><div><b>Zero mid fade</b><span>Our signature cut</span></div></div>
-        <div class="tile reveal"><svg><use href="#i-razor"/></svg><div><b>Beard shaping</b><span>Sharp lines</span></div></div>
-        <div class="tile reveal"><svg><use href="#i-kid"/></svg><div><b>Kids' cuts</b><span>Fresh for school</span></div></div>
-        <div class="tile reveal"><svg><use href="#i-comb"/></svg><div><b>Braids</b><span>By appointment</span></div></div>
-        <div class="tile reveal"><svg><use href="#i-drop"/></svg><div><b>Color</b><span>Bold or subtle</span></div></div>
-        <div class="tile reveal"><svg><use href="#i-star"/></svg><div><b>Blowouts</b><span>Full volume</span></div></div>
-      </div>
-      <div class="gallery-cta reveal">
-        <a class="btn btn-ghost" href="https://www.tiktok.com/@goldenbarberandsalon" target="_blank" rel="noopener"><svg><use href="#i-tiktok"/></svg>@goldenbarberandsalon</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Visit -->
-  <section class="block" id="visit" style="padding-top:0">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <div>
-          <span class="eyebrow">Visit us</span>
-          <h2>Come on <span class="gold-text">up.</span></h2>
-        </div>
-        <p>We're on the second floor, Suite D2-B. Walk in, or book ahead to skip the wait.</p>
-      </div>
-      <div class="visit-grid">
-        <div class="visit-card reveal">
-          <h3>Golden Barber &amp; Salon</h3>
-          <div class="info"><svg><use href="#i-pin"/></svg><div><small>Address</small><a href="https://www.google.com/maps/search/?api=1&query=Golden+Barber+%26+Salon+5901+Hillcroft+Ave+Houston+TX+77036" target="_blank" rel="noopener">5901 Hillcroft Ave, Suite D2-B<br>Houston, TX 77036</a></div></div>
-          <div class="info"><svg><use href="#i-stairs"/></svg><div><small>Finding us</small><span class="sub">Second floor of the building. Look for Suite D2-B.</span></div></div>
-          <div class="info"><svg><use href="#i-phone"/></svg><div><small>Phone</small><a href="tel:+18322307726">(832) 230-7726</a></div></div>
-          <div class="info"><svg><use href="#i-cal"/></svg><div><small>Hours</small><span class="sub">Walk-ins welcome. Call or check Booksy for today's hours.</span></div></div>
-          <div class="visit-ctas">
-            <a class="btn btn-gold" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book Now <svg><use href="#i-arrow"/></svg></a>
-            <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&destination=5901+Hillcroft+Ave+Houston+TX+77036" target="_blank" rel="noopener">Directions</a>
+      <div class="board-wrap">
+        <div class="board">
+          <div class="board-title">✂ <i>Golden</i> price list ✂</div>
+          <div class="board-cols">
+            <div>
+              <h3>Barber</h3>
+              <div class="line"><span>Men's cut</span><span class="lead"></span><span class="p">$25</span></div>
+              <div class="line"><span>Fades</span><span class="lead"></span><span class="p">$25</span></div>
+              <div class="line"><span>Kids' cut</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Beard shaping</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Head shave</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Add shampoo</span><span class="lead"></span><span class="p ask">Ask</span></div>
+            </div>
+            <div>
+              <h3>Salon</h3>
+              <div class="line"><span>Cut &amp; style</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Color</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Blowout</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Cut+color+blowout</span><span class="lead"></span><span class="p ask">Ask</span></div>
+              <div class="line"><span>Braids</span><span class="lead"></span><span class="p ask">Appt</span></div>
+              <div class="line"><span>Kids' styles</span><span class="lead"></span><span class="p ask">Ask</span></div>
+            </div>
           </div>
+          <div class="board-foot">Walk-ins welcome · Booking on Booksy</div>
         </div>
-        <div class="map reveal">
-          <iframe title="Map to Golden Barber & Salon" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=5901+Hillcroft+Ave,+Houston,+TX+77036&z=15&output=embed"></iframe>
+        <div class="sticky marker">Braids are by appointment, so call ahead! <a href="tel:+18322307726">832-230-7726</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Walk in / Book -->
+  <section class="tickets" id="how">
+    <div class="wrap">
+      <div class="head-row">
+        <h2 class="h2">Two ways<br><em>into the chair</em></h2>
+      </div>
+      <div class="ticket-row">
+        <div class="ticket t-walk">
+          <div class="main">
+            <small>No. 01 · Anytime we're open</small>
+            <h3>Walk in</h3>
+            <p>No appointment? No problem. Head up to the 2nd floor, grab a seat and we'll get you next.</p>
+            <a class="btn btn-paper" href="#find">How to find us</a>
+          </div>
+          <div class="stub"><span>Admit one</span></div>
+        </div>
+        <div class="ticket t-book">
+          <div class="main">
+            <small>No. 02 · Skip the wait</small>
+            <h3>Book ahead</h3>
+            <p>Pick your service and your time on Booksy. Best for braids and color, or when you want a set time.</p>
+            <a class="btn btn-mustard" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Open Booksy</a>
+          </div>
+          <div class="stub"><span>Reserved</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA band -->
-  <div class="wrap">
-    <div class="band reveal">
-      <h2>Ready for a fresh cut?</h2>
-      <p>Grab a time online in seconds, or just walk in. We'll take care of the rest.</p>
-      <div class="row">
-        <a class="btn btn-dark" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book on Booksy</a>
-        <a class="btn btn-outline-dark" href="tel:+18322307726">Call (832) 230-7726</a>
+  <!-- The work -->
+  <section id="work">
+    <div class="wrap">
+      <div class="head-row">
+        <h2 class="h2">Fresh off<br><em>the chair</em></h2>
+        <p class="lede">A few recent cuts. There's a lot more on our TikTok.</p>
+      </div>
+      <div class="polaroids">
+        <figure class="polaroid">
+          <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg></div>
+          <figcaption class="cap">zero mid fade</figcaption>
+        </figure>
+        <figure class="polaroid">
+          <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9M8 9v11M11 9v9M14 9v11M17 9v9M20 9v7"/></svg></div>
+          <figcaption class="cap">beard + lineup</figcaption>
+        </figure>
+        <figure class="polaroid">
+          <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3c0 4 8 5 8 9s-8 5-8 9M16 3c0 4-8 5-8 9s8 5 8 9"/></svg></div>
+          <figcaption class="cap">fresh braids</figcaption>
+        </figure>
+        <figure class="polaroid">
+          <div class="shot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M9 14.5a4 4 0 0 0 6 0"/></svg></div>
+          <figcaption class="cap">first haircut!</figcaption>
+        </figure>
+      </div>
+      <p class="tiktok-link">Follow along → <a href="https://www.tiktok.com/@goldenbarberandsalon" target="_blank" rel="noopener">@goldenbarberandsalon</a> on TikTok</p>
+    </div>
+  </section>
+
+  <!-- Find us -->
+  <section class="upstairs" id="find">
+    <div class="wrap up-grid">
+      <div>
+        <h2 class="h2">We're<br><em>upstairs</em></h2>
+        <ol class="steps">
+          <li><span class="n">1</span><div><b>Pull up to 5901 Hillcroft</b><span>Houston, TX 77036</span></div></li>
+          <li><span class="n">2</span><div><b>Take the stairs</b><span>We're on the 2nd floor</span></div></li>
+          <li><span class="n">3</span><div><b>Suite D2-B</b><span>Come on in and grab a seat</span></div></li>
+        </ol>
+        <div class="contact-lines">
+          <div>Call: <a href="tel:+18322307726">(832) 230-7726</a></div>
+          <div>Hours: call or check <a href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Booksy</a> for today</div>
+        </div>
+        <div class="up-ctas">
+          <a class="btn btn-mustard" href="https://www.google.com/maps/dir/?api=1&destination=5901+Hillcroft+Ave+Houston+TX+77036" target="_blank" rel="noopener">Get directions</a>
+          <a class="btn btn-red" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book a cut</a>
+        </div>
+      </div>
+      <div class="map-frame">
+        <span class="tape a"></span><span class="tape b"></span>
+        <iframe title="Map to Golden Barber & Salon" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=5901+Hillcroft+Ave,+Houston,+TX+77036&z=16&output=embed"></iframe>
+        <div class="map-note marker">2nd floor, Suite D2-B ↑</div>
       </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <div class="foot">
-      <a href="#top" class="brand">
-        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="22.5" fill="none" stroke="#d4af5c" stroke-width="1.5"/>
-          <text x="24" y="31.5" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-weight="800" font-size="22" fill="#d4af5c">G</text>
-        </svg>
-        <div class="brand-name"><b>Golden</b><span>Barber &amp; Salon</span></div>
-      </a>
-      <div>5901 Hillcroft Ave, Suite D2-B · Houston, TX 77036 · <a href="tel:+18322307726">(832) 230-7726</a></div>
-      <div class="social">
-        <a href="https://www.tiktok.com/@goldenbarberandsalon" target="_blank" rel="noopener" aria-label="TikTok"><svg><use href="#i-tiktok"/></svg></a>
-        <a href="tel:+18322307726" aria-label="Call"><svg><use href="#i-phone"/></svg></a>
-        <a href="https://www.google.com/maps/search/?api=1&query=Golden+Barber+%26+Salon+5901+Hillcroft+Ave+Houston+TX+77036" target="_blank" rel="noopener" aria-label="Map"><svg><use href="#i-pin"/></svg></a>
-      </div>
+    <div class="see-you">See you in<br>the chair<span>Golden Barber &amp; Salon</span></div>
+    <div class="foot-ctas">
+      <a class="btn btn-red" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book on Booksy</a>
+      <a class="btn btn-paper" href="tel:+18322307726">Call 832-230-7726</a>
+      <a class="btn btn-mustard" href="https://www.tiktok.com/@goldenbarberandsalon" target="_blank" rel="noopener">TikTok</a>
     </div>
-    <div class="copy">© <span id="yr">2026</span> Golden Barber &amp; Salon. Website preview.</div>
+    <div class="foot-small">
+      <span>5901 Hillcroft Ave, Suite D2-B, 2nd Floor · Houston, TX 77036</span>
+      <span>© <span id="yr">2026</span> Golden Barber &amp; Salon · Preview site</span>
+    </div>
   </div>
 </footer>
+<div class="pole-stripe" aria-hidden="true"></div>
 
-<!-- Mobile action bar -->
 <div class="mbar">
-  <a class="btn btn-ghost" href="tel:+18322307726"><svg><use href="#i-phone"/></svg>Call</a>
-  <a class="btn btn-gold" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener"><svg><use href="#i-cal"/></svg>Book</a>
+  <a class="btn btn-paper" href="tel:+18322307726">Call</a>
+  <a class="btn btn-red" href="https://booksy.com/en-us/1441976_golden-barber-salon_barber-shop_36800_houston" target="_blank" rel="noopener">Book</a>
 </div>
 
-<script>
-  document.getElementById("yr").textContent = new Date().getFullYear();
-  (function () {
-    var els = document.querySelectorAll(".reveal");
-    if (!("IntersectionObserver" in window)) { els.forEach(function (e) { e.classList.add("in"); }); return; }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
-    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
-    els.forEach(function (e) { io.observe(e); });
-  })();
-</script>
+<script>document.getElementById("yr").textContent = new Date().getFullYear();</script>
 </body>
 </html>
