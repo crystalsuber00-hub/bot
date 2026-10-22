@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Golden Barber &amp; Salon · Hillcroft, Houston</title>
+<title>Golden Barber &amp; Salon Preview</title>
 <meta name="description" content="Golden Barber & Salon, upstairs at 5901 Hillcroft Ave in Houston. Fades, lineups, beard work, kids' cuts, braids, color and blowouts. Walk-ins welcome.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,6 +71,7 @@
     white-space: nowrap;
   }
   .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+  .btn:focus-visible, .drawn-map:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
   .btn-red { background: var(--red); color: #fff8ea; }
   .btn-paper { background: #fff8ea; color: var(--ink); }
@@ -254,7 +250,14 @@
   .upstairs .btn:hover { box-shadow: 6px 6px 0 var(--mustard); }
 
   .map-frame { position: relative; background: #fffdf7; padding: 12px; transform: rotate(1.2deg); box-shadow: 0 20px 40px -12px rgba(0,0,0,.7); }
-  .map-frame iframe { display: block; width: 100%; height: 420px; border: 0; filter: sepia(.25) contrast(1.05); background: #ddd2bb; }
+  .drawn-map { display: block; position: relative; text-decoration: none; color: var(--ink); }
+  .drawn-map svg { display: block; width: 100%; height: auto; max-width: 100%; }
+  .map-open {
+    position: absolute; right: 12px; top: 12px; background: var(--ink); color: var(--paper);
+    font-family: "Archivo Narrow", sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 8px 12px; border-radius: 4px;
+  }
+  .drawn-map:hover .map-open, .drawn-map:focus-visible .map-open { background: var(--red); }
   .tape { position: absolute; width: 110px; height: 30px; background: rgba(255,240,190,.75); box-shadow: 0 1px 2px rgba(0,0,0,.2); }
   .tape.a { top: -14px; left: 24px; transform: rotate(-6deg); }
   .tape.b { top: -12px; right: 24px; transform: rotate(5deg); }
@@ -318,7 +321,6 @@
     .polaroids { gap: 22px 14px; }
     .polaroid { padding: 8px 8px 0; }
     .polaroid .cap { font-size: 17px; padding: 10px 2px 12px; }
-    .map-frame iframe { height: 320px; }
     .map-note { font-size: 17px; bottom: -30px; }
     .foot-ctas .btn { flex: 1 1 100%; }
     .mbar {
@@ -330,10 +332,8 @@
     .mbar .btn { padding: 12px 8px; font-size: 16px; box-shadow: 3px 3px 0 var(--ink); }
   }
 </style>
-</head>
-<body>
 
-<div class="preview-tag">Preview · concept website for Golden Barber &amp; Salon</div>
+<div class="preview-tag">Concept preview made for Golden Barber &amp; Salon · not their official website</div>
 <div class="pole-stripe" aria-hidden="true"></div>
 
 <div class="wrap">
@@ -508,8 +508,24 @@
       </div>
       <div class="map-frame">
         <span class="tape a"></span><span class="tape b"></span>
-        <iframe title="Map to Golden Barber & Salon" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=5901+Hillcroft+Ave,+Houston,+TX+77036&z=16&output=embed"></iframe>
+        <a class="drawn-map" href="https://www.google.com/maps/search/?api=1&query=Golden+Barber+%26+Salon+5901+Hillcroft+Ave+Houston+TX+77036" target="_blank" rel="noopener" aria-label="Open Golden Barber &amp; Salon in Google Maps">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect width="400" height="300" fill="#efe4cc"/>
+            <g stroke="#d9cba9" stroke-width="2" fill="none">
+              <path d="M0 60h400M0 140h400M0 230h400M70 0v300M300 0v300"/>
+            </g>
+            <rect x="160" y="0" width="56" height="300" fill="#fffaf0" stroke="#161310" stroke-width="3"/>
+            <path d="M188 0v300" stroke="#e3a72a" stroke-width="3" stroke-dasharray="14 12"/>
+            <text x="150" y="40" transform="rotate(-90 150 40)" text-anchor="end" font-family="Archivo Narrow, Arial Narrow, sans-serif" font-weight="700" font-size="15" letter-spacing="3" fill="#161310">HILLCROFT AVE</text>
+            <rect x="232" y="104" width="110" height="82" fill="#161310"/>
+            <rect x="242" y="114" width="90" height="62" fill="none" stroke="#e3a72a" stroke-width="2"/>
+            <text x="287" y="142" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="20" fill="#e3a72a">5901</text>
+            <text x="287" y="163" text-anchor="middle" font-family="Archivo Narrow, Arial Narrow, sans-serif" font-weight="700" font-size="11" letter-spacing="1.5" fill="#f2e9d6">SUITE D2-B</text>
+            <path d="M287 98c-14 0-24-10-24-23 0-17 24-41 24-41s24 24 24 41c0 13-10 23-24 23Z" fill="#c4321e" stroke="#161310" stroke-width="3"/>
+            <circle cx="287" cy="73" r="8" fill="#fffaf0"/>
+          </svg>
+          <span class="map-open">Open in Google Maps ↗</span>
+        </a>
         <div class="map-note marker">2nd floor, Suite D2-B ↑</div>
       </div>
     </div>
@@ -526,7 +542,7 @@
     </div>
     <div class="foot-small">
       <span>5901 Hillcroft Ave, Suite D2-B, 2nd Floor · Houston, TX 77036</span>
-      <span>© <span id="yr">2026</span> Golden Barber &amp; Salon · Preview site</span>
+      <span>Concept preview · <span id="yr">2026</span></span>
     </div>
   </div>
 </footer>
@@ -538,5 +554,3 @@
 </div>
 
 <script>document.getElementById("yr").textContent = new Date().getFullYear();</script>
-</body>
-</html>
