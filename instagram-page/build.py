@@ -8,7 +8,7 @@ All on-image text is original. The formats are modeled on the top posts in the
 #motivation scrape (see PLAYBOOK.md); the wording is not copied, because
 Instagram stops recommending accounts that mostly repost others' content.
 
-Usage: python3 build.py [--start 2026-10-05] [--per-day 3]
+Usage: python3 build.py [--start 2026-10-25] [--per-day 3]
 """
 import argparse
 import csv
@@ -223,7 +223,7 @@ def caption(fmt, slides, cta, n):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start", default="2026-10-05", help="first posting day (YYYY-MM-DD)")
+    ap.add_argument("--start", default="2026-10-25", help="first posting day (YYYY-MM-DD)")
     ap.add_argument("--per-day", type=int, default=3, choices=[1, 2, 3])
     args = ap.parse_args()
     start = dt.date.fromisoformat(args.start)

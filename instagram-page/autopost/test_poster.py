@@ -67,45 +67,45 @@ class PosterTest(unittest.TestCase):
         for item in q:
             for f in item.files:
                 self.assertTrue((self.root / f).exists(), f)
-        self.assertEqual(q[0].due, datetime(2026, 10, 5, 7, 30, tzinfo=TZ))
+        self.assertEqual(q[0].due, datetime(2026, 10, 25, 7, 30, tzinfo=TZ))
         with_reels = poster.build_queue({**CFG, "post_reels": True}, self.root)
         reels = [i for i in with_reels if i.kind == "reel"]
         self.assertEqual(len(reels), 10)
         self.assertTrue(all((self.root / r.cover).exists() for r in reels))
 
     def test_start_date_skips_earlier_posts(self):
-        self.assertEqual(poster.build_queue({**CFG, "start_date": "2026-11-07"}, self.root)[0].key, "QL100")
+        self.assertEqual(poster.build_queue({**CFG, "start_date": "2026-11-27"}, self.root)[0].key, "QL100")
 
     def test_publishes_single_image_once(self):
         fake = FakeInstagram()
-        self.assertTrue(self.run_at(datetime(2026, 10, 5, 7, 35, tzinfo=TZ), fake))
+        self.assertTrue(self.run_at(datetime(2026, 10, 25, 7, 35, tzinfo=TZ), fake))
         (create,) = fake.creates()
-        self.assertTrue(create["image_url"].startswith("https://me.github.io/ql/posts/2026-10-05_0730_QL001.jpg"))
+        self.assertTrue(create["image_url"].startswith("https://me.github.io/ql/posts/2026-10-25_0730_QL001.jpg"))
         self.assertIn("Follow @quietlyleveling", create["caption"])
         self.assertTrue(create["alt_text"].startswith("Nobody talks about"))
         self.assertEqual([r["key"] for r in self.log()], ["QL001"])
         self.assertEqual(self.log()[0]["permalink"], "https://www.instagram.com/p/c2/")
         # Next run in the same slot: nothing new is due.
         fake2 = FakeInstagram()
-        self.assertFalse(self.run_at(datetime(2026, 10, 5, 7, 50, tzinfo=TZ), fake2))
+        self.assertFalse(self.run_at(datetime(2026, 10, 25, 7, 50, tzinfo=TZ), fake2))
         self.assertEqual(fake2.creates(), [])
         self.assertIn("Next: QL002", self.out[-1])
 
     def test_late_posts_are_missed_not_burst(self):
         fake = FakeInstagram()
-        self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake)
+        self.run_at(datetime(2026, 10, 25, 12, 5, tzinfo=TZ), fake)
         self.assertEqual([(r["key"], r["status"]) for r in self.log()], [("QL001", "missed"), ("QL002", "published")])
         self.assertEqual(len(fake.creates()), 1)
 
     def test_one_post_per_run_when_two_are_due(self):
         fake = FakeInstagram()
-        self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake, cfg={**CFG, "max_late_minutes": 600})
+        self.run_at(datetime(2026, 10, 25, 12, 5, tzinfo=TZ), fake, cfg={**CFG, "max_late_minutes": 600})
         self.assertEqual([r["key"] for r in self.log()], ["QL001"])
         self.assertIn("Next run: QL002", self.out[-1])
 
     def test_carousel_builds_children_then_parent(self):
         fake = FakeInstagram()
-        self.run_at(datetime(2026, 10, 6, 7, 31, tzinfo=TZ), fake, cfg={**CFG, "start_date": "2026-10-06"})
+        self.run_at(datetime(2026, 10, 26, 7, 31, tzinfo=TZ), fake, cfg={**CFG, "start_date": "2026-10-26"})
         creates = fake.creates()
         self.assertEqual(len(creates), 8)
         self.assertTrue(all(c["is_carousel_item"] == "true" for c in creates[:7]))
@@ -115,16 +115,16 @@ class PosterTest(unittest.TestCase):
 
     def test_reel(self):
         fake = FakeInstagram()
-        self.run_at(datetime(2026, 10, 7, 17, 2, tzinfo=TZ), fake,
-                    cfg={**CFG, "start_date": "2026-10-07", "post_reels": True, "max_late_minutes": 5})
+        self.run_at(datetime(2026, 10, 27, 17, 2, tzinfo=TZ), fake,
+                    cfg={**CFG, "start_date": "2026-10-27", "post_reels": True, "max_late_minutes": 5})
         reel = fake.creates()[-1]
         self.assertEqual(reel["media_type"], "REELS")
-        self.assertTrue(reel["video_url"].endswith("reels/2026-10-07_1700_REEL-QL002.mp4"))
-        self.assertTrue(reel["cover_url"].endswith("reels/2026-10-07_1700_REEL-QL002-cover.jpg"))
+        self.assertTrue(reel["video_url"].endswith("reels/2026-10-27_1700_REEL-QL002.mp4"))
+        self.assertTrue(reel["cover_url"].endswith("reels/2026-10-27_1700_REEL-QL002-cover.jpg"))
         self.assertEqual(self.log()[-1]["key"], "REEL-QL002")
 
     def test_recovers_post_that_was_published_but_not_logged(self):
-        now = datetime(2026, 10, 5, 7, 50, tzinfo=TZ)
+        now = datetime(2026, 10, 25, 7, 50, tzinfo=TZ)
         caption = poster.build_queue(CFG, self.root)[0].caption
         stamp = (now - timedelta(minutes=18)).astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%M:%S+0000")
         fake = FakeInstagram(recent=[{"id": "m9", "caption": caption, "timestamp": stamp, "permalink": "https://x/p/m9"}])
@@ -134,12 +134,12 @@ class PosterTest(unittest.TestCase):
 
     def test_failed_container_is_not_logged(self):
         with self.assertRaises(poster.APIError):
-            self.run_at(datetime(2026, 10, 5, 7, 35, tzinfo=TZ), FakeInstagram(status="ERROR"))
+            self.run_at(datetime(2026, 10, 25, 7, 35, tzinfo=TZ), FakeInstagram(status="ERROR"))
         self.assertEqual(self.log(), [])
 
     def test_dry_run_changes_nothing(self):
         fake = FakeInstagram()
-        self.run_at(datetime(2026, 10, 5, 12, 5, tzinfo=TZ), fake, dry=True)
+        self.run_at(datetime(2026, 10, 25, 12, 5, tzinfo=TZ), fake, dry=True)
         self.assertEqual(fake.calls, [])
         self.assertEqual(self.log(), [])
         self.assertTrue(any(line.startswith("WOULD PUBLISH QL002") for line in self.out))

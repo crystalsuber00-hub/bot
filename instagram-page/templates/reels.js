@@ -17,11 +17,11 @@ const OUT = path.join(__dirname, "..", "reels");
 const W = 1080, H = 1920, FPS = 30;
 
 // Picked before launch for shareability (the formats behind the dataset's top
-// posts). Each Reel goes out after its image version. Wednesdays and Saturdays.
+// posts). Each Reel goes out after its image version. Tuesdays and Fridays.
 const REELS = [
-  ["QL002", "2026-10-07"], ["QL004", "2026-10-10"], ["QL005", "2026-10-14"], ["QL013", "2026-10-17"],
-  ["QL040", "2026-10-21"], ["QL051", "2026-10-24"], ["QL057", "2026-10-28"], ["QL067", "2026-10-31"],
-  ["QL058", "2026-11-04"], ["QL061", "2026-11-07"],
+  ["QL002", "2026-10-27"], ["QL004", "2026-10-30"], ["QL005", "2026-11-03"], ["QL013", "2026-11-06"],
+  ["QL040", "2026-11-10"], ["QL051", "2026-11-13"], ["QL057", "2026-11-17"], ["QL067", "2026-11-20"],
+  ["QL058", "2026-11-24"], ["QL061", "2026-11-27"],
 ];
 const TIME = "17:00";
 

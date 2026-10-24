@@ -19,7 +19,7 @@ How it fits together:
 - **`refresh-token.yml` renews your Instagram token every Monday.** Tokens
   expire after 60 days, so you never have to handle that by hand.
 
-It covers everything from the first post on Monday, October 5 (`start_date`
+It covers everything from the first post on Sunday, October 25 (`start_date`
 in `config.toml`). **No Facebook Page is needed.** It logs in with your
 Instagram account directly. Reels are off by default (see `config.toml`):
 posting through the API can't add trending audio, so schedule those in the

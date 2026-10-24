@@ -144,7 +144,7 @@ The step-by-step version, with fixes for common import problems, is in
 
 ### D. Reels
 
-Month one has 10 Reels in `reels/`, two a week (Wednesdays and Saturdays at
+Month one has 10 Reels in `reels/`, two a week (Tuesdays and Fridays at
 17:00). Each one is a full-screen version of a strong post, with the text
 appearing line by line over a slow zoom. Each Reel's date and time are in its
 file name, its cover is the matching `-cover.jpg`, and its caption is in the
@@ -162,7 +162,7 @@ Instagram's music library. Keep the sound low so the words stay the focus.
 
 `AUTOPOST.md` sets up an auto-poster on GitHub Actions. It publishes each post
 on schedule through Instagram's official API, so no scheduling tool or
-Facebook Page is needed. It starts with the first post on Monday, October 5,
+Facebook Page is needed. It starts with the first post on Sunday, October 25,
 so set it up before then.
 
 ## 6. The weekly loop
