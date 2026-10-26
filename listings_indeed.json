@@ -1367,5 +1367,405 @@
   "description": "plumbing HVAC company payroll manager, pay and exact location not listed; manager title (stretch)",
   "force": true,
   "skip_letter": false
+ },
+ {
+  "title": "Payroll & Administrative Coordinator",
+  "company": "University of California - San Francisco",
+  "location": "San Francisco, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aafj6jqp4fbl",
+  "description": "payroll admin coordinator $32.80-60.41/hr posted Oct 5",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Experienced Automotive Payroll & HR Administrator",
+  "company": "Marin Honda",
+  "location": "San Rafael, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aald8ds99qrz",
+  "description": "payroll HR administrator $28-30/hr posted Sep 29",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Accounts Payable / Accounts Receivable Admin",
+  "company": "Mission Constructors Inc",
+  "location": "San Francisco, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aaymp72wt87l",
+  "description": "AP AR admin $65-95k posted Oct 21",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "AP/AR Assistant (industrial distribution)",
+  "company": "Allied Fluid Products",
+  "location": "Oakland, CA",
+  "salary": 52000,
+  "url": "https://to.indeed.com/aawbrwysjkws",
+  "description": "AP AR assistant $25/hr posted Oct 1",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Accounting & Administrative Specialist",
+  "company": "Janus Corporation",
+  "location": "Concord, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aah7hnm46wlt",
+  "description": "accounting admin specialist $50-80k posted Oct 26",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Office/Bookkeeper (part-time)",
+  "company": "Fentons Creamery",
+  "location": "Oakland, CA",
+  "salary": 56000,
+  "url": "https://to.indeed.com/aavv7nrpb2px",
+  "description": "office bookkeeper $26-28/hr posted Oct 8",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Full Cycle Recruiter - HR / Recruiting & Onboarding Coordinator",
+  "company": "Cool Cat Fence",
+  "location": "Oakland, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aa2kvvpjj8m7",
+  "description": "recruiter onboarding coordinator $25-35/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "HR Assistant (temporary)",
+  "company": "Hunter Hamilton",
+  "location": "Pleasanton, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aakmmz9ctsw6",
+  "description": "HR assistant $25-30/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "HR and Benefits Assistant (hybrid)",
+  "company": "Farella Braun + Martel",
+  "location": "San Francisco, CA",
+  "salary": 72500,
+  "url": "https://to.indeed.com/aa64b2l62s8v",
+  "description": "HR benefits assistant $70-75k posted Oct 20",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "HR & EHS Generalist",
+  "company": "Modus Advanced",
+  "location": "Livermore, CA",
+  "salary": 77000,
+  "url": "https://to.indeed.com/aatjjb8z6wdx",
+  "description": "HR EHS generalist $32-42/hr posted Oct 23",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Recruiting and Scheduling Specialist",
+  "company": "Veterans Covert Protection Group",
+  "location": "Pleasanton, CA",
+  "salary": 70304,
+  "url": "https://to.indeed.com/aartcrty2zvb",
+  "description": "recruiting scheduling specialist $70.3k posted Oct 20",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Assistant (temporary)",
+  "company": "Certerra RMA Group",
+  "location": "San Leandro, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aac9hswl8mrc",
+  "description": "admin assistant temp $28-30/hr posted Sep 16",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Assistant",
+  "company": "California Motor Controls",
+  "location": "Benicia, CA",
+  "salary": 57000,
+  "url": "https://to.indeed.com/aa7fcmbj6gxp",
+  "description": "admin assistant $26-29/hr posted Oct 21",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Business Office Manager",
+  "company": "Memory Care of Contra Costa",
+  "location": "Pleasant Hill, CA",
+  "salary": 72000,
+  "url": "https://to.indeed.com/aarncmnzvk7y",
+  "description": "business office manager $70.3-75k posted Oct 22 (manager, stretch)",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Client Services Coordinator",
+  "company": "TGI Justice Project",
+  "location": "San Francisco, CA",
+  "salary": 64000,
+  "url": "https://to.indeed.com/aadtx8ccb4lv",
+  "description": "client services coordinator $29.80-32.21/hr posted Oct 19",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Sales/Customer Service Representative",
+  "company": "Santa Clara Systems",
+  "location": "Alameda, CA",
+  "salary": 58000,
+  "url": "https://to.indeed.com/aarqb62mndm7",
+  "description": "customer service rep $26-30/hr posted Oct 20",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Plumbing/HVAC Dispatcher",
+  "company": "Jazz Home Services",
+  "location": "Pleasanton, CA",
+  "salary": 68000,
+  "url": "https://to.indeed.com/aaxbyctbpny4",
+  "description": "plumbing HVAC dispatcher customer calls $30-35/hr posted Oct 18",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Assistant/Construction Industry",
+  "company": "Lee's Sheet Metal HVAC",
+  "location": "Vallejo, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aadtjg7jmnbt",
+  "description": "admin assistant HVAC $25-35/hr posted Oct 23",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Resident Services Coordinator",
+  "company": "Resources for Community Development",
+  "location": "Berkeley, CA",
+  "salary": 77000,
+  "url": "https://to.indeed.com/aasnryhz6h8n",
+  "description": "property resident services $35.81-37.69/hr posted Sep 30",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Resident Services Coordinator (part-time)",
+  "company": "Emerald Fund (Van Ness high-rises)",
+  "location": "San Francisco, CA",
+  "salary": 56000,
+  "url": "https://to.indeed.com/aanvjqgnntqs",
+  "description": "property resident services $27/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Coordinator",
+  "company": "SBM Management Services",
+  "location": "Foster City, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aav8w6ml2xb7",
+  "description": "property management admin coordinator $27-31/hr posted Sep 9",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Administrative Assistant / Associate Property Manager",
+  "company": "Small Business Tax Group",
+  "location": "San Francisco, CA",
+  "salary": 62000,
+  "url": "https://to.indeed.com/aavcbmn7zc8r",
+  "description": "admin assistant associate property manager from $30/hr posted Oct 19",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Customer Service Representative / Reproductive Health Specialist",
+  "company": "The Sperm Bank of California",
+  "location": "Berkeley, CA",
+  "salary": 70000,
+  "url": "https://to.indeed.com/aa8v9fmmgkg4",
+  "description": "customer service $33-35/hr posted Oct 15",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Legal Administrative Assistant",
+  "company": "Law Offices of Madden & Lynch PC",
+  "location": "San Francisco, CA",
+  "salary": 83000,
+  "url": "https://to.indeed.com/aatnglrp26gx",
+  "description": "legal admin assistant from $40/hr posted Oct 25",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Office Services Coordinator",
+  "company": "CBRE",
+  "location": "San Francisco, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aacxtwxd6zxt",
+  "description": "office services coordinator $31.51/hr posted Oct 13",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Surgery Scheduler",
+  "company": "East Bay Retina Consultants, Inc.",
+  "location": "Oakland, CA",
+  "salary": 58000,
+  "url": "https://to.indeed.com/aa9pqpz2627q",
+  "description": "surgery scheduler $26-30/hr posted Oct 19",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Surgery Scheduler / Insurance Authorization Specialist",
+  "company": "San Francisco Vein & Vascular Institute",
+  "location": "San Francisco, CA",
+  "salary": 63000,
+  "url": "https://to.indeed.com/aaklhjvvnfvf",
+  "description": "surgery scheduler authorization $27.73-33.39/hr posted Oct 21",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Clinic Medical Clerk",
+  "company": "Center for Elders' Independence",
+  "location": "San Leandro, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aakwpmt2snql",
+  "description": "clinic medical clerk $25.50-36.72/hr posted Oct 21",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Treatment Coordinator Pediatric and Orthodontic",
+  "company": "Orthodontics Pediatric Dentistry",
+  "location": "San Francisco, CA",
+  "salary": 68000,
+  "url": "https://to.indeed.com/aanrx9rwlp7b",
+  "description": "treatment coordinator $27-39/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Treatment Coordinator",
+  "company": "Sky Dental / Pittsburg Dental Specialists",
+  "location": "Pittsburg, CA",
+  "salary": 68000,
+  "url": "https://to.indeed.com/aa4b4vlm4hyk",
+  "description": "treatment coordinator $30-35/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Patient Care Coordinator",
+  "company": "Dudum Chiropractic",
+  "location": "Walnut Creek, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aasmzwbw9dsf",
+  "description": "patient care coordinator $26-32/hr posted Oct 22",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Front Office & Patient Experience Coordinator",
+  "company": "Ethos Plastic Surgery",
+  "location": "San Francisco, CA",
+  "salary": 78000,
+  "url": "https://to.indeed.com/aapsj4by6pbh",
+  "description": "patient experience coordinator $35-40/hr posted Oct 21",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Front Office Administrator",
+  "company": "Pacific Dental Associates",
+  "location": "San Francisco, CA",
+  "salary": 80000,
+  "url": "https://to.indeed.com/aajc2w8syb4y",
+  "description": "front office administrator $37-40/hr posted Oct 19",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Patient Care Coordinator",
+  "company": "NOW Dental",
+  "location": "San Mateo, CA",
+  "salary": 54000,
+  "url": "https://to.indeed.com/aals9r4blbkb",
+  "description": "patient care coordinator from $26/hr posted Oct 6",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Front Desk Associate",
+  "company": "Family Dental (Foster City)",
+  "location": "Foster City, CA",
+  "salary": 65000,
+  "url": "https://to.indeed.com/aam4khd74nz7",
+  "description": "front desk associate $28-35/hr posted Oct 21",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Front Office Receptionist / Coordinator (part-time)",
+  "company": "Kuo Dentistry",
+  "location": "Oakland, CA",
+  "salary": 66000,
+  "url": "https://to.indeed.com/aaccdl97z69p",
+  "description": "front office coordinator $28-36/hr posted Oct 16",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Dental Treatment Coordinator & Billing/Auditor",
+  "company": "Waterford / Gale Ranch Family Dental",
+  "location": "Dublin, CA",
+  "salary": 68000,
+  "url": "https://to.indeed.com/aaw48k8t2dw6",
+  "description": "treatment coordinator billing $30-35/hr posted Oct 23",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Medical Billing Specialist",
+  "company": "Bio Pacific",
+  "location": "Hayward, CA",
+  "salary": 63000,
+  "url": "https://to.indeed.com/aakgwkf8plhr",
+  "description": "medical billing $25-36/hr posted Sep 29",
+  "force": true,
+  "skip_letter": false
+ },
+ {
+  "title": "Phlebotomist I",
+  "company": "Quest Diagnostics (Millbrae)",
+  "location": "Millbrae, CA",
+  "salary": 58000,
+  "url": "https://to.indeed.com/aapzbtw2bpk9",
+  "description": "phlebotomist full-time $27-29.45/hr posted Sep 24",
+  "force": true,
+  "skip_letter": true
+ },
+ {
+  "title": "Point of Care Lab Technician",
+  "company": "TridentCare",
+  "location": "San Leandro, CA",
+  "salary": 60000,
+  "url": "https://to.indeed.com/aa9drw2yxszg",
+  "description": "lab technician point of care $26-32/hr posted Oct 26",
+  "force": true,
+  "skip_letter": true
  }
 ]
