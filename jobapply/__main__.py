@@ -262,6 +262,16 @@ def cmd_init(a, p, jobs):
           "Change anything later with: jobapply edit")
 
 
+def cmd_drop(a, p, jobs):
+    """Take every not-yet-applied job from a company out of the queue."""
+    n = 0
+    for j in jobs.values():
+        if a.company.lower() in (j.get("company") or "").lower() and j["status"] in ("new", "approved", "manual"):
+            j["status"] = "skipped"
+            n += 1
+    print(f"dropped {n} jobs from {a.company}")
+
+
 def cmd_applied(a, p, jobs):
     """Everything you already applied to, so you can check a job before applying again."""
     done = sorted((j for j in jobs.values() if j["status"] == "applied"),
@@ -298,6 +308,8 @@ def main(argv=None):
     w.add_argument("--once", action="store_true", help="one check then exit")
     sub.add_parser("init", help="first-time setup: asks a few questions and writes profile.toml")
     sub.add_parser("status")
+    dr = sub.add_parser("drop", help="remove all waiting jobs from one company, e.g. jobapply drop \"Robert Half\"")
+    dr.add_argument("company")
     sub.add_parser("applied", help="list every job you already applied to")
     sub.add_parser("preview", help="show the emails exactly as they will be sent")
     sub.add_parser("edit", help="open your profile to change the email wording")
@@ -310,7 +322,7 @@ def main(argv=None):
     p = load_profile(a.config)
     jobs = queue.load()
     apply_contacts(jobs)
-    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status, "applied": cmd_applied,
+    {"search": cmd_search, "review": cmd_review, "apply": cmd_apply, "status": cmd_status, "applied": cmd_applied, "drop": cmd_drop,
      "preview": cmd_preview, "edit": cmd_edit, "contacts": cmd_contacts,
      "watch": cmd_watch}[a.cmd](a, p, jobs)
     queue.save(jobs)

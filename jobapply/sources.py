@@ -143,6 +143,8 @@ def _hits(job: dict, p: Profile) -> int:
 
 def score(job: dict, p: Profile) -> int:
     """-1 = rejected by filters, otherwise number of keyword hits."""
+    if any(c.lower() in (job.get("company") or "").lower() for c in p.exclude_companies):
+        return -1
     if job.get("force"):  # user asked for this one by name: skip the filters
         return max(1, _hits(job, p))
     if p.title_keywords and not any(k.lower() in job["title"].lower() for k in p.title_keywords):

@@ -249,3 +249,16 @@ def test_greenhouse_and_lever_sources(monkeypatch):
     l = sources.lever("payroll", p)
     assert [j["title"] for j in g] == ["Payroll Specialist"] and g[0]["location"] == "Oakland, CA"
     assert l[0]["url"] == "https://l/1" and l[0]["company"] == "beta"
+
+
+def test_drop_and_exclude_companies():
+    from jobapply import __main__ as m, sources
+    from jobapply.profile import Profile
+    jobs = {"a": {"id": "a", "company": "Robert Half", "status": "approved"},
+            "b": {"id": "b", "company": "Robert Half", "status": "applied"},
+            "c": {"id": "c", "company": "Acme", "status": "approved"}}
+    class A: company = "robert half"
+    m.cmd_drop(A, None, jobs)
+    assert [jobs[k]["status"] for k in "abc"] == ["skipped", "applied", "approved"]
+    p = Profile(name="x", email="y", exclude_companies=["Robert Half"])
+    assert sources.score({"title": "Payroll", "company": "Robert Half LLC", "description": "", "location": "", "salary": 0, "force": True}, p) == -1

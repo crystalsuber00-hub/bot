@@ -13,6 +13,7 @@ class Profile:
     phone: str = ""
     keywords: list[str] = field(default_factory=list)   # any match scores +
     exclude: list[str] = field(default_factory=list)    # any match rejects
+    exclude_companies: list[str] = field(default_factory=list)  # never apply to these employers
     locations: list[str] = field(default_factory=list)  # empty = anywhere
     min_salary: int = 0
     summary: str = ""                                   # 2-3 sentences about you
